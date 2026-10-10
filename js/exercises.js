@@ -117,6 +117,11 @@ const Exercises = (() => {
     const out = [];
     const ws = shuffle(words);
 
+    // 0. Объяснение грамматики перед первым прохождением урока
+    if (!isReplay && typeof GRAMMAR === "object" && GRAMMAR[lesson.id]) {
+      out.push({ type: "grammar", g: GRAMMAR[lesson.id] });
+    }
+
     // 1. Карточки новых слов (только при первом прохождении)
     if (!isReplay) {
       ws.slice(0, letters ? 3 : 2).forEach((w) => out.push({ type: "teach", word: w, letters }));
@@ -307,7 +312,27 @@ const Exercises = (() => {
   }
 
   /* ---------- Рендеры ---------- */
+  // Карточка правила (используется и в уроке, и в окне "Подсказка")
+  function grammarCard(g, withSpeak = true) {
+    return `
+      <div class="rule">
+        <ul class="rule__points">${g.points.map((p) => `<li>${p}</li>`).join("")}</ul>
+        ${g.table ? `<table class="rule__table"><thead><tr>${g.table.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+          <tbody>${g.table.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>` : ""}
+        ${g.examples && g.examples.length ? `<div class="rule__examples">${g.examples.map(([en, ru]) => `
+          <div class="rule__ex">${withSpeak ? speakBtn(en) : ""}<div><b>${esc(en)}</b><small>${esc(ru)}</small></div></div>`).join("")}</div>` : ""}
+      </div>`;
+  }
+
   const renderers = {
+    grammar(ex, root, ctx) {
+      root.innerHTML = `<div class="ex-head"><span class="ex-kicker">Как это работает</span><h2 class="ex-title">${esc(ex.g.title)}</h2></div>
+        <div class="rule-wrap">${grammarCard(ex.g)}<div class="rule__fox">${SVG.mascot({ mood: "readlaugh", hat: ctx.hat })}</div></div>`;
+      bindSpeak(root, ctx);
+      ctx.onReady(true);
+      return { check: () => ({ correct: true, silent: true }) };
+    },
+
     teach(ex, root, ctx) {
       const w = ex.word;
       const picSvg = w.pic ? SVG.pic(w.pic, "teach__pic") : "";
@@ -640,5 +665,5 @@ const Exercises = (() => {
     return renderers[ex.type](ex, root, ctx);
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak };
 })();

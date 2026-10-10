@@ -36,6 +36,7 @@ const App = (() => {
   });
 
   function applySettings() {
+    loadCustomWords();
     const s = d().settings;
     applyTheme(s.theme);
     Sound.setEnabled(s.sound);
@@ -477,14 +478,22 @@ const App = (() => {
             <span><span class="lesson-card__title">${esc(l.title)}</span><br><span class="lesson-card__sub">${sub}</span></span>
           </button>`;
       }).join("");
-      return `
+      // Заголовок уровня перед первой главой каждого уровня
+      const lv = LEVELS.find((l) => l.units[0] === u.id);
+      const lvDone = lv ? lv.units.every((id) => { const x = COURSE.units.findIndex((cu) => cu.id === id); return unitDone(x) === COURSE.units[x].lessons.length; }) : false;
+      const levelHead = lv ? `
+        <div class="level-head reveal ${lvDone ? "is-done" : ""}">
+          <span class="level-badge">${lv.id}</span>
+          <div><div class="level-head__title">${esc(lv.title)}${lvDone ? " (пройден)" : ""}</div><div class="level-head__desc">${esc(lv.desc)}</div></div>
+        </div>` : "";
+      return `${levelHead}
         <section class="chapter reveal ${isDoneUnit ? "is-done" : ""} ${isActive ? "is-active" : ""}" style="${style}">
           <span class="chapter__dot">${isDoneUnit ? SVG.icon("check") : ui + 1}</span>
           <div class="card chapter__card">
             <div class="chapter__head">
               <div class="chapter__icon">${SVG.unitIcon(u.icon, "")}</div>
               <div class="chapter__info">
-                <span class="chapter__num">Глава ${ui + 1}</span>
+                <span class="chapter__num">Глава ${ui + 1} <span class="level-chip">${u.level || ""}</span></span>
                 <span class="chapter__title">${esc(u.title)}</span>
                 <span class="chapter__desc">${esc(u.desc)}</span>
               </div>
@@ -499,6 +508,7 @@ const App = (() => {
     return `
       <div class="journey">
         ${nextUp}
+        ${placementCard()}
         ${homeRow()}
         ${chapters}
         <div class="journey-end reveal">
@@ -512,6 +522,8 @@ const App = (() => {
   function bindLearn(main) {
     main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-placement]").forEach((b) => b.addEventListener("click", startPlacement));
+    main.querySelectorAll("[data-placement-skip]").forEach((b) => b.addEventListener("click", () => { d().placementDone = true; Store.save(); renderPage(); }));
     main.querySelectorAll("[data-test]").forEach((b) => b.addEventListener("click", () => confirmTest(Number(b.dataset.test))));
     main.querySelectorAll(".lesson-card").forEach((b) =>
       b.addEventListener("click", () => {
@@ -639,6 +651,119 @@ const App = (() => {
     if (ok) beginSession("test", Exercises.buildTest(u), { testUnit: ui, colors: u.colors });
   }
 
+  /* ---------- Стартовый тест уровня ----------
+     6 этапов (A1...C2) по 3 задания. Две ошибки на этапе - тест заканчивается,
+     и открываются все уровни ниже этого этапа. */
+  function placementCard() {
+    if (d().placementDone || lessonsDone() > 0) return "";
+    return `
+      <section class="card placement-card reveal">
+        <div class="placement-card__fox">${SVG.mascot({ mood: "surprised" })}</div>
+        <div class="placement-card__text">
+          <div class="widget__title">Уже знаете английский?</div>
+          <p class="widget__body">Пройдите тест уровня за 5 минут: 18 заданий от A1 до C2. Подходящие главы откроются сразу, без повторения того, что вы уже знаете.</p>
+          <div class="placement-card__actions">
+            <button class="btn btn--sm" data-placement>Пройти тест уровня</button>
+            <button class="btn btn--sm btn--ghost" data-placement-skip>Начать с нуля</button>
+          </div>
+        </div>
+      </section>`;
+  }
+
+  function startPlacement() {
+    const queue = [];
+    LEVELS.forEach((lv, stage) => {
+      const units = COURSE.units.filter((u) => lv.units.includes(u.id));
+      const pool = [];
+      units.forEach((u) => u.lessons.forEach((l) => {
+        Exercises.build(u, l, { isReplay: true })
+          .filter((e) => e.type === "gap" || e.type === "build" || (e.type === "choose" && !e.letters))
+          .forEach((e) => pool.push(e));
+      }));
+      // На старших уровнях больше заданий на грамматику
+      const gaps = Exercises.shuffle(pool.filter((e) => e.type === "gap"));
+      const rest = Exercises.shuffle(pool.filter((e) => e.type !== "gap"));
+      const pick = (stage >= 2 ? gaps.slice(0, 2).concat(rest) : rest.slice(0, 2).concat(gaps, rest.slice(2))).slice(0, 3);
+      pick.forEach((e) => { e.stage = stage; queue.push(e); });
+    });
+    beginSession("placement", queue, { colors: ["#8f7bff", "#5b8cff"], stageWrong: {}, passed: 0 });
+  }
+
+  function finishPlacement(passed) {
+    const L = lesson;
+    const data = d();
+    data.placementDone = true;
+    let opened = 0;
+    const passedIds = LEVELS.slice(0, passed).flatMap((lv) => lv.units);
+    FLAT.filter((x) => passedIds.includes(x.unit.id)).forEach((x) => {
+      if (!data.completed[x.lesson.id]) {
+        data.completed[x.lesson.id] = { times: 1, perfect: false, at: Date.now(), viaTest: true };
+        opened++;
+        const words = new Set(data.words);
+        x.lesson.words.forEach((w) => { if (w.en.length > 1) words.add(w.en.toLowerCase()); });
+        data.words = [...words];
+        rememberWords(x.lesson.words);
+      }
+    });
+    const xp = 10 + L.correctAnswers * RULES.xpPerCorrect;
+    const s = settle(xp, 10, L);
+    lesson = null;
+    const next = LEVELS[Math.min(passed, LEVELS.length - 1)];
+    const title = passed === 0 ? "Начнём с основ!" : passed >= LEVELS.length ? "Уровень C2: впечатляет!" : `Ваш уровень: ${LEVELS[passed - 1].id}`;
+    const subtitle = passed === 0
+      ? "Тест показал, что лучше начать с уровня A1. Это быстро, а основа будет крепкой."
+      : passed >= LEVELS.length
+        ? `Открыты все уроки (${opened}). Повторяйте темы и играйте в игры, чтобы держать форму.`
+        : `Открыто уроков: ${opened}. Продолжайте с уровня ${next.id}: ${next.title.toLowerCase()}.`;
+    renderResult(Object.assign(s, {
+      xp, coins: 10, perfect: L.mistakes === 0, title, subtitle,
+      mood: passed >= 3 ? "cool" : passed > 0 ? "cheer" : "hello",
+      again: null
+    }));
+  }
+
+  /* ---------- Свои слова ---------- */
+  // Добавляет слова пользователя в общий словарь WORDS (для повторения и игр)
+  function loadCustomWords() {
+    Object.keys(WORDS).forEach((k) => { if (WORDS[k].custom) delete WORDS[k]; });
+    (d().customWords || []).forEach((w) => {
+      const k = w.en.toLowerCase();
+      if (!WORDS[k]) WORDS[k] = { en: w.en, ru: w.ru, ui: -1, custom: true };
+    });
+  }
+
+  function addCustomWord(en, ru) {
+    en = en.trim().replace(/\s+/g, " ");
+    ru = ru.trim().replace(/\s+/g, " ");
+    if (en.length < 2 || !ru) return "Заполните оба поля";
+    if (!/^[a-zA-Z' .-]+$/.test(en)) return "Английское слово пишите латиницей";
+    const k = en.toLowerCase();
+    const data = d();
+    if (WORDS[k] && !WORDS[k].custom) {
+      // Слово уже есть в курсе: просто добавляем его в изученные
+      if (!data.words.includes(k)) data.words.push(k);
+      if (!data.wordStats[k]) data.wordStats[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 };
+      Store.save();
+      return null;
+    }
+    if (data.customWords.some((w) => w.en.toLowerCase() === k)) return "Это слово уже есть в вашем словаре";
+    data.customWords.push({ en, ru, added: Date.now() });
+    WORDS[k] = { en, ru, ui: -1, custom: true };
+    if (!data.words.includes(k)) data.words.push(k);
+    data.wordStats[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 };
+    Store.save();
+    return null;
+  }
+
+  function removeCustomWord(k) {
+    const data = d();
+    data.customWords = data.customWords.filter((w) => w.en.toLowerCase() !== k);
+    data.words = data.words.filter((x) => x !== k);
+    delete data.wordStats[k];
+    delete WORDS[k];
+    Store.save();
+  }
+
   /* ---------- Задания дня ---------- */
   const QUESTS = [
     { id: "lessons2", title: "Пройдите 2 урока", goal: 2, icon: "book", value: (q) => q.lessons },
@@ -725,6 +850,7 @@ const App = (() => {
           <button class="icon-btn" data-act="quit" aria-label="Выйти из урока">${SVG.icon("close")}</button>
           <div class="progress" role="progressbar" aria-label="Прогресс урока"><div class="progress__fill" id="lessonProgress"></div></div>
           <span class="lesson__count" id="lessonCount"></span>
+          ${L.entry && typeof GRAMMAR === "object" && GRAMMAR[L.entry.lesson.id] ? `<button class="icon-btn" data-act="hint" aria-label="Подсказка по грамматике" title="Подсказка">${SVG.icon("book")}</button>` : ""}
         </div>
         <div class="lesson__body" id="exRoot"></div>
         <footer class="lesson__foot" id="foot">
@@ -735,8 +861,20 @@ const App = (() => {
         </footer>
       </div>`;
     $app.querySelector('[data-act="quit"]').addEventListener("click", quitLesson);
+    const hint = $app.querySelector('[data-act="hint"]');
+    if (hint) hint.addEventListener("click", () => showGrammar(L.entry.lesson.id));
     $app.querySelector("#mainBtn").addEventListener("click", onMain);
     showExercise();
+  }
+
+  // Окно с правилом урока (кнопка "Подсказка")
+  function showGrammar(id) {
+    const g = GRAMMAR[id];
+    if (!g) return;
+    openModal(`<h2>${esc(g.title)}</h2><div class="modal__rule">${Exercises.grammarCard(g)}</div><button class="btn" data-close-btn>Понятно</button>`, (card) => {
+      card.querySelector("[data-close-btn]").onclick = closeModal;
+      Exercises.bindSpeak(card, { speak: say });
+    });
   }
 
   function updateLessonProgress() {
@@ -748,6 +886,7 @@ const App = (() => {
 
   const HINTS = {
     teach: "Запомните слово и нажмите «Дальше»",
+    grammar: "Прочитайте правило и нажмите «Дальше»",
     choose: "Выберите вариант или нажмите 1-4",
     picture: "Выберите подходящую картинку",
     match: "Соедините слова и переводы",
@@ -771,7 +910,7 @@ const App = (() => {
     L.phase = "answer";
     foot.className = "lesson__foot";
     btn.className = "btn";
-    btn.textContent = ex.type === "teach" ? "Дальше" : "Проверить";
+    btn.textContent = ex.type === "teach" || ex.type === "grammar" ? "Дальше" : "Проверить";
     btn.disabled = true;
     // Для заданий на слух можно пропустить (нет наушников или звука)
     left.innerHTML = ex.type === "listen" || ex.type === "dictation"
@@ -860,7 +999,8 @@ const App = (() => {
       L.mistakes++;
       Sound.play("wrong");
       // В уроке и повторении ошибка возвращается в конец; в тесте просто считается
-      const isTest = L.mode === "test";
+      const isTest = L.mode === "test" || L.mode === "placement";
+      if (L.mode === "placement") L.stageWrong[ex.stage] = (L.stageWrong[ex.stage] || 0) + 1;
       if (!isTest) {
         L.queue.push(ex);
         L.total++;
@@ -873,7 +1013,7 @@ const App = (() => {
           <div class="feedback__fox">${SVG.mascot({ mood: "worried", hat: d().hat })}</div>
           <div>
             <div class="feedback__title">Не совсем</div>
-            <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${isTest ? ` Ошибок: ${L.mistakes} из ${TEST_MAX_MISTAKES + 1} допустимых.` : " Задание вернётся в конце."}</div>
+            <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${L.mode === "placement" ? "" : isTest ? ` Ошибок: ${L.mistakes} из ${TEST_MAX_MISTAKES + 1} допустимых.` : " Задание вернётся в конце."}</div>
           </div>
         </div>`;
       btn.className = "btn btn--rose";
@@ -889,6 +1029,17 @@ const App = (() => {
     const L = lesson;
     L.idx++;
     updateLessonProgress();
+    // Тест уровня: после каждого этапа решаем, идти ли дальше
+    if (L.mode === "placement") {
+      const prev = L.queue[L.idx - 1], next = L.queue[L.idx];
+      if (prev && (!next || next.stage !== prev.stage)) {
+        if ((L.stageWrong[prev.stage] || 0) >= 2) { finishPlacement(prev.stage); return; }
+        L.passed = prev.stage + 1;
+      }
+      if (!next) { finishPlacement(L.passed); return; }
+      showExercise();
+      return;
+    }
     // Тест заканчивается досрочно, если ошибок уже слишком много
     if (L.mode === "test" && L.mistakes > TEST_MAX_MISTAKES) {
       finishTest(false);
@@ -1383,9 +1534,10 @@ const App = (() => {
           <div class="card empty reveal">
             <div class="empty__fox">${SVG.mascot({ mood: "sleep" })}</div>
             <h3>Здесь пока пусто</h3>
-            <p>Пройдите первый урок со словами, и они появятся в словаре.</p>
+            <p>Пройдите первый урок со словами, и они появятся в словаре. Или добавьте своё слово.</p>
             <button class="btn" data-go="learn">К маршруту</button>
           </div>
+          ${addWordForm()}
         </div>`;
     }
     const weak = learned.filter((k) => st[k] && st[k].wrong > 0).length;
@@ -1395,6 +1547,7 @@ const App = (() => {
           <h1>Словарь</h1>
           <p>Изучено слов: ${learned.length}. Пора повторить: ${due}.</p>
         </div>
+        ${addWordForm()}
         <div class="dict-tools">
           <div class="search">${SVG.icon("search")}<input class="input" id="dictSearch" type="search" placeholder="Поиск по-английски или по-русски" value="${esc(dictQuery)}" aria-label="Поиск слова"></div>
           <div class="chips-row">
@@ -1406,6 +1559,19 @@ const App = (() => {
         </div>
         <div id="dictList"></div>
       </div>`;
+  }
+
+  function addWordForm() {
+    return `
+      <form class="card add-word reveal" id="addWord" autocomplete="off">
+        <div class="widget__title">Добавить своё слово</div>
+        <div class="add-word__row">
+          <input class="input" name="en" placeholder="Слово по-английски" aria-label="Слово по-английски" maxlength="40" spellcheck="false">
+          <input class="input" name="ru" placeholder="Перевод" aria-label="Перевод" maxlength="60">
+          <button class="btn btn--sm" type="submit">${SVG.icon("plus")}Добавить</button>
+        </div>
+        <p class="field__error" id="addWordError" role="alert"></p>
+      </form>`;
   }
 
   function renderDictList() {
@@ -1428,7 +1594,7 @@ const App = (() => {
     keys.forEach((k) => (groups[WORDS[k].ui] = groups[WORDS[k].ui] || []).push(k));
     box.innerHTML = Object.keys(groups).sort((a, b) => a - b).map((ui) => `
       <div class="dict-group">
-        <div class="dict-group__title">${esc(COURSE.units[ui].title)}</div>
+        <div class="dict-group__title">${Number(ui) < 0 ? "Мои слова" : esc(COURSE.units[ui].title)}</div>
         ${groups[ui].map((k) => {
           const w = WORDS[k];
           const s = st[k] || { lvl: 1, wrong: 0 };
@@ -1439,14 +1605,26 @@ const App = (() => {
               <div class="word-row__pic">${w.pic && SVG.hasPic(w.pic) ? SVG.pic(w.pic) : `<span>${esc(w.en[0].toUpperCase())}</span>`}</div>
               <div><div class="word-row__en">${esc(w.en)}</div><div class="word-row__ru">${esc(w.ru)}</div></div>
               <div class="strength ${weakW ? "is-weak" : ""}" title="Насколько хорошо слово запомнено">${bars}</div>
-              ${Speech.canSay(w.en) ? `<button class="speak-btn" data-say-word="${esc(w.en)}" aria-label="Прослушать ${esc(w.en)}">${SVG.icon("speaker")}</button>` : "<span></span>"}
+              ${w.custom ? `<button class="icon-btn" data-remove-word="${esc(k)}" aria-label="Удалить слово ${esc(w.en)}" title="Удалить">${SVG.icon("close")}</button>` : Speech.canSay(w.en) ? `<button class="speak-btn" data-say-word="${esc(w.en)}" aria-label="Прослушать ${esc(w.en)}">${SVG.icon("speaker")}</button>` : "<span></span>"}
             </div>`;
         }).join("")}
       </div>`).join("");
     box.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+    box.querySelectorAll("[data-remove-word]").forEach((b) => b.addEventListener("click", () => { removeCustomWord(b.dataset.removeWord); renderPage(); }));
   }
 
   function bindWords(main) {
+    const form = main.querySelector("#addWord");
+    if (form) form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const err = addCustomWord(form.en.value, form.ru.value);
+      if (err) { main.querySelector("#addWordError").textContent = err; return; }
+      Sound.play("match");
+      Toast.show({ title: "Слово добавлено", text: `${esc(form.en.value.trim())}: попадёт в повторение`, icon: SVG.icon("check") });
+      renderPage();
+      const f2 = document.querySelector("#addWord input[name=en]");
+      if (f2) f2.focus();
+    });
     main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-filter]").forEach((b) =>

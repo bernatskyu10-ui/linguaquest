@@ -76,6 +76,11 @@ const Sync = (() => {
     m.achievements = Object.assign({}, o.achievements || {}, m.achievements || {});
     m.words = [...new Set([...(m.words || []), ...(o.words || [])])];
     m.owned = [...new Set([...(m.owned || []), ...(o.owned || [])])];
+    // Свои слова: объединяем по английскому написанию
+    const cw = new Map();
+    [...(o.customWords || []), ...(m.customWords || [])].forEach((w) => cw.set(w.en.toLowerCase(), w));
+    m.customWords = [...cw.values()];
+    m.placementDone = !!(m.placementDone || o.placementDone);
     m.wordStats = Object.assign({}, m.wordStats || {});
     for (const [k, s] of Object.entries(o.wordStats || {})) {
       if (!m.wordStats[k] || (s.seen || 0) > (m.wordStats[k].seen || 0)) m.wordStats[k] = s;

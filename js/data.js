@@ -232,7 +232,7 @@ const COURSE = {
             { en: "are", ru: "есть (с you, we, they)" },
             { en: "happy", ru: "счастливый" },
             { en: "tired", ru: "уставший" },
-            { en: "student", ru: "студент" }
+            { en: "student", ru: "студент", pic: "student" }
           ],
           sentences: [
             { en: "I am happy", ru: "Я счастлив" },
@@ -250,8 +250,8 @@ const COURSE = {
           id: "be-2", title: "Отрицание: not",
           words: [
             { en: "not", ru: "не" },
-            { en: "teacher", ru: "учитель" },
-            { en: "doctor", ru: "врач" },
+            { en: "teacher", ru: "учитель", pic: "teacher" },
+            { en: "doctor", ru: "врач", pic: "doctor" },
             { en: "hungry", ru: "голодный" },
             { en: "cold", ru: "холодный" },
             { en: "hot", ru: "горячий, жаркий" }
@@ -273,7 +273,7 @@ const COURSE = {
           words: [
             { en: "where", ru: "где" },
             { en: "home", ru: "дом (жилище)" },
-            { en: "school", ru: "школа" },
+            { en: "school", ru: "школа", pic: "school" },
             { en: "ready", ru: "готовый" },
             { en: "here", ru: "здесь" },
             { en: "there", ru: "там" }
@@ -427,7 +427,7 @@ const COURSE = {
             { en: "parents", ru: "родители" },
             { en: "family", ru: "семья", pic: "family" },
             { en: "baby", ru: "малыш", pic: "baby" },
-            { en: "love", ru: "любить" }
+            { en: "love", ru: "любить", pic: "love" }
           ],
           sentences: [
             { en: "This is my mother", ru: "Это моя мама" },
@@ -562,7 +562,7 @@ const COURSE = {
             { en: "yesterday", ru: "вчера" },
             { en: "morning", ru: "утро" },
             { en: "evening", ru: "вечер" },
-            { en: "week", ru: "неделя" },
+            { en: "week", ru: "неделя", pic: "schedule" },
             { en: "day", ru: "день" }
           ],
           sentences: [
@@ -578,8 +578,8 @@ const COURSE = {
             { en: "hour", ru: "час" },
             { en: "minute", ru: "минута" },
             { en: "o'clock", ru: "ровно (о времени)", pic: "clock3", alt: ["oclock"] },
-            { en: "month", ru: "месяц" },
-            { en: "year", ru: "год" }
+            { en: "month", ru: "месяц", pic: "schedule" },
+            { en: "year", ru: "год", pic: "schedule" }
           ],
           sentences: [
             { en: "What time is it?", ru: "Который час?" },
@@ -641,7 +641,7 @@ const COURSE = {
           words: [
             { en: "don't", ru: "не (с I, you, we, they)", alt: ["do not"] },
             { en: "doesn't", ru: "не (с he, she, it)", alt: ["does not"] },
-            { en: "music", ru: "музыка" },
+            { en: "music", ru: "музыка", pic: "music" },
             { en: "sport", ru: "спорт" },
             { en: "often", ru: "часто" },
             { en: "never", ru: "никогда" }
@@ -887,9 +887,9 @@ const COURSE = {
         {
           id: "ph-1", title: "В кафе",
           words: [
-            { en: "menu", ru: "меню" },
-            { en: "bill", ru: "счёт", alt: ["check"] },
-            { en: "table", ru: "столик, стол" },
+            { en: "menu", ru: "меню", pic: "menu" },
+            { en: "bill", ru: "счёт", pic: "bill", alt: ["check"] },
+            { en: "table", ru: "столик, стол", pic: "table" },
             { en: "can I have", ru: "можно мне" },
             { en: "would like", ru: "хотел бы" }
           ],
@@ -903,10 +903,10 @@ const COURSE = {
           id: "ph-2", title: "В магазине",
           words: [
             { en: "shop", ru: "магазин", alt: ["store"] },
-            { en: "price", ru: "цена" },
-            { en: "cheap", ru: "дешёвый" },
-            { en: "expensive", ru: "дорогой" },
-            { en: "money", ru: "деньги" },
+            { en: "price", ru: "цена", pic: "price" },
+            { en: "cheap", ru: "дешёвый", pic: "price" },
+            { en: "expensive", ru: "дорогой", pic: "price" },
+            { en: "money", ru: "деньги", pic: "money" },
             { en: "buy", ru: "покупать" }
           ],
           sentences: [
@@ -952,7 +952,7 @@ const COURSE = {
             { en: "rain", ru: "дождь", pic: "rain" },
             { en: "snow", ru: "снег", pic: "snow" },
             { en: "cloud", ru: "облако", pic: "cloud" },
-            { en: "wind", ru: "ветер" },
+            { en: "wind", ru: "ветер", pic: "wind" },
             { en: "umbrella", ru: "зонт", pic: "umbrella" }
           ],
           sentences: [
@@ -984,12 +984,12 @@ const COURSE = {
         {
           id: "wea-3", title: "Времена года",
           words: [
-            { en: "spring", ru: "весна" },
-            { en: "summer", ru: "лето" },
-            { en: "autumn", ru: "осень", alt: ["fall"] },
-            { en: "winter", ru: "зима" },
+            { en: "spring", ru: "весна", pic: "spring" },
+            { en: "summer", ru: "лето", pic: "summer" },
+            { en: "autumn", ru: "осень", pic: "autumn", alt: ["fall"] },
+            { en: "winter", ru: "зима", pic: "winter" },
             { en: "tree", ru: "дерево", pic: "tree" },
-            { en: "sea", ru: "море" }
+            { en: "sea", ru: "море", pic: "sea" }
           ],
           sentences: [
             { en: "I like summer", ru: "Мне нравится лето" },
@@ -1013,9 +1013,9 @@ const COURSE = {
           words: [
             { en: "head", ru: "голова" },
             { en: "eye", ru: "глаз", pic: "eye" },
-            { en: "ear", ru: "ухо" },
+            { en: "ear", ru: "ухо", pic: "ear" },
             { en: "nose", ru: "нос" },
-            { en: "mouth", ru: "рот" },
+            { en: "mouth", ru: "рот", pic: "mouth" },
             { en: "hair", ru: "волосы" }
           ],
           sentences: [
@@ -1047,8 +1047,8 @@ const COURSE = {
           words: [
             { en: "ill", ru: "больной", alt: ["sick"] },
             { en: "headache", ru: "головная боль" },
-            { en: "medicine", ru: "лекарство" },
-            { en: "hospital", ru: "больница" },
+            { en: "medicine", ru: "лекарство", pic: "medicine" },
+            { en: "hospital", ru: "больница", pic: "hospital" },
             { en: "healthy", ru: "здоровый" },
             { en: "rest", ru: "отдых" }
           ],
@@ -1076,8 +1076,8 @@ const COURSE = {
             { en: "dress", ru: "платье", pic: "dress" },
             { en: "shoes", ru: "обувь", pic: "shoes" },
             { en: "hat", ru: "шляпа, шапка", pic: "hat" },
-            { en: "jacket", ru: "куртка" },
-            { en: "jeans", ru: "джинсы" }
+            { en: "jacket", ru: "куртка", pic: "jacket" },
+            { en: "jeans", ru: "джинсы", pic: "jeans" }
           ],
           sentences: [
             { en: "I like your dress", ru: "Мне нравится твоё платье" },
@@ -1110,7 +1110,7 @@ const COURSE = {
             { en: "try on", ru: "примерять" },
             { en: "fit", ru: "подходить по размеру" },
             { en: "color", ru: "цвет", alt: ["colour"] },
-            { en: "cheap", ru: "дешёвый" },
+            { en: "cheap", ru: "дешёвый", pic: "price" },
             { en: "beautiful", ru: "красивый" }
           ],
           sentences: [
@@ -1133,12 +1133,12 @@ const COURSE = {
         {
           id: "home-1", title: "Комнаты",
           words: [
-            { en: "kitchen", ru: "кухня" },
+            { en: "kitchen", ru: "кухня", pic: "kitchen" },
             { en: "bedroom", ru: "спальня" },
-            { en: "bathroom", ru: "ванная" },
+            { en: "bathroom", ru: "ванная", pic: "bathroom" },
             { en: "living room", ru: "гостиная" },
-            { en: "door", ru: "дверь" },
-            { en: "window", ru: "окно" }
+            { en: "door", ru: "дверь", pic: "door" },
+            { en: "window", ru: "окно", pic: "window" }
           ],
           sentences: [
             { en: "This is my bedroom", ru: "Это моя спальня" },
@@ -1150,9 +1150,9 @@ const COURSE = {
           words: [
             { en: "bed", ru: "кровать", pic: "bed" },
             { en: "chair", ru: "стул", pic: "chair" },
-            { en: "table", ru: "стол" },
+            { en: "table", ru: "стол", pic: "table" },
             { en: "lamp", ru: "лампа", pic: "lamp" },
-            { en: "sofa", ru: "диван" },
+            { en: "sofa", ru: "диван", pic: "sofa" },
             { en: "shelf", ru: "полка" }
           ],
           sentences: [
@@ -1199,11 +1199,11 @@ const COURSE = {
           id: "job-1", title: "Профессии",
           words: [
             { en: "job", ru: "работа" },
-            { en: "driver", ru: "водитель" },
-            { en: "cook", ru: "повар" },
-            { en: "nurse", ru: "медсестра" },
-            { en: "engineer", ru: "инженер" },
-            { en: "artist", ru: "художник" }
+            { en: "driver", ru: "водитель", pic: "driver" },
+            { en: "cook", ru: "повар", pic: "cook" },
+            { en: "nurse", ru: "медсестра", pic: "nurse" },
+            { en: "engineer", ru: "инженер", pic: "engineer" },
+            { en: "artist", ru: "художник", pic: "artist" }
           ],
           sentences: [
             { en: "What is your job?", ru: "Кем ты работаешь?" },
@@ -1217,7 +1217,7 @@ const COURSE = {
             { en: "can", ru: "уметь, мочь" },
             { en: "can't", ru: "не уметь, не мочь", alt: ["cannot"] },
             { en: "swim", ru: "плавать" },
-            { en: "sing", ru: "петь" },
+            { en: "sing", ru: "петь", pic: "sing" },
             { en: "dance", ru: "танцевать" },
             { en: "drive", ru: "водить машину" }
           ],
@@ -1236,10 +1236,10 @@ const COURSE = {
           words: [
             { en: "hobby", ru: "хобби" },
             { en: "free time", ru: "свободное время" },
-            { en: "draw", ru: "рисовать" },
-            { en: "cook", ru: "готовить" },
+            { en: "draw", ru: "рисовать", pic: "draw" },
+            { en: "cook", ru: "готовить", pic: "cook" },
             { en: "travel", ru: "путешествовать" },
-            { en: "photo", ru: "фотография" }
+            { en: "photo", ru: "фотография", pic: "photo" }
           ],
           sentences: [
             { en: "What do you do in your free time?", ru: "Чем ты занимаешься в свободное время?" },
@@ -1266,7 +1266,7 @@ const COURSE = {
             { en: "soon", ru: "скоро" },
             { en: "later", ru: "позже" },
             { en: "next", ru: "следующий" },
-            { en: "call", ru: "звонить" }
+            { en: "call", ru: "звонить", pic: "call" }
           ],
           sentences: [
             { en: "I will call you later", ru: "Я позвоню тебе позже" },
@@ -1286,7 +1286,7 @@ const COURSE = {
             { en: "learn", ru: "учить, изучать" },
             { en: "plan", ru: "план" },
             { en: "holiday", ru: "отпуск, каникулы", alt: ["vacation"] },
-            { en: "summer", ru: "лето" }
+            { en: "summer", ru: "лето", pic: "summer" }
           ],
           sentences: [
             { en: "I am going to learn English", ru: "Я собираюсь учить английский" },
@@ -1302,7 +1302,7 @@ const COURSE = {
           id: "fut-3", title: "Итоговое повторение",
           words: [
             { en: "dream", ru: "мечта" },
-            { en: "world", ru: "мир" },
+            { en: "world", ru: "мир", pic: "world" },
             { en: "English", ru: "английский язык" },
             { en: "practice", ru: "практика", alt: ["practise"] },
             { en: "every day", ru: "каждый день" },
@@ -1357,7 +1357,7 @@ const COURSE = {
             { en: "more", ru: "более, больше" },
             { en: "less", ru: "менее, меньше" },
             { en: "interesting", ru: "интересный" },
-            { en: "expensive", ru: "дорогой" },
+            { en: "expensive", ru: "дорогой", pic: "price" },
             { en: "difficult", ru: "трудный" },
             { en: "important", ru: "важный" }
           ],
@@ -1430,7 +1430,7 @@ const COURSE = {
             { en: "don't have to", ru: "не нужно", alt: ["do not have to"] },
             { en: "early", ru: "рано" },
             { en: "uniform", ru: "форма (одежда)" },
-            { en: "homework", ru: "домашнее задание" }
+            { en: "homework", ru: "домашнее задание", pic: "homework" }
           ],
           sentences: [
             { en: "I have to get up early", ru: "Мне приходится рано вставать" },
@@ -1448,9 +1448,9 @@ const COURSE = {
             { en: "should", ru: "следует, стоит" },
             { en: "shouldn't", ru: "не следует", alt: ["should not"] },
             { en: "advice", ru: "совет" },
-            { en: "doctor", ru: "врач" },
+            { en: "doctor", ru: "врач", pic: "doctor" },
             { en: "sleep", ru: "спать" },
-            { en: "sugar", ru: "сахар" }
+            { en: "sugar", ru: "сахар", pic: "sugar" }
           ],
           sentences: [
             { en: "You should see a doctor", ru: "Тебе стоит сходить к врачу" },
@@ -1575,7 +1575,7 @@ const COURSE = {
             { en: "been to", ru: "бывал в" },
             { en: "seen", ru: "видел" },
             { en: "tried", ru: "пробовал" },
-            { en: "abroad", ru: "за границей" }
+            { en: "abroad", ru: "за границей", pic: "world" }
           ],
           sentences: [
             { en: "Have you ever been to London?", ru: "Ты когда-нибудь был в Лондоне?" },
@@ -1621,11 +1621,11 @@ const COURSE = {
         {
           id: "tr-1", title: "В аэропорту",
           words: [
-            { en: "airport", ru: "аэропорт" },
-            { en: "passport", ru: "паспорт" },
-            { en: "ticket", ru: "билет" },
-            { en: "flight", ru: "рейс, полёт" },
-            { en: "luggage", ru: "багаж" },
+            { en: "airport", ru: "аэропорт", pic: "airport" },
+            { en: "passport", ru: "паспорт", pic: "passport" },
+            { en: "ticket", ru: "билет", pic: "ticket" },
+            { en: "flight", ru: "рейс, полёт", pic: "airport" },
+            { en: "luggage", ru: "багаж", pic: "luggage" },
             { en: "gate", ru: "выход на посадку" }
           ],
           sentences: [
@@ -1650,12 +1650,12 @@ const COURSE = {
         {
           id: "tr-2", title: "В отеле",
           words: [
-            { en: "hotel", ru: "отель" },
+            { en: "hotel", ru: "отель", pic: "hotel" },
             { en: "room", ru: "номер, комната" },
             { en: "reservation", ru: "бронь", alt: ["booking"] },
-            { en: "key", ru: "ключ" },
+            { en: "key", ru: "ключ", pic: "key" },
             { en: "floor", ru: "этаж" },
-            { en: "breakfast", ru: "завтрак" }
+            { en: "breakfast", ru: "завтрак", pic: "breakfast" }
           ],
           sentences: [
             { en: "I have a reservation", ru: "У меня есть бронь" },
@@ -1679,11 +1679,11 @@ const COURSE = {
         {
           id: "tr-3", title: "Как пройти?",
           words: [
-            { en: "map", ru: "карта" },
+            { en: "map", ru: "карта", pic: "map" },
             { en: "straight on", ru: "прямо", alt: ["straight ahead"] },
             { en: "corner", ru: "угол" },
-            { en: "bridge", ru: "мост" },
-            { en: "museum", ru: "музей" },
+            { en: "bridge", ru: "мост", pic: "bridge" },
+            { en: "museum", ru: "музей", pic: "museum" },
             { en: "lost", ru: "потерявшийся" }
           ],
           sentences: [
@@ -1717,7 +1717,7 @@ const COURSE = {
           words: [
             { en: "waiter", ru: "официант" },
             { en: "order", ru: "заказывать" },
-            { en: "dessert", ru: "десерт" },
+            { en: "dessert", ru: "десерт", pic: "dessert" },
             { en: "spicy", ru: "острый" },
             { en: "tip", ru: "чаевые" },
             { en: "vegetarian", ru: "вегетарианский" }
@@ -1744,12 +1744,12 @@ const COURSE = {
         {
           id: "tk-2", title: "По телефону",
           words: [
-            { en: "call back", ru: "перезвонить" },
+            { en: "call back", ru: "перезвонить", pic: "call" },
             { en: "speaking", ru: "у телефона (я)" },
-            { en: "message", ru: "сообщение" },
+            { en: "message", ru: "сообщение", pic: "call" },
             { en: "hold on", ru: "подождите (на линии)" },
             { en: "busy", ru: "занят" },
-            { en: "number", ru: "номер" }
+            { en: "number", ru: "номер", pic: "call" }
           ],
           sentences: [
             { en: "Can I speak to Mary, please?", ru: "Можно поговорить с Мэри?" },
@@ -1772,8 +1772,8 @@ const COURSE = {
           id: "tk-3", title: "Приглашения",
           words: [
             { en: "invite", ru: "приглашать" },
-            { en: "party", ru: "вечеринка" },
-            { en: "birthday", ru: "день рождения" },
+            { en: "party", ru: "вечеринка", pic: "party" },
+            { en: "birthday", ru: "день рождения", pic: "birthday" },
             { en: "would you like", ru: "не хотите ли" },
             { en: "I'd love to", ru: "с удовольствием", alt: ["i would love to"] },
             { en: "maybe next time", ru: "может, в другой раз" }
@@ -1801,6 +1801,1134 @@ const COURSE = {
               { q: "Что принёс Том?", options: ["Большой торт", "Цветы", "Подарок"], answer: "Большой торт" },
               { q: "До какого времени длилась вечеринка?", options: ["До полуночи", "До утра", "До шести вечера"], answer: "До полуночи" },
               { q: "Как Кейт назвала этот день?", options: ["Лучший день рождения", "Скучный вечер", "Обычный день"], answer: "Лучший день рождения" }
+            ]
+          }
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "cond",
+      title: "Если бы...",
+      desc: "Условные предложения с if",
+      colors: ["#5b8cff", "#ff8f6b", "#3a62d6"],
+      icon: "cond",
+      lessons: [
+        {
+          id: "if-1", title: "Если пойдёт дождь",
+          words: [
+            { en: "if", ru: "если" },
+            { en: "unless", ru: "если не" },
+            { en: "stay at home", ru: "остаться дома" },
+            { en: "be late", ru: "опоздать" },
+            { en: "miss the bus", ru: "опоздать на автобус" },
+            { en: "hurry", ru: "спешить" }
+          ],
+          sentences: [
+            { en: "If it rains, I will stay at home", ru: "Если пойдёт дождь, я останусь дома" },
+            { en: "If you hurry, you will catch the bus", ru: "Если поспешишь, успеешь на автобус" },
+            { en: "We will be late unless we leave now", ru: "Мы опоздаем, если не выйдем сейчас" }
+          ],
+          gaps: [
+            { text: "If it ___ tomorrow, we will go to the beach.", options: ["is sunny", "will be sunny", "was sunny"], answer: "is sunny", ru: "Если завтра будет солнечно, мы пойдём на пляж." },
+            { text: "If you study, you ___ the exam.", options: ["pass", "will pass", "passed"], answer: "will pass", ru: "Если будешь заниматься, сдашь экзамен." }
+          ]
+        },
+        {
+          id: "if-2", title: "Если бы я был...",
+          words: [
+            { en: "would", ru: "бы" },
+            { en: "rich", ru: "богатый" },
+            { en: "if I were you", ru: "на твоём месте" },
+            { en: "lottery", ru: "лотерея" },
+            { en: "world", ru: "мир", pic: "world" },
+            { en: "fly", ru: "летать" }
+          ],
+          sentences: [
+            { en: "If I were rich, I would travel the world", ru: "Если бы я был богатым, я бы путешествовал по миру" },
+            { en: "If I were you, I would call her", ru: "На твоём месте я бы ей позвонил" },
+            { en: "What would you do if you won the lottery?", ru: "Что бы ты сделал, если бы выиграл в лотерею?" }
+          ],
+          gaps: [
+            { text: "If I ___ a bird, I would fly.", options: ["am", "were", "will be"], answer: "were", ru: "Если бы я был птицей, я бы летал." },
+            { text: "If she had time, she ___ learn Spanish.", options: ["will", "would", "is"], answer: "would", ru: "Если бы у неё было время, она бы учила испанский." }
+          ]
+        },
+        {
+          id: "if-3", title: "Мечты и советы",
+          words: [
+            { en: "wish", ru: "желать, жаль что" },
+            { en: "dream", ru: "мечта" },
+            { en: "advice", ru: "совет" },
+            { en: "choose", ru: "выбирать" },
+            { en: "chance", ru: "шанс" }
+          ],
+          sentences: [
+            { en: "I wish I had more time", ru: "Жаль, что у меня мало времени" },
+            { en: "If you need help, call me", ru: "Если нужна помощь, звони мне" },
+            { en: "I would choose the red one", ru: "Я бы выбрал красный" }
+          ],
+          story: {
+            en: "Mark often dreams about his future. If he had a lot of money, he would buy a small house by the sea. He would wake up early and swim every morning. But first he must finish university.",
+            ru: "Марк часто мечтает о будущем. Если бы у него было много денег, он купил бы маленький дом у моря. Он бы рано просыпался и плавал каждое утро. Но сначала ему нужно окончить университет.",
+            questions: [
+              { q: "Что бы купил Марк, если бы у него были деньги?", options: ["Дом у моря", "Машину", "Самолёт"], answer: "Дом у моря" },
+              { q: "Что он делал бы каждое утро?", options: ["Плавал", "Бегал", "Читал"], answer: "Плавал" },
+              { q: "Что Марку нужно сделать сначала?", options: ["Окончить университет", "Найти работу", "Выиграть в лотерею"], answer: "Окончить университет" }
+            ]
+          }
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "passive",
+      title: "Страдательный залог",
+      desc: "Сделано, построено, написано",
+      colors: ["#2ec4a6", "#8f7bff", "#16917a"],
+      icon: "passive",
+      lessons: [
+        {
+          id: "pas-1", title: "Это делается так",
+          words: [
+            { en: "is made", ru: "делается, сделан" },
+            { en: "is spoken", ru: "говорят (на языке)" },
+            { en: "is grown", ru: "выращивается" },
+            { en: "is sold", ru: "продаётся" },
+            { en: "glass", ru: "стекло", pic: "glass" },
+            { en: "coffee beans", ru: "кофейные зёрна" }
+          ],
+          sentences: [
+            { en: "Glass is made from sand", ru: "Стекло делают из песка" },
+            { en: "English is spoken all over the world", ru: "На английском говорят по всему миру" },
+            { en: "Coffee is grown in Brazil", ru: "Кофе выращивают в Бразилии" }
+          ],
+          gaps: [
+            { text: "Cheese is ___ from milk.", options: ["make", "made", "making"], answer: "made", ru: "Сыр делают из молока." },
+            { text: "These phones ___ in China.", options: ["is made", "are made", "made"], answer: "are made", ru: "Эти телефоны производят в Китае." }
+          ]
+        },
+        {
+          id: "pas-2", title: "Это было сделано",
+          words: [
+            { en: "was built", ru: "был построен" },
+            { en: "was written", ru: "был написан" },
+            { en: "was invented", ru: "был изобретён" },
+            { en: "was painted", ru: "был нарисован" },
+            { en: "century", ru: "век" },
+            { en: "bridge", ru: "мост", pic: "bridge" }
+          ],
+          sentences: [
+            { en: "This bridge was built in 1890", ru: "Этот мост построили в 1890 году" },
+            { en: "The book was written by a young girl", ru: "Книгу написала молодая девушка" },
+            { en: "The telephone was invented in the 19th century", ru: "Телефон изобрели в 19 веке" }
+          ],
+          gaps: [
+            { text: "The Mona Lisa ___ painted by Leonardo.", options: ["is", "was", "were"], answer: "was", ru: "Мону Лизу написал Леонардо." },
+            { text: "These houses were ___ last year.", options: ["build", "built", "building"], answer: "built", ru: "Эти дома построили в прошлом году." }
+          ]
+        },
+        {
+          id: "pas-3", title: "Это будет сделано",
+          words: [
+            { en: "will be done", ru: "будет сделано" },
+            { en: "has been sent", ru: "было отправлено" },
+            { en: "delivered", ru: "доставлен" },
+            { en: "repaired", ru: "отремонтирован" },
+            { en: "package", ru: "посылка", pic: "package" },
+            { en: "invited", ru: "приглашён" }
+          ],
+          sentences: [
+            { en: "Your package will be delivered tomorrow", ru: "Ваша посылка будет доставлена завтра" },
+            { en: "The car has been repaired", ru: "Машину отремонтировали" },
+            { en: "All my friends were invited", ru: "Все мои друзья были приглашены" }
+          ],
+          gaps: [
+            { text: "The work will ___ done by Friday.", options: ["be", "is", "been"], answer: "be", ru: "Работа будет сделана к пятнице." },
+            { text: "The letter has been ___.", options: ["send", "sent", "sending"], answer: "sent", ru: "Письмо отправлено." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "reported",
+      title: "Он сказал, что...",
+      desc: "Косвенная речь",
+      colors: ["#ff7ac8", "#5b8cff", "#c94a96"],
+      icon: "reported",
+      lessons: [
+        {
+          id: "rep-1", title: "Said и told",
+          words: [
+            { en: "said", ru: "сказал" },
+            { en: "told", ru: "сказал (кому-то)" },
+            { en: "that", ru: "что (союз)" },
+            { en: "tired", ru: "уставший" },
+            { en: "hungry", ru: "голодный" },
+            { en: "true", ru: "правда, верный" }
+          ],
+          sentences: [
+            { en: "She said that she was tired", ru: "Она сказала, что устала" },
+            { en: "He told me that he was hungry", ru: "Он сказал мне, что голоден" },
+            { en: "They said it was true", ru: "Они сказали, что это правда" }
+          ],
+          gaps: [
+            { text: "Tom ___ me that he liked jazz.", options: ["said", "told", "say"], answer: "told", ru: "Том сказал мне, что любит джаз." },
+            { text: "She said that she ___ busy.", options: ["is", "was", "be"], answer: "was", ru: "Она сказала, что занята." }
+          ]
+        },
+        {
+          id: "rep-2", title: "Он спросил, ...",
+          words: [
+            { en: "asked", ru: "спросил" },
+            { en: "if", ru: "ли" },
+            { en: "whether", ru: "ли (официально)" },
+            { en: "wanted", ru: "хотел" },
+            { en: "knew", ru: "знал" }
+          ],
+          sentences: [
+            { en: "She asked if I was hungry", ru: "Она спросила, голоден ли я" },
+            { en: "He asked where I lived", ru: "Он спросил, где я живу" },
+            { en: "They asked what I wanted", ru: "Они спросили, чего я хочу" }
+          ],
+          gaps: [
+            { text: "He asked ___ I liked coffee.", options: ["if", "that", "what if"], answer: "if", ru: "Он спросил, люблю ли я кофе." },
+            { text: "She asked where I ___.", options: ["live", "lived", "do live"], answer: "lived", ru: "Она спросила, где я живу." }
+          ]
+        },
+        {
+          id: "rep-3", title: "Просьбы и обещания",
+          words: [
+            { en: "asked me to", ru: "попросил меня" },
+            { en: "promised", ru: "пообещал" },
+            { en: "would", ru: "что будет (в косвенной речи)" },
+            { en: "call", ru: "позвонить", pic: "call" },
+            { en: "help", ru: "помогать" }
+          ],
+          sentences: [
+            { en: "She asked me to help her", ru: "Она попросила меня помочь ей" },
+            { en: "He promised that he would call", ru: "Он пообещал, что позвонит" },
+            { en: "My boss told me to come early", ru: "Начальник велел мне прийти пораньше" }
+          ],
+          gaps: [
+            { text: "Mom asked me ___ clean my room.", options: ["to", "that", "for"], answer: "to", ru: "Мама попросила меня убрать комнату." },
+            { text: "He said he ___ come tomorrow.", options: ["will", "would", "is"], answer: "would", ru: "Он сказал, что придёт завтра." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "phrasal",
+      title: "Фразовые глаголы",
+      desc: "get up, look for, give up",
+      colors: ["#ffb547", "#2ec4a6", "#d99a0b"],
+      icon: "phrasal",
+      lessons: [
+        {
+          id: "phr-1", title: "Каждый день",
+          words: [
+            { en: "get up", ru: "вставать" },
+            { en: "wake up", ru: "просыпаться" },
+            { en: "turn on", ru: "включать" },
+            { en: "turn off", ru: "выключать" },
+            { en: "put on", ru: "надевать" },
+            { en: "go out", ru: "выходить (из дома)" }
+          ],
+          sentences: [
+            { en: "I get up at seven", ru: "Я встаю в семь" },
+            { en: "Turn off the light, please", ru: "Выключи свет, пожалуйста" },
+            { en: "We go out on Friday evening", ru: "В пятницу вечером мы идём гулять" }
+          ],
+          gaps: [
+            { text: "Please turn ___ the TV, I want to sleep.", options: ["off", "on", "up"], answer: "off", ru: "Выключи, пожалуйста, телевизор, я хочу спать." },
+            { text: "I usually wake ___ at six.", options: ["up", "on", "out"], answer: "up", ru: "Я обычно просыпаюсь в шесть." }
+          ]
+        },
+        {
+          id: "phr-2", title: "Поиск и находки",
+          words: [
+            { en: "look for", ru: "искать" },
+            { en: "find out", ru: "узнавать, выяснять" },
+            { en: "look after", ru: "присматривать" },
+            { en: "pick up", ru: "подобрать, забрать" },
+            { en: "come back", ru: "возвращаться" },
+            { en: "give back", ru: "возвращать (вещь)" }
+          ],
+          sentences: [
+            { en: "I am looking for my keys", ru: "Я ищу свои ключи" },
+            { en: "Can you pick me up at six?", ru: "Можешь забрать меня в шесть?" },
+            { en: "She looks after her little brother", ru: "Она присматривает за младшим братом" }
+          ],
+          gaps: [
+            { text: "I need to find ___ what time the train leaves.", options: ["out", "up", "on"], answer: "out", ru: "Мне нужно выяснить, во сколько уходит поезд." },
+            { text: "Please give ___ my book tomorrow.", options: ["back", "up", "off"], answer: "back", ru: "Пожалуйста, верни мою книгу завтра." }
+          ]
+        },
+        {
+          id: "phr-3", title: "Не сдавайся",
+          words: [
+            { en: "give up", ru: "сдаваться, бросать" },
+            { en: "carry on", ru: "продолжать" },
+            { en: "work out", ru: "тренироваться; разобраться" },
+            { en: "run out of", ru: "закончиться (о запасах)" },
+            { en: "get on with", ru: "ладить с" },
+            { en: "set up", ru: "основать, настроить" }
+          ],
+          sentences: [
+            { en: "Never give up", ru: "Никогда не сдавайся" },
+            { en: "We have run out of milk", ru: "У нас закончилось молоко" },
+            { en: "I get on well with my sister", ru: "Я хорошо лажу с сестрой" }
+          ],
+          gaps: [
+            { text: "Don't give ___! You can do it.", options: ["up", "out", "off"], answer: "up", ru: "Не сдавайся! У тебя получится." },
+            { text: "Carry ___, you are doing great.", options: ["on", "up", "out"], answer: "on", ru: "Продолжай, у тебя отлично получается." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "career",
+      title: "Работа и карьера",
+      desc: "Резюме, собеседование, офис",
+      colors: ["#3a62d6", "#2ec4a6", "#283f99"],
+      icon: "career",
+      lessons: [
+        {
+          id: "car-1", title: "Поиск работы",
+          words: [
+            { en: "CV", ru: "резюме", alt: ["resume"] },
+            { en: "apply for", ru: "подавать заявку на" },
+            { en: "salary", ru: "зарплата", pic: "money" },
+            { en: "experience", ru: "опыт" },
+            { en: "skills", ru: "навыки" },
+            { en: "company", ru: "компания", pic: "company" }
+          ],
+          sentences: [
+            { en: "I want to apply for this job", ru: "Я хочу откликнуться на эту вакансию" },
+            { en: "I have three years of experience", ru: "У меня три года опыта" },
+            { en: "What is the salary?", ru: "Какая зарплата?" }
+          ]
+        },
+        {
+          id: "car-2", title: "Собеседование",
+          words: [
+            { en: "interview", ru: "собеседование" },
+            { en: "strengths", ru: "сильные стороны" },
+            { en: "team", ru: "команда" },
+            { en: "responsible", ru: "ответственный" },
+            { en: "goal", ru: "цель" },
+            { en: "hire", ru: "нанимать" }
+          ],
+          sentences: [
+            { en: "Tell me about yourself", ru: "Расскажите о себе" },
+            { en: "I work well in a team", ru: "Я хорошо работаю в команде" },
+            { en: "Why do you want this job?", ru: "Почему вы хотите эту работу?" }
+          ],
+          dialogs: [
+            {
+              title: "Собеседование",
+              lines: [
+                { who: "Менеджер", en: "Good morning! Please, tell me about yourself.", ru: "Доброе утро! Расскажите о себе." },
+                { me: true, en: "I am a designer with three years of experience.", ru: "Я дизайнер с трёхлетним опытом.", wrong: ["I am three years and a designer.", "Good morning, tell me about you."] },
+                { who: "Менеджер", en: "What are your strengths?", ru: "Какие у вас сильные стороны?" },
+                { me: true, en: "I am responsible and I work well in a team.", ru: "Я ответственный и хорошо работаю в команде.", wrong: ["My strengths are very salary.", "I am a strong team of coffee."] },
+                { who: "Менеджер", en: "Why do you want to work for our company?", ru: "Почему вы хотите работать в нашей компании?" },
+                { me: true, en: "Because I want to grow and learn new skills.", ru: "Потому что хочу расти и учиться новому.", wrong: ["Because your office is a company.", "I want to hire my goals."] }
+              ]
+            }
+          ]
+        },
+        {
+          id: "car-3", title: "В офисе",
+          words: [
+            { en: "meeting", ru: "встреча, совещание" },
+            { en: "deadline", ru: "срок сдачи", pic: "deadline" },
+            { en: "colleague", ru: "коллега" },
+            { en: "email", ru: "электронное письмо", pic: "email" },
+            { en: "report", ru: "отчёт", pic: "report" },
+            { en: "schedule", ru: "расписание", pic: "schedule" }
+          ],
+          sentences: [
+            { en: "The meeting starts at ten", ru: "Совещание начинается в десять" },
+            { en: "I will send you an email", ru: "Я отправлю вам письмо" },
+            { en: "The deadline is on Friday", ru: "Срок сдачи в пятницу" }
+          ],
+          story: {
+            en: "Lisa started a new job last month. Her colleagues are friendly and her boss is fair. Every Monday they have a team meeting. Lisa likes her job, but sometimes the deadlines are very tight.",
+            ru: "Лиза начала работать на новом месте в прошлом месяце. Коллеги дружелюбные, а начальник справедливый. Каждый понедельник у них совещание команды. Лизе нравится работа, но иногда сроки очень сжатые.",
+            questions: [
+              { q: "Когда Лиза начала новую работу?", options: ["В прошлом месяце", "Вчера", "Год назад"], answer: "В прошлом месяце" },
+              { q: "Когда у команды совещание?", options: ["Каждый понедельник", "Каждую пятницу", "Раз в месяц"], answer: "Каждый понедельник" },
+              { q: "Что иногда трудно для Лизы?", options: ["Сжатые сроки", "Коллеги", "Начальник"], answer: "Сжатые сроки" }
+            ]
+          }
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "narrative",
+      title: "Истории о прошлом",
+      desc: "Past Perfect и used to",
+      colors: ["#8f7bff", "#ff6b4a", "#6a55e0"],
+      icon: "narrative",
+      lessons: [
+        {
+          id: "nar-1", title: "Уже успел: Past Perfect",
+          words: [
+            { en: "had left", ru: "уже ушёл (к тому моменту)" },
+            { en: "had finished", ru: "уже закончил" },
+            { en: "by the time", ru: "к тому времени как" },
+            { en: "before", ru: "до того как" },
+            { en: "arrived", ru: "прибыл" },
+            { en: "realised", ru: "понял, осознал", alt: ["realized"] }
+          ],
+          sentences: [
+            { en: "When I arrived, the train had left", ru: "Когда я приехал, поезд уже ушёл" },
+            { en: "She had finished her work before lunch", ru: "Она закончила работу до обеда" },
+            { en: "By the time we got there, the film had started", ru: "К тому времени, как мы пришли, фильм уже начался" }
+          ],
+          gaps: [
+            { text: "When we arrived, the party ___ already ended.", options: ["has", "had", "was"], answer: "had", ru: "Когда мы пришли, вечеринка уже закончилась." },
+            { text: "I realised I ___ my keys at home.", options: ["had left", "have left", "leave"], answer: "had left", ru: "Я понял, что оставил ключи дома." }
+          ]
+        },
+        {
+          id: "nar-2", title: "Раньше я: used to",
+          words: [
+            { en: "used to", ru: "раньше (бывало)" },
+            { en: "didn't use to", ru: "раньше не", alt: ["did not use to"] },
+            { en: "childhood", ru: "детство" },
+            { en: "village", ru: "деревня", pic: "village" },
+            { en: "be used to", ru: "привыкнуть, быть привычным" },
+            { en: "get used to", ru: "привыкать" }
+          ],
+          sentences: [
+            { en: "I used to live in a small village", ru: "Раньше я жил в маленькой деревне" },
+            { en: "She didn't use to like coffee", ru: "Раньше она не любила кофе" },
+            { en: "I am used to getting up early", ru: "Я привык рано вставать" }
+          ],
+          gaps: [
+            { text: "When I was a child, I ___ to play outside every day.", options: ["used", "use", "was used"], answer: "used", ru: "В детстве я каждый день играл на улице." },
+            { text: "It took me a month to get used to ___ on the left.", options: ["drive", "driving", "drove"], answer: "driving", ru: "Мне понадобился месяц, чтобы привыкнуть к левостороннему движению." }
+          ]
+        },
+        {
+          id: "nar-3", title: "Рассказываем историю",
+          words: [
+            { en: "at first", ru: "сначала" },
+            { en: "eventually", ru: "в конце концов" },
+            { en: "meanwhile", ru: "тем временем" },
+            { en: "afterwards", ru: "впоследствии, потом" },
+            { en: "unexpectedly", ru: "неожиданно" },
+            { en: "in the end", ru: "в итоге" }
+          ],
+          sentences: [
+            { en: "At first I was nervous, but eventually I relaxed", ru: "Сначала я нервничал, но в конце концов расслабился" },
+            { en: "Meanwhile, my friends were waiting outside", ru: "Тем временем мои друзья ждали на улице" },
+            { en: "In the end, everything was fine", ru: "В итоге всё было хорошо" }
+          ],
+          story: {
+            en: "Last summer I went hiking in the mountains. At first the weather was perfect. Unexpectedly, it started to snow and we got lost. Eventually, a local farmer found us and took us to his house. In the end, it was the best trip I had ever had.",
+            ru: "Прошлым летом я пошёл в поход в горы. Сначала погода была отличной. Неожиданно пошёл снег, и мы заблудились. В конце концов нас нашёл местный фермер и отвёл к себе домой. В итоге это было лучшее путешествие в моей жизни.",
+            questions: [
+              { q: "Что неожиданно произошло?", options: ["Пошёл снег", "Начался дождь", "Сломалась машина"], answer: "Пошёл снег" },
+              { q: "Кто помог путешественникам?", options: ["Местный фермер", "Спасатели", "Другие туристы"], answer: "Местный фермер" },
+              { q: "Как автор оценивает поездку?", options: ["Лучшая поездка", "Ужасная поездка", "Скучная поездка"], answer: "Лучшая поездка" }
+            ]
+          }
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "deduction",
+      title: "Догадки и вероятность",
+      desc: "must be, might, can't be",
+      colors: ["#2ec4a6", "#ffb547", "#16917a"],
+      icon: "deduction",
+      lessons: [
+        {
+          id: "ded-1", title: "Наверное и вряд ли",
+          words: [
+            { en: "must be", ru: "наверняка (является)" },
+            { en: "might be", ru: "возможно (является)" },
+            { en: "can't be", ru: "не может быть" },
+            { en: "probably", ru: "вероятно" },
+            { en: "certainly", ru: "безусловно" },
+            { en: "perhaps", ru: "возможно" }
+          ],
+          sentences: [
+            { en: "He must be at work", ru: "Он, должно быть, на работе" },
+            { en: "She might be ill", ru: "Возможно, она заболела" },
+            { en: "That can't be true", ru: "Не может быть, чтобы это было правдой" }
+          ],
+          gaps: [
+            { text: "The lights are on. They ___ be at home.", options: ["must", "can't", "mustn't"], answer: "must", ru: "Свет горит. Они, должно быть, дома." },
+            { text: "He has just eaten. He ___ be hungry.", options: ["must", "can't", "might"], answer: "can't", ru: "Он только что поел. Не может быть, что он голоден." }
+          ]
+        },
+        {
+          id: "ded-2", title: "Догадки о прошлом",
+          words: [
+            { en: "must have", ru: "наверняка (сделал)" },
+            { en: "might have", ru: "возможно (сделал)" },
+            { en: "can't have", ru: "не мог (сделать)" },
+            { en: "should have", ru: "следовало бы (сделать)" },
+            { en: "forgotten", ru: "забыл (3-я форма)" },
+            { en: "missed", ru: "пропустил, опоздал" }
+          ],
+          sentences: [
+            { en: "She must have forgotten", ru: "Она, должно быть, забыла" },
+            { en: "They might have missed the train", ru: "Возможно, они опоздали на поезд" },
+            { en: "You should have told me", ru: "Тебе следовало мне сказать" }
+          ],
+          gaps: [
+            { text: "The ground is wet. It must ___ rained.", options: ["have", "has", "had"], answer: "have", ru: "Земля мокрая. Должно быть, шёл дождь." },
+            { text: "He can't have ___ it, he was with me all day.", options: ["do", "did", "done"], answer: "done", ru: "Он не мог этого сделать, он весь день был со мной." }
+          ]
+        },
+        {
+          id: "ded-3", title: "Говорим осторожно",
+          words: [
+            { en: "it seems", ru: "кажется" },
+            { en: "apparently", ru: "по-видимому" },
+            { en: "it is likely", ru: "вероятно" },
+            { en: "it is unlikely", ru: "маловероятно" },
+            { en: "no doubt", ru: "без сомнения" },
+            { en: "I suppose", ru: "полагаю" }
+          ],
+          sentences: [
+            { en: "It seems that he is right", ru: "Кажется, он прав" },
+            { en: "It is unlikely to rain today", ru: "Сегодня вряд ли будет дождь" },
+            { en: "Apparently, the shop is closed", ru: "По-видимому, магазин закрыт" }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "relative",
+      title: "Который, где, чей",
+      desc: "Придаточные предложения",
+      colors: ["#5b8cff", "#2ec4a6", "#3a62d6"],
+      icon: "relative",
+      lessons: [
+        {
+          id: "rel-1", title: "Who, which, that",
+          words: [
+            { en: "who", ru: "который (о людях)" },
+            { en: "which", ru: "который (о предметах)" },
+            { en: "that", ru: "который (обо всём)" },
+            { en: "neighbour", ru: "сосед", alt: ["neighbor"] },
+            { en: "recommend", ru: "рекомендовать" }
+          ],
+          sentences: [
+            { en: "The woman who lives next door is a doctor", ru: "Женщина, которая живёт по соседству, врач" },
+            { en: "This is the book which I recommended", ru: "Это книга, которую я советовал" },
+            { en: "I like films that make me laugh", ru: "Мне нравятся фильмы, которые меня смешат" }
+          ],
+          gaps: [
+            { text: "The man ___ called you is my uncle.", options: ["who", "which", "where"], answer: "who", ru: "Мужчина, который тебе звонил, мой дядя." },
+            { text: "The car ___ I bought is red.", options: ["who", "which", "whose"], answer: "which", ru: "Машина, которую я купил, красная." }
+          ]
+        },
+        {
+          id: "rel-2", title: "Where, whose, when",
+          words: [
+            { en: "where", ru: "где (в котором)" },
+            { en: "whose", ru: "чей" },
+            { en: "when", ru: "когда (в который)" },
+            { en: "grew up", ru: "вырос" },
+            { en: "owner", ru: "владелец" }
+          ],
+          sentences: [
+            { en: "This is the town where I grew up", ru: "Это город, где я вырос" },
+            { en: "That is the girl whose dog bit me", ru: "Это та девушка, чья собака меня укусила" },
+            { en: "I remember the day when we met", ru: "Я помню день, когда мы познакомились" }
+          ],
+          gaps: [
+            { text: "The hotel ___ we stayed was great.", options: ["which", "where", "who"], answer: "where", ru: "Отель, где мы жили, был отличный." },
+            { text: "He is the man ___ car was stolen.", options: ["who", "whose", "which"], answer: "whose", ru: "Это тот мужчина, у которого угнали машину." }
+          ]
+        },
+        {
+          id: "rel-3", title: "Дополнительная информация",
+          words: [
+            { en: "which is", ru: "который является" },
+            { en: "capital", ru: "столица" },
+            { en: "famous", ru: "известный" },
+            { en: "population", ru: "население" },
+            { en: "located", ru: "расположенный" }
+          ],
+          sentences: [
+            { en: "Paris, which is the capital of France, is beautiful", ru: "Париж, который является столицей Франции, прекрасен" },
+            { en: "My brother, who lives in Canada, is a pilot", ru: "Мой брат, который живёт в Канаде, пилот" }
+          ],
+          gaps: [
+            { text: "London, ___ has a population of 9 million, is huge.", options: ["that", "which", "where"], answer: "which", ru: "Лондон, где живёт 9 миллионов человек, огромный." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "gerund",
+      title: "Doing или to do?",
+      desc: "Герундий и инфинитив",
+      colors: ["#ff8f6b", "#8f7bff", "#d96a3a"],
+      icon: "gerund",
+      lessons: [
+        {
+          id: "ger-1", title: "Глаголы + -ing",
+          words: [
+            { en: "enjoy", ru: "наслаждаться, любить" },
+            { en: "avoid", ru: "избегать" },
+            { en: "mind", ru: "возражать" },
+            { en: "finish", ru: "заканчивать" },
+            { en: "suggest", ru: "предлагать" },
+            { en: "keep", ru: "продолжать (постоянно)" }
+          ],
+          sentences: [
+            { en: "I enjoy reading in the evening", ru: "Я люблю читать по вечерам" },
+            { en: "Do you mind opening the window?", ru: "Ты не против открыть окно?" },
+            { en: "She suggested going to the cinema", ru: "Она предложила пойти в кино" }
+          ],
+          gaps: [
+            { text: "He avoids ___ fast food.", options: ["eat", "eating", "to eat"], answer: "eating", ru: "Он избегает фастфуда." },
+            { text: "I finished ___ the report.", options: ["write", "writing", "to write"], answer: "writing", ru: "Я закончил писать отчёт." }
+          ]
+        },
+        {
+          id: "ger-2", title: "Глаголы + to",
+          words: [
+            { en: "decide", ru: "решать" },
+            { en: "hope", ru: "надеяться" },
+            { en: "plan", ru: "планировать" },
+            { en: "refuse", ru: "отказываться" },
+            { en: "afford", ru: "позволить себе" },
+            { en: "manage", ru: "суметь, справиться" }
+          ],
+          sentences: [
+            { en: "We decided to stay at home", ru: "Мы решили остаться дома" },
+            { en: "I can't afford to buy a new car", ru: "Я не могу позволить себе новую машину" },
+            { en: "She managed to finish on time", ru: "Ей удалось закончить вовремя" }
+          ],
+          gaps: [
+            { text: "They refused ___ the bill.", options: ["pay", "paying", "to pay"], answer: "to pay", ru: "Они отказались платить по счёту." },
+            { text: "I hope ___ you soon.", options: ["see", "seeing", "to see"], answer: "to see", ru: "Надеюсь скоро тебя увидеть." }
+          ]
+        },
+        {
+          id: "ger-3", title: "Меняется смысл",
+          words: [
+            { en: "remember", ru: "помнить" },
+            { en: "forget", ru: "забывать" },
+            { en: "stop", ru: "прекращать, останавливаться" },
+            { en: "try", ru: "пытаться, пробовать" },
+            { en: "regret", ru: "сожалеть" }
+          ],
+          sentences: [
+            { en: "Remember to lock the door", ru: "Не забудь запереть дверь" },
+            { en: "I remember locking the door", ru: "Я помню, что запер дверь" },
+            { en: "He stopped smoking last year", ru: "Он бросил курить в прошлом году" }
+          ],
+          gaps: [
+            { text: "Don't forget ___ milk on your way home.", options: ["buying", "to buy", "buy"], answer: "to buy", ru: "Не забудь купить молоко по дороге домой." },
+            { text: "We stopped ___ a coffee on the way.", options: ["having", "to have", "have"], answer: "to have", ru: "Мы остановились по дороге выпить кофе." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "society",
+      title: "Общество и природа",
+      desc: "Обсуждаем серьёзные темы",
+      colors: ["#2ec4a6", "#5b8cff", "#16917a"],
+      icon: "society",
+      lessons: [
+        {
+          id: "soc-1", title: "Экология",
+          words: [
+            { en: "environment", ru: "окружающая среда", pic: "environment" },
+            { en: "pollution", ru: "загрязнение", pic: "pollution" },
+            { en: "climate change", ru: "изменение климата" },
+            { en: "recycle", ru: "перерабатывать", pic: "recycle" },
+            { en: "waste", ru: "отходы; тратить впустую" },
+            { en: "renewable energy", ru: "возобновляемая энергия" }
+          ],
+          sentences: [
+            { en: "We should recycle more plastic", ru: "Нам следует больше перерабатывать пластик" },
+            { en: "Air pollution is a serious problem", ru: "Загрязнение воздуха - серьёзная проблема" },
+            { en: "Climate change affects everyone", ru: "Изменение климата влияет на всех" }
+          ]
+        },
+        {
+          id: "soc-2", title: "Технологии",
+          words: [
+            { en: "device", ru: "устройство", pic: "device" },
+            { en: "artificial intelligence", ru: "искусственный интеллект" },
+            { en: "privacy", ru: "конфиденциальность", pic: "privacy" },
+            { en: "addicted to", ru: "зависимый от" },
+            { en: "screen time", ru: "время у экрана", pic: "device" },
+            { en: "benefit", ru: "польза" }
+          ],
+          sentences: [
+            { en: "Many teenagers are addicted to their phones", ru: "Многие подростки зависимы от телефонов" },
+            { en: "Artificial intelligence is changing our lives", ru: "Искусственный интеллект меняет нашу жизнь" },
+            { en: "Online privacy is very important", ru: "Конфиденциальность в интернете очень важна" }
+          ]
+        },
+        {
+          id: "soc-3", title: "Своё мнение",
+          words: [
+            { en: "in my opinion", ru: "по моему мнению" },
+            { en: "I strongly believe", ru: "я твёрдо уверен" },
+            { en: "on the other hand", ru: "с другой стороны" },
+            { en: "I agree", ru: "я согласен" },
+            { en: "I disagree", ru: "я не согласен" },
+            { en: "it depends", ru: "смотря как, зависит от" }
+          ],
+          sentences: [
+            { en: "In my opinion, cities should have more parks", ru: "По-моему, в городах должно быть больше парков" },
+            { en: "On the other hand, it is very expensive", ru: "С другой стороны, это очень дорого" },
+            { en: "I see your point, but I disagree", ru: "Я понимаю твою мысль, но не согласен" }
+          ],
+          dialogs: [
+            {
+              title: "Спор о технологиях",
+              lines: [
+                { who: "Анна", en: "I think phones make people less social.", ru: "Мне кажется, телефоны делают людей менее общительными." },
+                { me: true, en: "I see your point, but they also help us stay in touch.", ru: "Понимаю твою мысль, но они также помогают нам общаться.", wrong: ["I see your phone, but it is social.", "Yes, the point is a phone."] },
+                { who: "Анна", en: "That's true. But many teenagers are addicted to them.", ru: "Это правда. Но многие подростки от них зависимы." },
+                { me: true, en: "I agree. Parents should limit screen time.", ru: "Согласен. Родителям стоит ограничивать время у экрана.", wrong: ["I agree. Screens should limit parents.", "No, teenagers are a screen."] }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "regrets",
+      title: "Если бы тогда...",
+      desc: "Третий и смешанный тип условных",
+      colors: ["#6a55e0", "#ff6b81", "#4b3aa8"],
+      icon: "regrets",
+      lessons: [
+        {
+          id: "reg-1", title: "Если бы я тогда...",
+          words: [
+            { en: "would have", ru: "бы (о прошлом)" },
+            { en: "if I had known", ru: "если бы я знал" },
+            { en: "would have come", ru: "пришёл бы" },
+            { en: "earlier", ru: "раньше" },
+            { en: "on time", ru: "вовремя" }
+          ],
+          sentences: [
+            { en: "If I had known, I would have come earlier", ru: "Если бы я знал, я бы пришёл раньше" },
+            { en: "If we had left on time, we wouldn't have missed the flight", ru: "Если бы мы вышли вовремя, мы бы не опоздали на рейс" },
+            { en: "She would have passed if she had studied", ru: "Она бы сдала, если бы готовилась" }
+          ],
+          gaps: [
+            { text: "If you had asked me, I ___ have helped.", options: ["will", "would", "had"], answer: "would", ru: "Если бы ты попросил, я бы помог." },
+            { text: "If they ___ the map, they wouldn't have got lost.", options: ["had taken", "took", "would take"], answer: "had taken", ru: "Если бы они взяли карту, они бы не заблудились." }
+          ]
+        },
+        {
+          id: "reg-2", title: "Сожаления",
+          words: [
+            { en: "I wish I had", ru: "жаль, что я не (в прошлом)" },
+            { en: "if only", ru: "если бы только" },
+            { en: "regret", ru: "сожалеть" },
+            { en: "opportunity", ru: "возможность" },
+            { en: "take advantage of", ru: "воспользоваться" }
+          ],
+          sentences: [
+            { en: "I wish I had studied harder at school", ru: "Жаль, что я плохо учился в школе" },
+            { en: "If only I had listened to you", ru: "Если бы только я тебя послушал" },
+            { en: "I regret not taking that opportunity", ru: "Жалею, что не воспользовался той возможностью" }
+          ],
+          gaps: [
+            { text: "I wish I ___ that email.", options: ["didn't send", "hadn't sent", "wouldn't send"], answer: "hadn't sent", ru: "Жаль, что я отправил то письмо." }
+          ]
+        },
+        {
+          id: "reg-3", title: "Смешанные условия",
+          words: [
+            { en: "now", ru: "сейчас" },
+            { en: "career", ru: "карьера" },
+            { en: "abroad", ru: "за границей", pic: "world" },
+            { en: "fluent", ru: "свободно говорящий" },
+            { en: "different", ru: "другой, иной" }
+          ],
+          sentences: [
+            { en: "If I had taken that job, I would be rich now", ru: "Если бы я тогда взял ту работу, я бы сейчас был богат" },
+            { en: "If she had lived abroad, she would be fluent now", ru: "Если бы она пожила за границей, сейчас говорила бы свободно" },
+            { en: "My life would be different if I hadn't met you", ru: "Моя жизнь была бы другой, если бы я не встретил тебя" }
+          ],
+          gaps: [
+            { text: "If I had saved money, I ___ a car now.", options: ["would have", "would have had", "will have"], answer: "would have", ru: "Если бы я копил деньги, у меня бы сейчас была машина." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "emphasis",
+      title: "Акценты и инверсия",
+      desc: "Never have I... Not only... but also",
+      colors: ["#ffb547", "#ff6b4a", "#d99a0b"],
+      icon: "emphasis",
+      lessons: [
+        {
+          id: "emp-1", title: "Инверсия",
+          words: [
+            { en: "never have I", ru: "никогда я не" },
+            { en: "rarely", ru: "редко" },
+            { en: "not only", ru: "не только" },
+            { en: "hardly", ru: "едва" },
+            { en: "under no circumstances", ru: "ни при каких обстоятельствах" }
+          ],
+          sentences: [
+            { en: "Never have I seen such a beautiful sunset", ru: "Никогда я не видел такого красивого заката" },
+            { en: "Not only is he smart, but he is also kind", ru: "Он не только умный, но и добрый" },
+            { en: "Under no circumstances should you open this door", ru: "Ни при каких обстоятельствах не открывайте эту дверь" }
+          ],
+          gaps: [
+            { text: "Rarely ___ such talent.", options: ["we see", "do we see", "we do see"], answer: "do we see", ru: "Редко встретишь такой талант." },
+            { text: "Hardly ___ I arrived when it started raining.", options: ["had", "have", "did"], answer: "had", ru: "Едва я пришёл, как начался дождь." }
+          ]
+        },
+        {
+          id: "emp-2", title: "Выделяем главное",
+          words: [
+            { en: "what I need is", ru: "что мне нужно, так это" },
+            { en: "it was ... that", ru: "именно ... (выделение)" },
+            { en: "the thing is", ru: "дело в том, что" },
+            { en: "do like", ru: "действительно нравится" },
+            { en: "indeed", ru: "действительно" }
+          ],
+          sentences: [
+            { en: "What I need is a long holiday", ru: "Что мне нужно, так это долгий отпуск" },
+            { en: "It was Tom who broke the window", ru: "Именно Том разбил окно" },
+            { en: "I do like your new haircut", ru: "Мне правда нравится твоя новая стрижка" }
+          ]
+        },
+        {
+          id: "emp-3", title: "Связки текста",
+          words: [
+            { en: "although", ru: "хотя" },
+            { en: "despite", ru: "несмотря на" },
+            { en: "however", ru: "однако" },
+            { en: "whereas", ru: "тогда как" },
+            { en: "therefore", ru: "следовательно" },
+            { en: "moreover", ru: "более того" }
+          ],
+          sentences: [
+            { en: "Although it was raining, we went for a walk", ru: "Хотя шёл дождь, мы пошли гулять" },
+            { en: "Despite the rain, we went for a walk", ru: "Несмотря на дождь, мы пошли гулять" },
+            { en: "The plan is risky. However, it might work", ru: "План рискованный. Однако он может сработать" }
+          ],
+          gaps: [
+            { text: "___ being tired, she kept working.", options: ["Although", "Despite", "However"], answer: "Despite", ru: "Несмотря на усталость, она продолжала работать." },
+            { text: "I like tea, ___ my sister prefers coffee.", options: ["whereas", "despite", "therefore"], answer: "whereas", ru: "Я люблю чай, тогда как сестра предпочитает кофе." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "idioms",
+      title: "Идиомы и устойчивые выражения",
+      desc: "Говорим как носители",
+      colors: ["#ff7ac8", "#ffb547", "#c94a96"],
+      icon: "idioms",
+      lessons: [
+        {
+          id: "idi-1", title: "Повседневные идиомы",
+          words: [
+            { en: "a piece of cake", ru: "проще простого" },
+            { en: "break the ice", ru: "растопить лёд (начать общение)" },
+            { en: "under the weather", ru: "неважно себя чувствовать" },
+            { en: "cost an arm and a leg", ru: "стоить целое состояние" },
+            { en: "hit the sack", ru: "лечь спать" },
+            { en: "once in a blue moon", ru: "очень редко" }
+          ],
+          sentences: [
+            { en: "The exam was a piece of cake", ru: "Экзамен был проще простого" },
+            { en: "I'm feeling a bit under the weather", ru: "Я себя неважно чувствую" },
+            { en: "That car cost an arm and a leg", ru: "Эта машина стоила целое состояние" }
+          ]
+        },
+        {
+          id: "idi-2", title: "Работа и учёба",
+          words: [
+            { en: "get the hang of", ru: "наловчиться" },
+            { en: "on the same page", ru: "на одной волне" },
+            { en: "think outside the box", ru: "мыслить нестандартно" },
+            { en: "cut corners", ru: "халтурить, срезать углы" },
+            { en: "the ball is in your court", ru: "теперь твоя очередь решать" },
+            { en: "learn by heart", ru: "выучить наизусть" }
+          ],
+          sentences: [
+            { en: "You'll soon get the hang of it", ru: "Ты скоро наловчишься" },
+            { en: "Let's make sure we're on the same page", ru: "Давай убедимся, что мы понимаем друг друга" },
+            { en: "We need to think outside the box", ru: "Нам нужно мыслить нестандартно" }
+          ]
+        },
+        {
+          id: "idi-3", title: "Устойчивые сочетания",
+          words: [
+            { en: "make a decision", ru: "принять решение" },
+            { en: "do your best", ru: "постараться изо всех сил" },
+            { en: "take a risk", ru: "рискнуть" },
+            { en: "pay attention", ru: "обращать внимание" },
+            { en: "keep in touch", ru: "поддерживать связь" },
+            { en: "catch a cold", ru: "простудиться" }
+          ],
+          sentences: [
+            { en: "It's time to make a decision", ru: "Пора принять решение" },
+            { en: "Please pay attention to the details", ru: "Пожалуйста, обратите внимание на детали" },
+            { en: "Let's keep in touch", ru: "Давай не теряться" }
+          ],
+          gaps: [
+            { text: "I need to ___ a decision today.", options: ["make", "do", "take"], answer: "make", ru: "Мне нужно принять решение сегодня." },
+            { text: "Just ___ your best!", options: ["make", "do", "give"], answer: "do", ru: "Просто постарайся изо всех сил!" }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "formal",
+      title: "Деловой английский",
+      desc: "Письма, встречи, переговоры",
+      colors: ["#3a62d6", "#8f7bff", "#283f99"],
+      icon: "formal",
+      lessons: [
+        {
+          id: "frm-1", title: "Деловое письмо",
+          words: [
+            { en: "Dear Sir or Madam", ru: "Уважаемые господа" },
+            { en: "I am writing to", ru: "Я пишу, чтобы" },
+            { en: "enquire about", ru: "узнать о", alt: ["inquire about"] },
+            { en: "attached", ru: "во вложении" },
+            { en: "I look forward to", ru: "с нетерпением жду" },
+            { en: "Kind regards", ru: "С уважением" }
+          ],
+          sentences: [
+            { en: "I am writing to enquire about the position", ru: "Пишу, чтобы узнать о вакансии" },
+            { en: "Please find attached my CV", ru: "Во вложении моё резюме" },
+            { en: "I look forward to hearing from you", ru: "С нетерпением жду вашего ответа" }
+          ]
+        },
+        {
+          id: "frm-2", title: "Переговоры",
+          words: [
+            { en: "proposal", ru: "предложение" },
+            { en: "compromise", ru: "компромисс" },
+            { en: "terms", ru: "условия" },
+            { en: "negotiate", ru: "вести переговоры" },
+            { en: "agreement", ru: "соглашение" },
+            { en: "budget", ru: "бюджет" }
+          ],
+          sentences: [
+            { en: "Could we discuss the terms of the agreement?", ru: "Могли бы мы обсудить условия соглашения?" },
+            { en: "I'm afraid that's beyond our budget", ru: "Боюсь, это выходит за рамки нашего бюджета" },
+            { en: "Perhaps we could reach a compromise", ru: "Возможно, мы могли бы прийти к компромиссу" }
+          ],
+          dialogs: [
+            {
+              title: "Переговоры о цене",
+              lines: [
+                { who: "Партнёр", en: "Our price for the project is fifty thousand dollars.", ru: "Наша цена за проект - пятьдесят тысяч долларов." },
+                { me: true, en: "I'm afraid that's beyond our budget.", ru: "Боюсь, это выходит за рамки нашего бюджета.", wrong: ["I'm afraid of your dollars.", "Our budget is beyond the project."] },
+                { who: "Партнёр", en: "What would you suggest?", ru: "Что бы вы предложили?" },
+                { me: true, en: "Perhaps we could reach a compromise at forty thousand.", ru: "Возможно, сойдёмся на сорока тысячах?", wrong: ["Perhaps the compromise is forty.", "I suggest your price is a project."] }
+              ]
+            }
+          ]
+        },
+        {
+          id: "frm-3", title: "Официально или нет",
+          words: [
+            { en: "purchase", ru: "покупать (официально)" },
+            { en: "assist", ru: "помогать (официально)" },
+            { en: "require", ru: "требоваться" },
+            { en: "commence", ru: "начинать (официально)" },
+            { en: "inform", ru: "сообщать" },
+            { en: "regarding", ru: "относительно" }
+          ],
+          sentences: [
+            { en: "How may I assist you?", ru: "Чем могу помочь?" },
+            { en: "The meeting will commence at nine", ru: "Совещание начнётся в девять" },
+            { en: "I would like to inform you regarding the changes", ru: "Хочу сообщить вам об изменениях" }
+          ],
+          gaps: [
+            { text: "Formal: We ___ further information.", options: ["want", "require", "wanna"], answer: "require", ru: "Нам требуется дополнительная информация." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "nuance",
+      title: "Тонкости смысла",
+      desc: "Синонимы и оттенки значений",
+      colors: ["#2ec4a6", "#ff8f6b", "#16917a"],
+      icon: "nuance",
+      lessons: [
+        {
+          id: "nu-1", title: "Смотреть и видеть",
+          words: [
+            { en: "glance", ru: "бросить взгляд" },
+            { en: "stare", ru: "пристально смотреть" },
+            { en: "gaze", ru: "долго смотреть, любоваться" },
+            { en: "notice", ru: "замечать" },
+            { en: "observe", ru: "наблюдать" },
+            { en: "peek", ru: "подглядывать" }
+          ],
+          sentences: [
+            { en: "She glanced at her watch", ru: "Она мельком взглянула на часы" },
+            { en: "It's rude to stare at people", ru: "Пялиться на людей невежливо" },
+            { en: "They gazed at the stars", ru: "Они любовались звёздами" }
+          ],
+          gaps: [
+            { text: "He ___ at the clock and hurried out.", options: ["glanced", "gazed", "stared"], answer: "glanced", ru: "Он мельком глянул на часы и поспешил выйти." }
+          ]
+        },
+        {
+          id: "nu-2", title: "Говорить по-разному",
+          words: [
+            { en: "whisper", ru: "шептать" },
+            { en: "mumble", ru: "бормотать" },
+            { en: "shout", ru: "кричать" },
+            { en: "claim", ru: "утверждать" },
+            { en: "admit", ru: "признавать" },
+            { en: "complain", ru: "жаловаться" }
+          ],
+          sentences: [
+            { en: "She whispered the answer to me", ru: "Она шёпотом подсказала мне ответ" },
+            { en: "He admitted that he was wrong", ru: "Он признал, что был неправ" },
+            { en: "They complained about the noise", ru: "Они жаловались на шум" }
+          ],
+          gaps: [
+            { text: "Finally, he ___ that he had lied.", options: ["admitted", "whispered", "complained"], answer: "admitted", ru: "В конце концов он признал, что солгал." }
+          ]
+        },
+        {
+          id: "nu-3", title: "Сильные прилагательные",
+          words: [
+            { en: "exhausted", ru: "измотанный" },
+            { en: "starving", ru: "умирающий от голода" },
+            { en: "furious", ru: "в ярости" },
+            { en: "terrified", ru: "в ужасе" },
+            { en: "delighted", ru: "в восторге" },
+            { en: "freezing", ru: "ледяной, очень холодно" }
+          ],
+          sentences: [
+            { en: "I'm absolutely exhausted after the trip", ru: "Я совершенно вымотан после поездки" },
+            { en: "She was furious with him", ru: "Она была в ярости на него" },
+            { en: "We were delighted with the result", ru: "Мы были в восторге от результата" }
+          ],
+          gaps: [
+            { text: "It's ___ outside, take a warm coat.", options: ["freezing", "cold very", "starving"], answer: "freezing", ru: "На улице ледяной холод, возьми тёплое пальто." }
+          ]
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------ */
+    {
+      id: "academic",
+      title: "Аргументы и дискуссии",
+      desc: "Академический английский",
+      colors: ["#5b8cff", "#ffb547", "#3a62d6"],
+      icon: "academic",
+      lessons: [
+        {
+          id: "aca-1", title: "Аргументируем",
+          words: [
+            { en: "evidence", ru: "доказательства", pic: "evidence" },
+            { en: "research suggests", ru: "исследования показывают" },
+            { en: "furthermore", ru: "кроме того" },
+            { en: "consequently", ru: "вследствие этого" },
+            { en: "significant", ru: "значительный" },
+            { en: "argue", ru: "утверждать, доказывать" }
+          ],
+          sentences: [
+            { en: "Research suggests that sleep improves memory", ru: "Исследования показывают, что сон улучшает память" },
+            { en: "There is no evidence to support this claim", ru: "Нет доказательств в поддержку этого утверждения" },
+            { en: "Consequently, prices have risen significantly", ru: "Вследствие этого цены значительно выросли" }
+          ]
+        },
+        {
+          id: "aca-2", title: "Возражаем вежливо",
+          words: [
+            { en: "with all due respect", ru: "при всём уважении" },
+            { en: "that's a valid point", ru: "это справедливое замечание" },
+            { en: "I'm not entirely convinced", ru: "я не совсем убеждён" },
+            { en: "to some extent", ru: "в некоторой степени" },
+            { en: "nevertheless", ru: "тем не менее" }
+          ],
+          sentences: [
+            { en: "With all due respect, I see things differently", ru: "При всём уважении, я смотрю на это иначе" },
+            { en: "That's a valid point, but I'm not entirely convinced", ru: "Это справедливое замечание, но я не совсем убеждён" },
+            { en: "I agree to some extent", ru: "Я согласен в некоторой степени" }
+          ],
+          dialogs: [
+            {
+              title: "Научная дискуссия",
+              lines: [
+                { who: "Профессор", en: "Social media has made people more isolated.", ru: "Соцсети сделали людей более изолированными." },
+                { me: true, en: "With all due respect, I'm not entirely convinced.", ru: "При всём уважении, я не совсем убеждён.", wrong: ["With all due media, I am isolated.", "I'm convinced of all respect."] },
+                { who: "Профессор", en: "Do you have any evidence?", ru: "У вас есть доказательства?" },
+                { me: true, en: "Research suggests that online communities reduce loneliness.", ru: "Исследования показывают, что онлайн-сообщества уменьшают одиночество.", wrong: ["Evidence suggests that research is lonely.", "Yes, I have a significant media."] }
+              ]
+            }
+          ]
+        },
+        {
+          id: "aca-3", title: "Подводим итоги",
+          words: [
+            { en: "in conclusion", ru: "в заключение" },
+            { en: "to sum up", ru: "подводя итог" },
+            { en: "overall", ru: "в целом" },
+            { en: "it is worth noting", ru: "стоит отметить" },
+            { en: "the key point is", ru: "ключевой момент в том" }
+          ],
+          sentences: [
+            { en: "In conclusion, the benefits outweigh the risks", ru: "В заключение, польза перевешивает риски" },
+            { en: "Overall, the project was a success", ru: "В целом проект был успешным" },
+            { en: "It is worth noting that costs have fallen", ru: "Стоит отметить, что расходы снизились" }
+          ],
+          story: {
+            en: "Many people believe that working from home reduces productivity. However, recent research suggests the opposite. Employees who work remotely often report fewer distractions and better focus. Nevertheless, it is worth noting that some people miss social contact. Overall, a mix of office and home work seems to be the best solution.",
+            ru: "Многие считают, что работа из дома снижает продуктивность. Однако недавние исследования говорят об обратном. Сотрудники на удалёнке часто отмечают меньше отвлечений и лучшую концентрацию. Тем не менее стоит отметить, что некоторым не хватает общения. В целом сочетание офиса и дома кажется лучшим решением.",
+            questions: [
+              { q: "Что показывают недавние исследования?", options: ["Удалёнка не снижает продуктивность", "Удалёнка снижает продуктивность", "Офис всегда лучше"], answer: "Удалёнка не снижает продуктивность" },
+              { q: "Чего не хватает некоторым на удалёнке?", options: ["Общения", "Денег", "Компьютера"], answer: "Общения" },
+              { q: "Какой вывод делает автор?", options: ["Лучше сочетать офис и дом", "Лучше только офис", "Лучше только дом"], answer: "Лучше сочетать офис и дом" }
             ]
           }
         }
@@ -1866,3 +2994,19 @@ const SOUND_PAIRS = [
   { group: "Звуки [l] и [r]", tip: "[r] без вибрации, язык не касается нёба", pairs: [["light", "свет", "right", "правый"], ["long", "длинный", "wrong", "неправильный"], ["play", "играть", "pray", "молиться"]] },
   { group: "Короткий и долгий [u]", tip: "full короткий, fool долгий", pairs: [["full", "полный", "fool", "дурак"], ["pull", "тянуть", "pool", "бассейн"], ["look", "смотреть", "Luke", "Люк (имя)"]] }
 ];
+/* --------------------------------------------------------------------------
+   Уровни по европейской шкале CEFR. У каждой главы появляется поле level,
+   а на маршруте перед первой главой уровня показывается заголовок.
+   -------------------------------------------------------------------------- */
+const LEVELS = [
+  { id: "A1", title: "Начальный", desc: "Алфавит, первые слова и простые фразы", units: ["alphabet", "greetings", "pronouns", "tobe", "numbers", "colors", "family", "food", "time", "verbs", "questions"] },
+  { id: "A2", title: "Элементарный", desc: "Прошлое, будущее и повседневное общение", units: ["continuous", "past", "phrases", "weather", "body", "clothes", "home", "skills", "future", "compare", "modals", "pastcont", "perfect", "travel", "talk"] },
+  { id: "B1", title: "Средний", desc: "Условия, пассив, косвенная речь, работа", units: ["cond", "passive", "reported", "phrasal", "career"] },
+  { id: "B2", title: "Выше среднего", desc: "Истории, догадки, сложные предложения", units: ["narrative", "deduction", "relative", "gerund", "society"] },
+  { id: "C1", title: "Продвинутый", desc: "Сожаления, акценты, идиомы, деловой стиль", units: ["regrets", "emphasis", "idioms", "formal"] },
+  { id: "C2", title: "Свободное владение", desc: "Тонкости смысла и академическая речь", units: ["nuance", "academic"] }
+];
+LEVELS.forEach((lv) => lv.units.forEach((id) => {
+  const u = COURSE.units.find((x) => x.id === id);
+  if (u) u.level = lv.id;
+}));

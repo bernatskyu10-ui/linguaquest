@@ -119,6 +119,9 @@ const Store = (() => {
       reviewsTotal: 0,
       // Синхронизация между устройствами: { code, lastSync }
       sync: null,
+      // Свои слова пользователя [{ en, ru }] и отметка о пройденном тесте уровня
+      customWords: [],
+      placementDone: false,
       // Рекорды мини-игр и точность ответов по дням
       records: { speed: 0, pairs: 0, sounds: 0 },
       accByDay: {},
