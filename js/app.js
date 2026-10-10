@@ -238,12 +238,26 @@ const App = (() => {
   const NAV = [
     { id: "learn", label: "Маршрут", icon: "navLearn" },
     { id: "words", label: "Словарь", icon: "navWords" },
+    { id: "reference", label: "Справочник", icon: "navRef" },
     { id: "games", label: "Игры", icon: "navGames" },
     { id: "achievements", label: "Награды", icon: "navAwards" },
     { id: "shop", label: "Магазин", icon: "navShop" },
     { id: "profile", label: "Профиль", icon: "navProfile" },
     { id: "settings", label: "Настройки", icon: "navSettings" }
   ];
+
+  // На телефоне внизу 4 главных пункта, остальные в меню "Ещё"
+  const BOTTOM_MAIN = ["learn", "words", "reference", "games"];
+  function bottomNavItems() {
+    const more = !BOTTOM_MAIN.includes(page);
+    return NAV.filter((n) => BOTTOM_MAIN.includes(n.id)).map((n) => `<button class="nav-item ${page === n.id ? "is-active" : ""}" data-nav="${n.id}" aria-label="${n.label}">${SVG.icon(n.icon)}<span>${n.label}</span></button>`).join("") +
+      `<button class="nav-item ${more ? "is-active" : ""}" data-more aria-label="Ещё">${SVG.icon("navMore")}<span>Ещё</span></button>`;
+  }
+  function openMoreMenu() {
+    openModal(`<h2>Ещё</h2><div class="more-menu">${NAV.filter((n) => !BOTTOM_MAIN.includes(n.id)).map((n) => `<button class="more-menu__item" data-go-more="${n.id}">${SVG.icon(n.icon)}<span>${n.label}</span></button>`).join("")}</div>`, (card) => {
+      card.querySelectorAll("[data-go-more]").forEach((b) => b.addEventListener("click", () => { closeModal(); go(b.dataset.goMore); }));
+    });
+  }
 
   function navItems() {
     return NAV.map((n) => `<button class="nav-item ${page === n.id ? "is-active" : ""}" data-nav="${n.id}" aria-label="${n.label}" ${page === n.id ? 'aria-current="page"' : ""}>${SVG.icon(n.icon)}<span>${n.label}</span></button>`).join("");
@@ -328,9 +342,10 @@ const App = (() => {
         </div>
         <aside class="rail" id="rail">${railHTML()}</aside>
       </div>
-      <nav class="bottom-nav" aria-label="Навигация">${navItems()}</nav>`;
+      <nav class="bottom-nav" aria-label="Навигация">${bottomNavItems()}</nav>`;
 
     $app.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => go(b.dataset.nav)));
+    $app.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", openMoreMenu));
     bindShellCommon($app);
     renderPage();
   }
@@ -339,7 +354,16 @@ const App = (() => {
   function bindShellCommon(root) {
     root.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openStatModal(b.dataset.open)));
     root.querySelectorAll('[data-act="switch"]').forEach((b) => b.addEventListener("click", switchProfile));
-    root.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+    bindSayWords(root);
+  }
+
+  // Кнопки прослушивания: привязываем один раз, даже если функцию вызвали повторно
+  function bindSayWords(root) {
+    root.querySelectorAll("[data-say-word]").forEach((b) => {
+      if (b.dataset.sayBound) return;
+      b.dataset.sayBound = "1";
+      b.addEventListener("click", () => say(b.dataset.sayWord));
+    });
   }
 
   function refreshStats() {
@@ -367,6 +391,7 @@ const App = (() => {
       b.classList.toggle("is-active", on);
       on ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current");
     });
+    document.querySelectorAll("[data-more]").forEach((b) => b.classList.toggle("is-active", !BOTTOM_MAIN.includes(p)));
     renderPage();
     window.scrollTo({ top: 0 });
   }
@@ -374,9 +399,9 @@ const App = (() => {
   function renderPage() {
     const main = document.getElementById("main");
     if (!main) return;
-    const pages = { learn: learnPage, words: wordsPage, games: gamesPage, achievements: achievementsPage, shop: shopPage, profile: profilePage, settings: settingsPage };
+    const pages = { learn: learnPage, words: wordsPage, reference: referencePage, games: gamesPage, achievements: achievementsPage, shop: shopPage, profile: profilePage, settings: settingsPage };
     main.innerHTML = `<div class="screen-enter">${pages[page]()}</div>`;
-    const binders = { learn: bindLearn, words: bindWords, games: bindGames, profile: bindProfile, shop: bindShop, settings: bindSettings };
+    const binders = { learn: bindLearn, words: bindWords, reference: bindReference, games: bindGames, profile: bindProfile, shop: bindShop, settings: bindSettings };
     binders[page] && binders[page](main);
     bindShellCommon(main);
     Reveal.observe(document);
@@ -1514,6 +1539,92 @@ const App = (() => {
       mood: record ? "cool" : g.kind === "sounds" && g.score < 5 ? "worried" : "cheer",
       again: () => startGame(g.kind), againLabel: "Сыграть ещё", backPage: "games"
     }));
+  }
+
+  /* ======================================================================
+     Справочник: грамматика, звуки, правила чтения, почему так пишется
+     ====================================================================== */
+  let refTab = "grammar";
+  let refQuery = "";
+
+  const refTable = (t) => `<div class="ref-table-wrap"><table class="rule__table"><thead><tr>${t.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+    <tbody>${t.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const sayChip = (w) => `<button class="say-chip" data-say-word="${esc(w)}">${SVG.icon("speaker")}${esc(w)}</button>`;
+
+  function referencePage() {
+    const tabs = [["grammar", "Грамматика"], ["sounds", "Звуки"], ["reading", "Правила чтения"], ["why", "Почему так"]];
+    return `
+      <div class="page">
+        <div class="page__head"><h1>Справочник</h1><p>Как устроен английский и почему именно так. Нажимайте на английские слова, чтобы послушать.</p></div>
+        <div class="segmented ref-tabs" role="tablist">${tabs.map(([id, label]) => `<button role="tab" aria-selected="${refTab === id}" class="${refTab === id ? "is-active" : ""}" data-ref-tab="${id}">${label}</button>`).join("")}</div>
+        <div id="refBody">${refBody()}</div>
+      </div>`;
+  }
+
+  function refBody() {
+    if (refTab === "grammar") {
+      const q = refQuery.trim().toLowerCase();
+      const list = REF_GRAMMAR.filter((a) => !q || (a.title + " " + a.intro + " " + a.sections.map((s) => s.h + " " + (s.text || "")).join(" ")).toLowerCase().includes(q));
+      return `
+        <div class="search">${SVG.icon("search")}<input class="input" id="refSearch" type="search" placeholder="Поиск: артикли, времена, предлоги..." value="${esc(refQuery)}" aria-label="Поиск по грамматике"></div>
+        <div class="ref-list" id="refList">${list.length ? list.map((a) => `
+          <details class="card ref-article">
+            <summary><span class="level-chip">${a.level}</span><span class="ref-article__title">${esc(a.title)}</span></summary>
+            <p class="ref-article__intro">${a.intro}</p>
+            ${a.sections.map((s) => `<div class="ref-section"><h3>${esc(s.h)}</h3>${s.text ? `<p>${s.text}</p>` : ""}${s.table ? refTable(s.table) : ""}</div>`).join("")}
+            ${a.examples ? `<div class="rule__examples">${a.examples.map(([en, ru]) => `<div class="rule__ex"><button class="speak-btn" data-say-word="${esc(en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button><div><b>${esc(en)}</b><small>${esc(ru)}</small></div></div>`).join("")}</div>` : ""}
+          </details>`).join("") : `<div class="card empty"><div class="empty__fox">${SVG.mascot({ mood: "think" })}</div><p>Ничего не найдено</p></div>`}</div>`;
+    }
+    if (refTab === "sounds") {
+      return REF_SOUNDS.map((g) => `
+        <h2 class="ref-h2">${esc(g.group)}</h2>
+        <p class="page__lead ref-lead">${esc(g.note)}</p>
+        <div class="sound-cards">${g.items.map((s) => `
+          <div class="card sound-card">
+            <div class="sound-card__ipa">/${s.ipa}/</div>
+            <div class="sound-card__like">${esc(s.like)}</div>
+            <p class="sound-card__how">${esc(s.how)}</p>
+            <div class="sound-card__words">${s.words.map(sayChip).join("")}</div>
+          </div>`).join("")}</div>`).join("");
+    }
+    if (refTab === "reading") {
+      return `<div class="ref-list">${REF_READING.map((r, i) => `
+        <div class="card ref-rule">
+          <h3><span class="ref-rule__num">${i + 1}</span>${esc(r.title)}</h3>
+          <p>${r.text}</p>
+          ${r.table ? refTable(r.table) : ""}
+          ${r.words ? `<div class="sound-card__words">${r.words.map(sayChip).join("")}</div>` : ""}
+        </div>`).join("")}</div>`;
+    }
+    return `
+      <div class="card ref-why">
+        <div class="ref-why__fox">${SVG.mascot({ mood: "readlaugh" })}</div>
+        ${REF_WHY.map((s) => `<div class="ref-section"><h3>${esc(s.h)}</h3><p>${s.text}</p></div>`).join("")}
+      </div>`;
+  }
+
+  function bindReference(main) {
+    main.querySelectorAll("[data-ref-tab]").forEach((b) => b.addEventListener("click", () => {
+      refTab = b.dataset.refTab;
+      main.querySelectorAll("[data-ref-tab]").forEach((x) => { x.classList.toggle("is-active", x === b); x.setAttribute("aria-selected", x === b); });
+      const body = main.querySelector("#refBody");
+      body.innerHTML = refBody();
+      bindRefBody(body);
+    }));
+    bindRefBody(main.querySelector("#refBody"));
+  }
+
+  function bindRefBody(body) {
+    bindSayWords(body);
+    const input = body.querySelector("#refSearch");
+    if (input) input.addEventListener("input", () => {
+      refQuery = input.value;
+      const tmp = document.createElement("div");
+      tmp.innerHTML = refBody();
+      const list = body.querySelector("#refList");
+      list.replaceWith(tmp.querySelector("#refList"));
+      bindSayWords(body);
+    });
   }
 
   /* ======================================================================
