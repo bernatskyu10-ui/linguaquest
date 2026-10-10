@@ -1,0 +1,2190 @@
+/* ==========================================================================
+   LinguaQuest - логика приложения
+   Экраны: вход / регистрация, маршрут курса, урок, результат,
+   награды, магазин, профиль, настройки.
+   Жизней нет: ошибка ничего не отнимает, задание просто возвращается
+   в конец урока, чтобы его закрепить.
+   ========================================================================== */
+
+const App = (() => {
+  const $app = document.getElementById("app");
+  const esc = Exercises.esc;
+
+  // Плоский список всех уроков курса по порядку (для блокировки и навигации)
+  const FLAT = [];
+  COURSE.units.forEach((unit, ui) => unit.lessons.forEach((lesson, li) => FLAT.push({ unit, lesson, ui, li, gi: FLAT.length })));
+  const TOTAL = FLAT.length;
+
+  let page = "learn";   // активная вкладка
+  let lesson = null;    // состояние текущего урока
+
+  const d = () => Store.data();
+  const coinIcon = (size = 20) => SVG.icon("coin").replace("<svg", `<svg style="width:${size}px;height:${size}px"`);
+
+  /* ======================================================================
+     Тема, звук, озвучка
+     ====================================================================== */
+  function applyTheme(theme) {
+    const mode = theme === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : theme;
+    document.documentElement.dataset.theme = mode;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = mode === "light" ? "#f3f5fb" : "#0c0f1f";
+  }
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    const t = d() ? d().settings.theme : Store.device().theme;
+    if (t === "system") applyTheme("system");
+  });
+
+  function applySettings() {
+    const s = d().settings;
+    applyTheme(s.theme);
+    Sound.setEnabled(s.sound);
+    Speech.setEnabled(s.speech);
+    Speech.setVoice(s.voice);
+    Speech.setRate(s.rate);
+  }
+  // Голоса в Chrome загружаются асинхронно: применяем выбранный, когда список появится
+  Speech.onVoices(() => {
+    if (!d()) return;
+    Speech.setVoice(d().settings.voice);
+    // Если открыты настройки, перерисовываем их с актуальным списком голосов
+    if (page === "settings" && !lesson && document.getElementById("voiceSelect")) renderPage();
+  });
+
+  // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
+  const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
+  const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
+
+  /* ======================================================================
+     Прогресс по урокам
+     ====================================================================== */
+  const isDone = (id) => !!d().completed[id];
+  const currentIndex = () => {
+    const i = FLAT.findIndex((x) => !isDone(x.lesson.id));
+    return i === -1 ? TOTAL : i;
+  };
+  const unitDone = (ui) => COURSE.units[ui].lessons.filter((l) => isDone(l.id)).length;
+  const lessonsDone = () => FLAT.filter((x) => isDone(x.lesson.id)).length;
+  const unitsDone = () => COURSE.units.filter((u, ui) => unitDone(ui) === u.lessons.length).length;
+
+  /* ======================================================================
+     Модальные окна
+     ====================================================================== */
+  const $modal = document.getElementById("modal");
+  const $modalCard = document.getElementById("modalCard");
+  let modalOnClose = null;
+
+  function openModal(html, bind, onClose) {
+    $modalCard.innerHTML = html;
+    $modal.hidden = false;
+    modalOnClose = onClose || null;
+    bind && bind($modalCard);
+    const first = $modalCard.querySelector("button");
+    first && first.focus({ preventScroll: true });
+  }
+  function closeModal() {
+    if ($modal.hidden) return;
+    $modal.hidden = true;
+    $modalCard.innerHTML = "";
+    const cb = modalOnClose;
+    modalOnClose = null;
+    cb && cb();
+  }
+  $modal.addEventListener("click", (e) => { if (e.target.hasAttribute("data-close")) closeModal(); });
+
+  function confirmModal({ pic = "", title, text, ok = "Да", cancel = "Отмена", okClass = "btn--rose" }) {
+    return new Promise((resolve) => {
+      let result = false;
+      openModal(
+        `${pic}<h2>${title}</h2><p class="modal__text">${text}</p>
+         <button class="btn ${okClass}" data-ok>${ok}</button>
+         <button class="btn btn--ghost" data-cancel>${cancel}</button>`,
+        (card) => {
+          card.querySelector("[data-ok]").onclick = () => { result = true; closeModal(); };
+          card.querySelector("[data-cancel]").onclick = () => closeModal();
+        },
+        () => resolve(result)
+      );
+    });
+  }
+
+  /* ======================================================================
+     Экран входа и регистрации
+     ====================================================================== */
+  function renderAuth(mode = "login", prefill = "") {
+    applyTheme(Store.device().theme || "dark");
+    const users = Store.listUsers();
+    if (!users.length && mode === "login" && !prefill) mode = "register";
+    const isLogin = mode === "login";
+
+    $app.innerHTML = `
+      <section class="auth screen-enter">
+        <div class="auth__hero">
+          <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+          <h1 class="auth__title">Английский с нуля, <em>в своём темпе</em></h1>
+          <p class="auth__sub">Короткие уроки, озвучка слов и маршрут из ${COURSE.units.length} глав. Без жизней и штрафов: ошибайтесь и учитесь.</p>
+          <div class="auth__showcase">
+            <div class="auth__mascot">${SVG.mascot({ mood: "wave" })}</div>
+            <div class="auth__perks">
+              <span class="tag">${SVG.icon("book")} ${TOTAL} уроков от алфавита до будущего времени</span>
+              <span class="tag">${SVG.icon("words")} 9 типов упражнений</span>
+              <span class="tag">${SVG.icon("trophy")} ${ACHIEVEMENTS.length} наград за успехи</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth__panel">
+          <div class="tabs" data-active="${isLogin ? 0 : 1}" role="tablist">
+            <span class="tabs__pill"></span>
+            <button class="tabs__btn ${isLogin ? "is-active" : ""}" data-mode="login" role="tab" aria-selected="${isLogin}">Вход</button>
+            <button class="tabs__btn ${!isLogin ? "is-active" : ""}" data-mode="register" role="tab" aria-selected="${!isLogin}">Регистрация</button>
+          </div>
+
+          <form class="auth__form" novalidate>
+            <div class="field">
+              <label for="fName">Имя пользователя</label>
+              <input class="input" id="fName" name="name" autocomplete="username" maxlength="20" value="${esc(prefill)}" placeholder="Например, alex" required>
+            </div>
+            <div class="field">
+              <label for="fPass">Пароль</label>
+              <input class="input" id="fPass" name="pass" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" placeholder="Не короче 4 символов" required>
+            </div>
+            ${isLogin ? "" : `
+            <div class="field">
+              <label for="fPass2">Повторите пароль</label>
+              <input class="input" id="fPass2" name="pass2" type="password" autocomplete="new-password" placeholder="Ещё раз пароль" required>
+            </div>`}
+            <p class="field__error" id="authError" role="alert"></p>
+            <button class="btn btn--block" type="submit" id="authSubmit">${isLogin ? "Войти" : "Создать профиль"}</button>
+            <p class="field__hint">Профили хранятся только на этом устройстве. Сервер и интернет не нужны.</p>
+          </form>
+
+          ${users.length ? `
+          <div class="auth__profiles">
+            <div class="auth__profiles-title">Профили на этом устройстве</div>
+            ${users.slice(0, 5).map((u) => `
+              <button class="profile-pick" type="button" data-user="${esc(u.username)}">
+                <span class="avatar" style="background:${u.color}">${esc(u.username[0].toUpperCase())}</span>
+                <span>${esc(u.username)}<small>${u.xp} XP, дней подряд: ${u.streak}</small></span>
+              </button>`).join("")}
+          </div>` : ""}
+        </div>
+      </section>`;
+
+    $app.querySelectorAll(".tabs__btn").forEach((b) =>
+      b.addEventListener("click", () => renderAuth(b.dataset.mode, $app.querySelector("#fName").value))
+    );
+    $app.querySelectorAll(".profile-pick").forEach((b) =>
+      b.addEventListener("click", () => {
+        renderAuth("login", b.dataset.user);
+        $app.querySelector("#fPass").focus();
+      })
+    );
+
+    const form = $app.querySelector("form");
+    const err = $app.querySelector("#authError");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      Sound.unlock();
+      const name = form.name.value;
+      const pass = form.pass.value;
+      err.textContent = "";
+      if (!isLogin && pass !== form.pass2.value) {
+        err.textContent = "Пароли не совпадают";
+        return;
+      }
+      const btn = $app.querySelector("#authSubmit");
+      btn.disabled = true;
+      btn.textContent = "Секунду...";
+      try {
+        if (isLogin) await Store.login(name, pass);
+        else await Store.register(name, pass);
+        afterLogin(!isLogin);
+      } catch (ex) {
+        err.textContent = ex.message;
+        btn.disabled = false;
+        btn.textContent = isLogin ? "Войти" : "Создать профиль";
+      }
+    });
+
+    setTimeout(() => {
+      const target = prefill ? $app.querySelector("#fPass") : $app.querySelector("#fName");
+      target && target.focus({ preventScroll: true });
+    }, 50);
+  }
+
+  function afterLogin(isNew) {
+    applySettings();
+    Store.setDevice({ theme: d().settings.theme });
+    const s = Store.checkStreak();
+    page = "learn";
+    renderShell();
+    const name = Store.user().username;
+    if (isNew) Toast.show({ title: `Добро пожаловать, ${esc(name)}!`, text: "Вот 50 монет на старт", icon: SVG.mascot({ mood: "love" }) });
+    else Toast.show({ title: `С возвращением, ${esc(name)}!`, text: d().streak ? `Дней подряд: ${d().streak}` : "Начнём новую серию сегодня", icon: SVG.mascot({ mood: "hello" }) });
+    streakToasts(s);
+    syncNow();
+  }
+
+  function streakToasts(s) {
+    if (s.usedFreezes) Toast.show({ title: "Заморозка спасла серию", text: `Использовано: ${s.usedFreezes}`, icon: SVG.icon("freeze") });
+    if (s.lost) Toast.show({ title: "Серия прервалась", text: `Было дней подряд: ${s.lost}. Начните новую сегодня`, icon: SVG.mascot({ mood: "cry" }) });
+  }
+
+  /* ======================================================================
+     Оболочка: меню, шапка, правая колонка
+     ====================================================================== */
+  const NAV = [
+    { id: "learn", label: "Маршрут", icon: "navLearn" },
+    { id: "words", label: "Словарь", icon: "navWords" },
+    { id: "games", label: "Игры", icon: "navGames" },
+    { id: "achievements", label: "Награды", icon: "navAwards" },
+    { id: "shop", label: "Магазин", icon: "navShop" },
+    { id: "profile", label: "Профиль", icon: "navProfile" },
+    { id: "settings", label: "Настройки", icon: "navSettings" }
+  ];
+
+  function navItems() {
+    return NAV.map((n) => `<button class="nav-item ${page === n.id ? "is-active" : ""}" data-nav="${n.id}" aria-label="${n.label}" ${page === n.id ? 'aria-current="page"' : ""}>${SVG.icon(n.icon)}<span>${n.label}</span></button>`).join("");
+  }
+
+  function statsChips() {
+    const data = d();
+    const activeToday = data.lastActiveDay === Store.dayKey();
+    return `
+      <button class="stat-chip stat-chip--streak ${activeToday ? "" : "is-dim"}" data-open="streak" title="Дней подряд">${SVG.icon("streak")}<span>${data.streak}</span></button>
+      <button class="stat-chip stat-chip--gems" data-open="gems" title="Монеты">${SVG.icon("coin")}<span>${data.gems}</span></button>
+      <button class="stat-chip stat-chip--xp" data-open="xp" title="Опыт за сегодня">${SVG.icon("bolt")}<span>${Store.todayXP()}</span></button>`;
+  }
+
+  // Слово дня: одно и то же весь день, выбирается из слов курса
+  function wordOfDay() {
+    const words = FLAT.flatMap((x) => x.lesson.words).filter((w) => w.en.length > 2);
+    const key = Store.dayKey();
+    let h = 0;
+    for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return words[h % words.length];
+  }
+
+  function railHTML() {
+    const data = d();
+    const today = Store.todayXP();
+    const goal = data.dailyGoal;
+    const user = Store.user();
+    const wod = wordOfDay();
+    const tips = [
+      "Нажмите на черепаху в заданиях на слух, чтобы прослушать фразу медленно.",
+      "Цифры 1-4 на клавиатуре выбирают вариант ответа, Enter проверяет.",
+      "Повторяйте слова каждый день: карточка «Повторение» покажет, что пора освежить.",
+      "Знаете тему? Сдайте тест главы и откройте её сразу.",
+      "Понемногу каждый день полезнее, чем долго раз в неделю.",
+      "Ошибка не страшна: задание вернётся в конце урока, и вы его закрепите."
+    ];
+    return `
+      <div class="rail__stats" data-stats>${statsChips()}</div>
+      <div class="card widget reveal">
+        <div class="widget__head"><span class="widget__title">Цель на сегодня</span><span class="tag">${today} / ${goal} XP</span></div>
+        <div class="progress"><div class="progress__fill" style="width:${Math.min(100, (today / goal) * 100)}%"></div></div>
+        <p class="widget__body">${today >= goal ? "Цель выполнена. Отличная работа!" : `Осталось ${goal - today} XP, это примерно один урок.`}</p>
+      </div>
+      <div class="card widget reveal">
+        <div class="widget__head"><span class="widget__title">Слово дня</span>
+          ${Speech.isEnabled() ? `<button class="speak-btn" data-say-word="${esc(wod.en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          ${wod.pic ? `<div style="width:56px;flex:none">${SVG.pic(wod.pic)}</div>` : ""}
+          <div><div style="font-family:var(--font-display);font-size:22px;font-weight:700">${esc(wod.en)}</div><div class="widget__body">${esc(wod.ru)}</div></div>
+        </div>
+      </div>
+      <div class="card widget reveal">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="width:60px;flex:none">${SVG.mascot({ mood: "think", hat: data.hat })}</div>
+          <p class="widget__body">${tips[(Math.random() * tips.length) | 0]}</p>
+        </div>
+      </div>
+      <div class="card widget reveal">
+        <div style="display:flex;gap:12px;align-items:center">
+          <span class="avatar" style="background:${user.color}">${esc(user.username[0].toUpperCase())}</span>
+          <div style="flex:1;min-width:0"><div style="font-weight:800">${esc(user.username)}</div><div class="widget__body">${data.xp} XP всего</div></div>
+          <button class="btn btn--ghost btn--sm" data-act="switch">Сменить</button>
+        </div>
+      </div>`;
+  }
+
+  function renderShell() {
+    $app.innerHTML = `
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+          ${navItems()}
+        </aside>
+        <div class="center">
+          <header class="topbar">
+            <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+            <div style="display:flex;gap:6px" data-stats>${statsChips()}</div>
+          </header>
+          <div class="main" id="main"></div>
+        </div>
+        <aside class="rail" id="rail">${railHTML()}</aside>
+      </div>
+      <nav class="bottom-nav" aria-label="Навигация">${navItems()}</nav>`;
+
+    $app.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => go(b.dataset.nav)));
+    bindShellCommon($app);
+    renderPage();
+  }
+
+  // Общие обработчики: чипы статистики, смена профиля, слово дня
+  function bindShellCommon(root) {
+    root.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openStatModal(b.dataset.open)));
+    root.querySelectorAll('[data-act="switch"]').forEach((b) => b.addEventListener("click", switchProfile));
+    root.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+  }
+
+  function refreshStats() {
+    if (!d()) return;
+    document.querySelectorAll("[data-stats]").forEach((el) => {
+      el.innerHTML = statsChips();
+      bindShellCommon(el);
+    });
+  }
+
+  function bumpStat(kind) {
+    document.querySelectorAll(`.stat-chip--${kind}`).forEach((el) => {
+      el.classList.remove("bump");
+      void el.offsetWidth;
+      el.classList.add("bump");
+    });
+  }
+
+  function go(p) {
+    if (page === p) return;
+    page = p;
+    Sound.play("tap");
+    document.querySelectorAll("[data-nav]").forEach((b) => {
+      const on = b.dataset.nav === p;
+      b.classList.toggle("is-active", on);
+      on ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current");
+    });
+    renderPage();
+    window.scrollTo({ top: 0 });
+  }
+
+  function renderPage() {
+    const main = document.getElementById("main");
+    if (!main) return;
+    const pages = { learn: learnPage, words: wordsPage, games: gamesPage, achievements: achievementsPage, shop: shopPage, profile: profilePage, settings: settingsPage };
+    main.innerHTML = `<div class="screen-enter">${pages[page]()}</div>`;
+    const binders = { learn: bindLearn, words: bindWords, games: bindGames, profile: bindProfile, shop: bindShop, settings: bindSettings };
+    binders[page] && binders[page](main);
+    bindShellCommon(main);
+    Reveal.observe(document);
+  }
+
+  function switchProfile() {
+    Store.save();
+    Store.logout();
+    renderAuth("login");
+  }
+
+  /* Окна по клику на чипы статистики */
+  function openStatModal(kind) {
+    const data = d();
+    const info = {
+      streak: {
+        pic: SVG.badge("spark", ["#ff9a3d", "#ff6b4a"]),
+        title: `Дней подряд: ${data.streak}`,
+        text: `Пройдите хотя бы один урок в день, чтобы серия росла. Рекорд: ${data.bestStreak}. Заморозок в запасе: ${data.freezes}.`,
+        btn: "Вперёд"
+      },
+      gems: {
+        pic: SVG.badge("coin", ["#ffb547", "#e39b16"]),
+        title: `Монет: ${data.gems}`,
+        text: "Монеты выдаются за каждый пройденный урок. Тратьте их в магазине на заморозку серии и наряды для Лингви.",
+        btn: "Понятно",
+        extra: `<button class="btn btn--ghost" data-shop>В магазин</button>`
+      },
+      xp: {
+        pic: SVG.badge("bolt", ["#ffb547", "#ff6b4a"]),
+        title: `Сегодня: ${Store.todayXP()} XP`,
+        text: `Цель на день: ${data.dailyGoal} XP. Всего набрано: ${data.xp} XP. Цель меняется в настройках.`,
+        btn: "Понятно"
+      }
+    }[kind];
+    openModal(`
+      <div class="modal__pic">${info.pic}</div>
+      <h2>${info.title}</h2>
+      <p class="modal__text">${info.text}</p>
+      <button class="btn" data-close-btn>${info.btn}</button>${info.extra || ""}`,
+      (card) => {
+        card.querySelector("[data-close-btn]").onclick = closeModal;
+        const shop = card.querySelector("[data-shop]");
+        if (shop) shop.onclick = () => { closeModal(); if (!lesson) go("shop"); };
+      });
+  }
+
+  /* ======================================================================
+     Маршрут курса: карточка "дальше" и главы с уроками
+     ====================================================================== */
+  function ring(done, total) {
+    const r = 21, c = 2 * Math.PI * r;
+    const off = c * (1 - done / total);
+    return `<div class="ring" aria-label="Пройдено ${done} из ${total}">
+      <svg viewBox="0 0 52 52"><circle class="bg" cx="26" cy="26" r="${r}"/><circle class="fg" cx="26" cy="26" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
+      <span>${done}/${total}</span></div>`;
+  }
+
+  function learnPage() {
+    const cur = currentIndex();
+    const finished = cur >= TOTAL;
+    const next = finished ? null : FLAT[cur];
+
+    const nextUp = finished
+      ? `<section class="next-up reveal">
+          <div class="next-up__text">
+            <span class="next-up__kicker">Маршрут пройден</span>
+            <div class="next-up__title">Все ${TOTAL} уроков позади!</div>
+            <p class="next-up__meta">Повторяйте любимые темы, чтобы слова не забывались.</p>
+          </div>
+          <div class="next-up__mascot">${SVG.mascot({ mood: "party" })}</div>
+        </section>`
+      : `<section class="next-up reveal">
+          <div class="next-up__text">
+            <span class="next-up__kicker">${cur === 0 ? "Начните путешествие" : "Продолжить"}</span>
+            <div class="next-up__title">${esc(next.lesson.title)}</div>
+            <p class="next-up__meta">Глава ${next.ui + 1}: ${esc(next.unit.title)}. Урок ${next.li + 1} из ${next.unit.lessons.length}</p>
+            <button class="btn" data-start="${next.gi}">${cur === 0 ? "Начать первый урок" : "Продолжить урок"}</button>
+          </div>
+          <div class="next-up__mascot">${SVG.mascot({ mood: "determined", hat: d().hat })}</div>
+        </section>`;
+
+    const chapters = COURSE.units.map((u, ui) => {
+      const style = `--u1:${u.colors[0]};--u2:${u.colors[1]};--u3:${u.colors[2]}`;
+      const done = unitDone(ui);
+      const total = u.lessons.length;
+      const isDoneUnit = done === total;
+      const isActive = !isDoneUnit && next && next.ui === ui;
+      const lessons = u.lessons.map((l, li) => {
+        const entry = FLAT.find((x) => x.lesson.id === l.id);
+        const ldone = isDone(l.id);
+        const isCur = entry.gi === cur;
+        const locked = entry.gi > cur;
+        const state = ldone ? SVG.icon("check") : locked ? SVG.icon("lock") : SVG.nodeGlyph("star");
+        const sub = ldone ? "Пройден, можно повторить" : isCur ? "Следующий" : "Откроется позже";
+        return `
+          <button class="lesson-card ${ldone ? "is-done" : ""} ${isCur ? "is-current" : ""} ${locked ? "is-locked" : ""}" data-gi="${entry.gi}" ${locked ? 'aria-disabled="true"' : ""}>
+            <span class="lesson-card__top"><span class="lesson-card__num">${String(li + 1).padStart(2, "0")}</span><span class="lesson-card__state">${state}</span></span>
+            <span><span class="lesson-card__title">${esc(l.title)}</span><br><span class="lesson-card__sub">${sub}</span></span>
+          </button>`;
+      }).join("");
+      return `
+        <section class="chapter reveal ${isDoneUnit ? "is-done" : ""} ${isActive ? "is-active" : ""}" style="${style}">
+          <span class="chapter__dot">${isDoneUnit ? SVG.icon("check") : ui + 1}</span>
+          <div class="card chapter__card">
+            <div class="chapter__head">
+              <div class="chapter__icon">${SVG.unitIcon(u.icon, "")}</div>
+              <div class="chapter__info">
+                <span class="chapter__num">Глава ${ui + 1}</span>
+                <span class="chapter__title">${esc(u.title)}</span>
+                <span class="chapter__desc">${esc(u.desc)}</span>
+              </div>
+              ${FLAT.find((x) => x.ui === ui).gi > cur ? `<button class="btn btn--ghost btn--sm chapter__test" data-test="${ui}" title="Сдайте тест, чтобы открыть главу сразу">Тест</button>` : ""}
+              ${ring(done, total)}
+            </div>
+            <div class="chapter__lessons">${lessons}</div>
+          </div>
+        </section>`;
+    }).join("");
+
+    return `
+      <div class="journey">
+        ${nextUp}
+        ${homeRow()}
+        ${chapters}
+        <div class="journey-end reveal">
+          <div class="journey-end__mascot">${SVG.mascot({ mood: finished ? "happy" : "wink", hat: finished ? "crown" : d().hat })}</div>
+          <h3>${finished ? "Курс пройден!" : "Финиш маршрута"}</h3>
+          <p>${finished ? "Вы прошли все уроки." : `Впереди ещё ${TOTAL - cur} уроков. Шаг за шагом, и вы здесь.`}</p>
+        </div>
+      </div>`;
+  }
+
+  function bindLearn(main) {
+    main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
+    main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-test]").forEach((b) => b.addEventListener("click", () => confirmTest(Number(b.dataset.test))));
+    main.querySelectorAll(".lesson-card").forEach((b) =>
+      b.addEventListener("click", () => {
+        if (b.classList.contains("is-locked")) {
+          Sound.play("tap");
+          Toast.show({ title: "Урок пока закрыт", text: "Сначала пройдите уроки выше по маршруту", icon: SVG.icon("lock").replace("<svg", '<svg style="color:var(--muted)"') });
+          return;
+        }
+        startLesson(Number(b.dataset.gi));
+      })
+    );
+  }
+
+  /* ======================================================================
+     Урок
+     ====================================================================== */
+  // Общее начало любой сессии: урок, повторение или тест главы
+  function beginSession(mode, queue, extra) {
+    lesson = Object.assign({
+      mode,
+      queue,
+      idx: 0,
+      total: queue.length,
+      solved: 0,
+      correctAnswers: 0,
+      mistakes: 0,
+      startedAt: Date.now(),
+      ctrl: null,
+      phase: "answer",
+      skipped: 0
+    }, extra);
+    Sound.unlock();
+    renderLesson();
+  }
+
+  const speakingOn = () => d().settings.speaking !== false;
+
+  function startLesson(gi) {
+    const entry = FLAT[gi];
+    if (!entry || gi > currentIndex()) return;
+    const replay = isDone(entry.lesson.id);
+    const queue = Exercises.build(entry.unit, entry.lesson, { isReplay: replay, speaking: speakingOn() });
+    beginSession("lesson", queue, { entry, replay, colors: entry.unit.colors });
+  }
+
+  /* ---------- Интервальное повторение слов ---------- */
+  // Все слова курса по ключу (en в нижнем регистре)
+  const WORDS = {};
+  FLAT.forEach((x) => x.lesson.words.forEach((w) => { if (w.en.length > 1 && !WORDS[w.en.toLowerCase()]) WORDS[w.en.toLowerCase()] = Object.assign({ ui: x.ui }, w); }));
+  // Через сколько дней снова показать слово на каждом уровне знания
+  const INTERVALS = [0, 1, 2, 4, 7, 15, 30];
+  const DAY = 86400000;
+
+  function rememberWords(words) {
+    const st = d().wordStats;
+    words.forEach((w) => {
+      const k = w.en.toLowerCase();
+      if (w.en.length > 1 && !st[k]) st[k] = { lvl: 1, due: Date.now() + DAY, wrong: 0, seen: 1 };
+    });
+  }
+
+  // Слово, которое проверяло упражнение (для статистики)
+  function exerciseWord(ex) {
+    const en = (ex.word && ex.word.en) || (ex.type === "listen" || ex.type === "dictation" ? ex.target : null);
+    return en && WORDS[en.toLowerCase()] ? en.toLowerCase() : null;
+  }
+
+  function trackAnswer(ex, correct) {
+    const k = exerciseWord(ex);
+    if (!k) return;
+    const st = d().wordStats;
+    // В тесте не добавляем в словарь слова, которые ещё не изучались
+    if (!st[k] && lesson && lesson.mode === "test") return;
+    const s = st[k] || (st[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 });
+    s.seen++;
+    if (correct) {
+      s.lvl = Math.min(INTERVALS.length - 1, s.lvl + 1);
+      s.due = Date.now() + INTERVALS[s.lvl] * DAY;
+    } else {
+      s.lvl = 0;
+      s.wrong++;
+      s.due = Date.now();
+    }
+  }
+
+  // Слова, которые пора повторить: сначала просроченные и слабые
+  function dueWords() {
+    const st = d().wordStats;
+    const now = Date.now();
+    return Object.keys(st)
+      .filter((k) => WORDS[k] && st[k].due <= now)
+      .sort((a, b) => st[a].lvl - st[b].lvl || st[b].wrong - st[a].wrong);
+  }
+
+  function startReview() {
+    const st = d().wordStats;
+    let keys = dueWords();
+    // Если просроченных мало, добавляем самые трудные слова
+    if (keys.length < 6) {
+      const extra = Object.keys(st).filter((k) => WORDS[k] && !keys.includes(k)).sort((a, b) => st[b].wrong - st[a].wrong || st[a].lvl - st[b].lvl);
+      keys = keys.concat(extra).slice(0, 6);
+    }
+    keys = keys.slice(0, 8);
+    if (keys.length < 4) {
+      Toast.show({ title: "Пока нечего повторять", text: "Пройдите пару уроков, и слова появятся здесь", icon: SVG.mascot({ mood: "idle" }) });
+      return;
+    }
+    const queue = Exercises.buildReview(keys.map((k) => WORDS[k]));
+    beginSession("review", queue, { colors: ["#ff6b4a", "#ffb547"], reviewKeys: keys });
+  }
+
+  /* ---------- Тест для пропуска глав ---------- */
+  const TEST_MAX_MISTAKES = 2;
+
+  async function confirmTest(ui) {
+    const u = COURSE.units[ui];
+    const ok = await confirmModal({
+      pic: `<div class="modal__pic">${SVG.mascot({ mood: "determined" })}</div>`,
+      title: `Тест: ${esc(u.title)}`,
+      text: `12 заданий по всей главе. Если ошибок будет не больше ${TEST_MAX_MISTAKES}, откроются эта глава и все главы до неё.`,
+      ok: "Начать тест",
+      okClass: "",
+      cancel: "Не сейчас"
+    });
+    if (ok) beginSession("test", Exercises.buildTest(u), { testUnit: ui, colors: u.colors });
+  }
+
+  /* ---------- Задания дня ---------- */
+  const QUESTS = [
+    { id: "lessons2", title: "Пройдите 2 урока", goal: 2, icon: "book", value: (q) => q.lessons },
+    { id: "xp30", title: "Наберите 30 XP", goal: 30, icon: "bolt", value: () => Store.todayXP() },
+    { id: "correct15", title: "Дайте 15 верных ответов", goal: 15, icon: "target", value: (q) => q.correct },
+    { id: "review1", title: "Повторите слова один раз", goal: 1, icon: "streak", value: (q) => q.reviews },
+    { id: "perfect1", title: "Урок без единой ошибки", goal: 1, icon: "star", value: (q) => q.perfect },
+    { id: "lessons1", title: "Пройдите 1 урок", goal: 1, icon: "book", value: (q) => q.lessons }
+  ];
+  const QUEST_REWARD = 15;
+
+  // Счётчики дня: при смене даты обнуляются
+  function daily() {
+    const q = d().daily;
+    const today = Store.dayKey();
+    if (q.day !== today) Object.assign(q, { day: today, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [] });
+    return q;
+  }
+
+  // Три задания на сегодня (одинаковые весь день)
+  function todayQuests() {
+    let h = 0;
+    for (const c of Store.dayKey()) h = (h * 33 + c.charCodeAt(0)) >>> 0;
+    const lessonQuest = h % 2 ? QUESTS[0] : QUESTS[5];
+    const others = QUESTS.filter((q) => q !== QUESTS[0] && q !== QUESTS[5]);
+    const a = others[h % others.length];
+    const b = others[(h + 1 + (h >> 3) % (others.length - 1)) % others.length];
+    return [lessonQuest, a, b === a ? others[(others.indexOf(a) + 1) % others.length] : b];
+  }
+
+  // Выдаёт награды за выполненные задания
+  function claimQuests() {
+    const q = daily();
+    const done = [];
+    for (const quest of todayQuests()) {
+      if (q.claimed.includes(quest.id)) continue;
+      if (quest.value(q) >= quest.goal) {
+        q.claimed.push(quest.id);
+        d().gems += QUEST_REWARD;
+        d().gemsEarned += QUEST_REWARD;
+        done.push(quest);
+      }
+    }
+    if (done.length) Store.save();
+    return done;
+  }
+
+  function homeRow() {
+    const q = daily();
+    const quests = todayQuests();
+    const due = dueWords().length;
+    const total = Object.keys(d().wordStats).length;
+    return `
+      <div class="home-row">
+        <div class="card widget reveal">
+          <div class="widget__head"><span class="widget__title">Задания дня</span><span class="tag">${q.claimed.length} / 3</span></div>
+          <div class="quest-list">
+            ${quests.map((quest) => {
+              const val = Math.min(quest.goal, quest.value(q));
+              const isDoneQ = q.claimed.includes(quest.id);
+              return `<div class="quest ${isDoneQ ? "is-done" : ""}">
+                <span class="quest__icon">${SVG.icon(isDoneQ ? "check" : quest.icon)}</span>
+                <div><div class="quest__title">${quest.title}</div><div class="progress"><div class="progress__fill" style="width:${(val / quest.goal) * 100}%"></div></div></div>
+                <span class="quest__reward">${coinIcon(16)}${QUEST_REWARD}</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>
+        <div class="card review-card reveal">
+          <div class="widget__title">Повторение слов</div>
+          <div><div class="review-card__count">${due}</div><div class="widget__body">${total ? (due ? "слов пора повторить" : "Всё повторено. Новые слова появятся завтра") : "Слова появятся после первого урока"}</div></div>
+          <button class="btn btn--sm" data-review ${total < 4 ? "disabled" : ""}>${SVG.icon("repeat")}Повторить</button>
+          <div class="review-card__fox">${SVG.mascot({ mood: "readlaugh", hat: d().hat })}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderLesson() {
+    const L = lesson;
+    const c = L.colors || ["#ff6b4a", "#ffb547"];
+    $app.innerHTML = `
+      <div class="lesson screen-enter" style="--u1:${c[0]};--u2:${c[1]}">
+        <div class="lesson__top">
+          <button class="icon-btn" data-act="quit" aria-label="Выйти из урока">${SVG.icon("close")}</button>
+          <div class="progress" role="progressbar" aria-label="Прогресс урока"><div class="progress__fill" id="lessonProgress"></div></div>
+          <span class="lesson__count" id="lessonCount"></span>
+        </div>
+        <div class="lesson__body" id="exRoot"></div>
+        <footer class="lesson__foot" id="foot">
+          <div class="lesson__foot-inner">
+            <div class="foot-left" id="footLeft"></div>
+            <button class="btn" id="mainBtn" disabled>Проверить</button>
+          </div>
+        </footer>
+      </div>`;
+    $app.querySelector('[data-act="quit"]').addEventListener("click", quitLesson);
+    $app.querySelector("#mainBtn").addEventListener("click", onMain);
+    showExercise();
+  }
+
+  function updateLessonProgress() {
+    const el = document.getElementById("lessonProgress");
+    const cnt = document.getElementById("lessonCount");
+    if (el) el.style.width = `${(lesson.solved / lesson.total) * 100}%`;
+    if (cnt) cnt.textContent = `${Math.min(lesson.solved, lesson.total)} / ${lesson.total}`;
+  }
+
+  const HINTS = {
+    teach: "Запомните слово и нажмите «Дальше»",
+    choose: "Выберите вариант или нажмите 1-4",
+    picture: "Выберите подходящую картинку",
+    match: "Соедините слова и переводы",
+    type: "Напишите ответ и нажмите Enter",
+    build: "Соберите фразу из слов",
+    listen: "Послушайте и выберите вариант",
+    dictation: "Послушайте и напишите",
+    gap: "Выберите правильную форму",
+    speak: "Нажмите на микрофон и скажите фразу",
+    dialog: "Выберите подходящий ответ",
+    story: "Прочитайте текст и ответьте на вопрос"
+  };
+
+  function showExercise() {
+    const L = lesson;
+    const ex = L.queue[L.idx];
+    const root = document.getElementById("exRoot");
+    const foot = document.getElementById("foot");
+    const btn = document.getElementById("mainBtn");
+    const left = document.getElementById("footLeft");
+    L.phase = "answer";
+    foot.className = "lesson__foot";
+    btn.className = "btn";
+    btn.textContent = ex.type === "teach" ? "Дальше" : "Проверить";
+    btn.disabled = true;
+    // Для заданий на слух можно пропустить (нет наушников или звука)
+    left.innerHTML = ex.type === "listen" || ex.type === "dictation"
+      ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу слушать</button>`
+      : ex.type === "speak"
+      ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу говорить</button>`
+      : `<span class="foot-hint">${HINTS[ex.type] || ""}</span>`;
+    const skip = document.getElementById("skipBtn");
+    if (skip) skip.addEventListener("click", skipExercise);
+
+    L.ctrl = Exercises.render(ex, root, {
+      onReady: (v) => { if (L.phase === "answer") btn.disabled = !v; },
+      speak: say,
+      auto,
+      sfx: (n) => Sound.play(n),
+      hat: d().hat
+    });
+    updateLessonProgress();
+    window.scrollTo({ top: 0 });
+  }
+
+  function skipExercise() {
+    lesson.skipped++;
+    lesson.solved++;
+    nextExercise();
+  }
+
+  const PRAISE = ["Отлично!", "Верно!", "Так держать!", "Великолепно!", "Супер!", "Точно в цель!"];
+
+  function onMain() {
+    const L = lesson;
+    if (!L) return;
+    const btn = document.getElementById("mainBtn");
+    if (btn.disabled) return;
+
+    if (L.phase === "feedback") {
+      nextExercise();
+      return;
+    }
+
+    const res = L.ctrl.check();
+    const ex = L.queue[L.idx];
+
+    // Задания без проверки (карточка слова, пары) засчитываются сразу
+    if (res.silent) {
+      if (res.mistakes) L.mistakes += res.mistakes;
+      L.solved++;
+      if (ex.type === "match") {
+        Sound.play("correct");
+        L.correctAnswers++;
+      }
+      nextExercise();
+      return;
+    }
+
+    L.phase = "feedback";
+    const data = d();
+    data.totalAnswers++;
+    trackAnswer(ex, res.correct);
+    // Точность по дням для статистики
+    const acc = data.accByDay[Store.dayKey()] || (data.accByDay[Store.dayKey()] = { c: 0, t: 0 });
+    acc.t++;
+    if (res.correct) acc.c++;
+    const foot = document.getElementById("foot");
+    const left = document.getElementById("footLeft");
+
+    if (res.correct) {
+      data.correctAnswers++;
+      daily().correct++;
+      L.correctAnswers++;
+      L.solved++;
+      Sound.play("correct");
+      const r = btn.getBoundingClientRect();
+      Confetti.burst({ x: (r.left + r.width / 2) / innerWidth, y: r.top / innerHeight, count: 24, spread: 50, power: 9 });
+      foot.className = "lesson__foot is-correct";
+      left.innerHTML = `
+        <div class="feedback">
+          <div class="feedback__fox">${SVG.mascot({ mood: Math.random() < 0.5 ? "wink" : "cheer", hat: d().hat })}</div>
+          <div>
+            <div class="feedback__title">${res.typo ? "Почти идеально!" : PRAISE[(Math.random() * PRAISE.length) | 0]}</div>
+            ${res.typo ? `<div class="feedback__text">Есть опечатка. Правильно: <b>${esc(res.solution)}</b></div>` : ""}
+          </div>
+        </div>`;
+      btn.className = "btn btn--teal";
+    } else {
+      L.mistakes++;
+      Sound.play("wrong");
+      // В уроке и повторении ошибка возвращается в конец; в тесте просто считается
+      const isTest = L.mode === "test";
+      if (!isTest) {
+        L.queue.push(ex);
+        L.total++;
+      } else {
+        L.solved++;
+      }
+      foot.className = "lesson__foot is-wrong";
+      left.innerHTML = `
+        <div class="feedback">
+          <div class="feedback__fox">${SVG.mascot({ mood: "worried", hat: d().hat })}</div>
+          <div>
+            <div class="feedback__title">Не совсем</div>
+            <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${isTest ? ` Ошибок: ${L.mistakes} из ${TEST_MAX_MISTAKES + 1} допустимых.` : " Задание вернётся в конце."}</div>
+          </div>
+        </div>`;
+      btn.className = "btn btn--rose";
+    }
+    btn.textContent = "Продолжить";
+    btn.disabled = false;
+    btn.focus({ preventScroll: true });
+    updateLessonProgress();
+    Store.save();
+  }
+
+  function nextExercise() {
+    const L = lesson;
+    L.idx++;
+    updateLessonProgress();
+    // Тест заканчивается досрочно, если ошибок уже слишком много
+    if (L.mode === "test" && L.mistakes > TEST_MAX_MISTAKES) {
+      finishTest(false);
+      return;
+    }
+    if (L.idx >= L.queue.length) {
+      if (L.mode === "review") finishReview();
+      else if (L.mode === "test") finishTest(true);
+      else finishLesson();
+      return;
+    }
+    showExercise();
+  }
+
+  async function quitLesson() {
+    const what = lesson.mode === "test" ? "теста" : lesson.mode === "review" ? "повторения" : "этого урока";
+    const keep = await confirmModal({
+      pic: `<div class="modal__pic">${SVG.mascot({ mood: "sad", hat: d().hat })}</div>`,
+      title: "Уже уходите?",
+      text: `Если выйти сейчас, прогресс ${what} не сохранится.`,
+      ok: "Продолжить",
+      okClass: "",
+      cancel: "Выйти"
+    });
+    if (!keep) exitLesson();
+  }
+
+  function exitLesson() {
+    lesson = null;
+    Speech.stop();
+    renderShell();
+  }
+
+  // Общие начисления в конце любой сессии
+  function settle(xp, coins, L) {
+    const data = d();
+    const goalBefore = Store.todayXP();
+    Store.addXP(xp);
+    data.gems += coins;
+    data.gemsEarned += coins;
+    const hour = new Date().getHours();
+    if (hour >= 22 || hour < 4) data.flags.night = 1;
+    if (hour >= 4 && hour < 8) data.flags.morning = 1;
+    const secs = Math.round((Date.now() - L.startedAt) / 1000);
+    data.minutes += secs / 60;
+    const streakUp = Store.markActive();
+    Store.save();
+    const quests = claimQuests();
+    const unlocked = checkAchievements();
+    return {
+      secs,
+      streakUp,
+      quests,
+      unlocked,
+      goalReached: goalBefore < data.dailyGoal && Store.todayXP() >= data.dailyGoal,
+      accuracy: Math.round((L.correctAnswers / Math.max(1, L.correctAnswers + L.mistakes)) * 100)
+    };
+  }
+
+  /* Завершение урока: награды, серия, достижения */
+  function finishLesson() {
+    const L = lesson;
+    const data = d();
+    const id = L.entry.lesson.id;
+    const firstTime = !isDone(id);
+    const perfect = L.mistakes === 0 && L.skipped === 0;
+    const factor = firstTime ? 1 : RULES.xpReplayFactor;
+    const xp = Math.max(1, Math.round((L.correctAnswers * RULES.xpPerCorrect + RULES.xpLessonBonus + (perfect ? RULES.xpPerfectBonus : 0)) * factor));
+    const coins = Math.round((RULES.gemsPerLesson + (perfect ? RULES.gemsPerfectBonus : 0)) * factor);
+
+    const prev = data.completed[id] || { times: 0, perfect: false };
+    data.completed[id] = { times: prev.times + 1, perfect: prev.perfect || perfect, at: Date.now() };
+    if (perfect) { data.perfectCount++; daily().perfect++; }
+    daily().lessons++;
+    // Выученные слова (буквы алфавита не считаем) попадают в повторение
+    const words = new Set(data.words);
+    L.entry.lesson.words.forEach((w) => { if (w.en.length > 1) words.add(w.en.toLowerCase()); });
+    data.words = [...words];
+    rememberWords(L.entry.lesson.words);
+
+    const s = settle(xp, coins, L);
+    const unitFinished = firstTime && unitDone(L.entry.ui) === L.entry.unit.lessons.length;
+    lesson = null;
+    const title = unitFinished ? "Глава пройдена!" : perfect ? "Безупречно!" : s.accuracy >= 80 ? "Урок пройден!" : "Хорошая работа!";
+    renderResult(Object.assign(s, {
+      xp, coins, perfect, title,
+      subtitle: `${L.entry.unit.title}: ${L.entry.lesson.title}`,
+      mood: unitFinished ? "party" : perfect ? "cheer" : "happy",
+      again: () => startLesson(L.entry.gi), againLabel: "Пройти ещё раз"
+    }));
+  }
+
+  function finishReview() {
+    const L = lesson;
+    const data = d();
+    const perfect = L.mistakes === 0 && L.skipped === 0;
+    const xp = L.correctAnswers * RULES.xpPerCorrect + 5;
+    const coins = 5;
+    daily().reviews++;
+    data.reviewsTotal = (data.reviewsTotal || 0) + 1;
+    const s = settle(xp, coins, L);
+    lesson = null;
+    renderResult(Object.assign(s, {
+      xp, coins, perfect,
+      title: "Слова повторены!",
+      subtitle: `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
+      mood: "readlaugh",
+      again: startReview, againLabel: "Повторить ещё"
+    }));
+  }
+
+  function finishTest(passed) {
+    const L = lesson;
+    const data = d();
+    const ui = L.testUnit;
+    const u = COURSE.units[ui];
+    if (!passed) {
+      lesson = null;
+      renderResult({
+        xp: 0, coins: 0, perfect: false, secs: Math.round((Date.now() - L.startedAt) / 1000),
+        accuracy: Math.round((L.correctAnswers / Math.max(1, L.correctAnswers + L.mistakes)) * 100),
+        streakUp: false, goalReached: false, unlocked: [], quests: [], failed: true,
+        title: "Тест не сдан",
+        subtitle: `Ошибок: ${L.mistakes}. Можно пройти уроки по порядку или попробовать ещё раз.`,
+        mood: "cry",
+        again: () => beginSession("test", Exercises.buildTest(u), { testUnit: ui, colors: u.colors }), againLabel: "Попробовать снова"
+      });
+      return;
+    }
+    // Открываем все уроки до конца этой главы включительно
+    let opened = 0;
+    FLAT.filter((x) => x.ui <= ui).forEach((x) => {
+      if (!data.completed[x.lesson.id]) {
+        data.completed[x.lesson.id] = { times: 1, perfect: false, at: Date.now(), viaTest: true };
+        opened++;
+        const words = new Set(data.words);
+        x.lesson.words.forEach((w) => { if (w.en.length > 1) words.add(w.en.toLowerCase()); });
+        data.words = [...words];
+        rememberWords(x.lesson.words);
+      }
+    });
+    const xp = 20 + L.correctAnswers * RULES.xpPerCorrect;
+    const coins = 20;
+    const s = settle(xp, coins, L);
+    lesson = null;
+    renderResult(Object.assign(s, {
+      xp, coins, perfect: L.mistakes === 0,
+      title: "Тест сдан!",
+      subtitle: `Открыто уроков: ${opened}. Глава «${u.title}» пройдена.`,
+      mood: "party",
+      again: null
+    }));
+  }
+
+  function renderResult(r) {
+    const data = d();
+    const mm = Math.floor(r.secs / 60);
+    const ss = String(r.secs % 60).padStart(2, "0");
+    const small = (name) => SVG.icon(name).replace("<svg", '<svg style="width:18px;height:18px"');
+    $app.innerHTML = `
+      <section class="result screen-enter">
+        <div class="result__inner">
+          <div class="result__mascot">${SVG.mascot({ mood: r.mood, hat: data.hat })}</div>
+          <h1 class="result__title">${esc(r.title)}</h1>
+          <p style="color:var(--text-2);font-weight:500">${esc(r.subtitle)}</p>
+          <div class="result__stats">
+            <div class="result-stat" style="animation-delay:80ms">${SVG.icon("bolt")}<div class="result-stat__value">+${r.xp}</div><div class="result-stat__label">опыт</div></div>
+            <div class="result-stat" style="animation-delay:180ms">${SVG.icon("target")}<div class="result-stat__value">${r.accuracy}%</div><div class="result-stat__label">точность</div></div>
+            <div class="result-stat" style="animation-delay:280ms">${SVG.icon("clock")}<div class="result-stat__value">${mm}:${ss}</div><div class="result-stat__label">время</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+            ${r.coins ? `<span class="tag">${small("coin")} +${r.coins} монет</span>` : ""}
+            ${r.streakUp ? `<span class="tag">${small("streak")} Дней подряд: ${data.streak}</span>` : ""}
+            ${r.goalReached ? `<span class="tag">${small("target")} Цель дня выполнена</span>` : ""}
+            ${r.perfect ? `<span class="tag">${small("star")} Без ошибок</span>` : ""}
+            ${r.quests.map((q) => `<span class="tag">${small("quest")} ${esc(q.title)}: +${QUEST_REWARD}</span>`).join("")}
+          </div>
+          <div class="result__actions">
+            <button class="btn btn--block" data-act="continue">Продолжить</button>
+            ${r.again ? `<button class="btn btn--ghost btn--block" data-act="again">${r.againLabel}</button>` : ""}
+          </div>
+        </div>
+      </section>`;
+    if (r.failed) Sound.play("wrong");
+    else {
+      Sound.play("complete");
+      Confetti.celebrate();
+    }
+    $app.querySelector('[data-act="continue"]').addEventListener("click", () => { page = r.backPage || "learn"; renderShell(); });
+    const again = $app.querySelector('[data-act="again"]');
+    if (again) again.addEventListener("click", r.again);
+    $app.querySelector('[data-act="continue"]').focus({ preventScroll: true });
+
+    // Новые достижения показываем по очереди
+    r.unlocked.forEach((a, i) => {
+      setTimeout(() => {
+        Sound.play("achievement");
+        Toast.show({ title: `Награда: ${a.title}`, text: a.desc, icon: SVG.badge(a.badge, a.colors), duration: 4200 });
+      }, 1200 + i * 900);
+    });
+  }
+
+  /* ======================================================================
+     Мини-игры: "60 секунд", "Пары на скорость", "Звуки" и справочник звуков
+     ====================================================================== */
+  let game = null;
+
+  // Слова для игр: изученные, а если их мало, то из первых открытых уроков
+  function gameWords(min = 10) {
+    const keys = Object.keys(WORDS).filter((k) => d().words.includes(k));
+    if (keys.length < min) {
+      FLAT.slice(0, Math.max(currentIndex() + 1, 8)).forEach((x) => x.lesson.words.forEach((w) => {
+        const k = w.en.toLowerCase();
+        if (WORDS[k] && !keys.includes(k)) keys.push(k);
+      }));
+    }
+    return keys.map((k) => WORDS[k]);
+  }
+
+  const GAMES = [
+    { id: "speed", title: "60 секунд", desc: "Переведите как можно больше слов за минуту", icon: "bolt", record: (r) => (r.speed ? `Рекорд: ${r.speed} слов` : "Рекорда пока нет") },
+    { id: "pairs", title: "Пары на скорость", desc: "Три раунда по 5 пар. Ошибка добавляет 3 секунды", icon: "target", record: (r) => (r.pairs ? `Рекорд: ${r.pairs} сек` : "Рекорда пока нет") },
+    { id: "sounds", title: "Звуки", desc: "Услышьте разницу: ship или sheep, think или sink", icon: "speaker", record: (r) => (r.sounds ? `Рекорд: ${r.sounds} из 10` : "Рекорда пока нет"), needsAudio: true }
+  ];
+
+  function gamesPage() {
+    const r = d().records;
+    const audioOk = Speech.isEnabled();
+    return `
+      <div class="page">
+        <div class="page__head"><h1>Игры</h1><p>Короткие тренировки на скорость и слух. Дают опыт и монеты.</p></div>
+        <div class="games">
+          ${GAMES.map((g) => `
+            <div class="card game-card reveal">
+              <span class="game-card__icon">${SVG.icon(g.icon)}</span>
+              <div class="game-card__main">
+                <div class="game-card__title">${g.title}</div>
+                <div class="game-card__desc">${g.desc}</div>
+                <span class="tag">${SVG.icon("trophy")}${g.record(r)}</span>
+              </div>
+              <button class="btn btn--sm" data-game="${g.id}" ${g.needsAudio && !audioOk ? "disabled title=\"Нужна озвучка\"" : ""}>Играть</button>
+            </div>`).join("")}
+        </div>
+
+        <h2>Трудные звуки</h2>
+        <p class="page__lead">Нажмите на слово, чтобы услышать разницу. Потом проверьте себя в игре «Звуки».</p>
+        <div class="sound-groups">
+          ${SOUND_PAIRS.map((g) => `
+            <div class="card sound-group reveal">
+              <div class="sound-group__title">${esc(g.group)}</div>
+              <div class="sound-group__tip">${esc(g.tip)}</div>
+              <div class="sound-pairs">
+                ${g.pairs.map((p) => `
+                  <div class="sound-pair">
+                    <button class="sound-word" data-say-word="${esc(p[0])}"><b>${esc(p[0])}</b><small>${esc(p[1])}</small></button>
+                    <span class="sound-vs">или</span>
+                    <button class="sound-word" data-say-word="${esc(p[2])}"><b>${esc(p[2])}</b><small>${esc(p[3])}</small></button>
+                  </div>`).join("")}
+              </div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function bindGames(main) {
+    main.querySelectorAll("[data-game]").forEach((b) => b.addEventListener("click", () => startGame(b.dataset.game)));
+  }
+
+  // Экран игры: верхняя панель с таймером и область игры
+  function renderGameShell(title) {
+    $app.innerHTML = `
+      <div class="lesson screen-enter">
+        <div class="lesson__top">
+          <button class="icon-btn" data-act="quit-game" aria-label="Выйти из игры">${SVG.icon("close")}</button>
+          <div class="progress"><div class="progress__fill" id="gameBar"></div></div>
+          <span class="lesson__count" id="gameInfo"></span>
+        </div>
+        <div class="lesson__body" id="gameRoot"><h2 class="ex-title">${esc(title)}</h2></div>
+      </div>`;
+    $app.querySelector('[data-act="quit-game"]').addEventListener("click", () => {
+      if (game && game.timer) clearInterval(game.timer);
+      game = null;
+      Speech.stop();
+      page = "games";
+      renderShell();
+    });
+  }
+
+  function startGame(kind) {
+    Sound.unlock();
+    if (kind === "speed") startSpeed();
+    if (kind === "pairs") startPairs();
+    if (kind === "sounds") startSounds();
+  }
+
+  /* --- 60 секунд --- */
+  function startSpeed() {
+    const words = Exercises.shuffle(gameWords(10));
+    game = { kind: "speed", words, i: 0, score: 0, mistakes: 0, left: 60, startedAt: Date.now(), timer: null, lock: false };
+    renderGameShell("60 секунд");
+    nextSpeed();
+    game.timer = setInterval(() => {
+      if (!game) return;
+      game.left--;
+      updateSpeedBar();
+      if (game.left <= 0) endGame();
+    }, 1000);
+    updateSpeedBar();
+  }
+  function updateSpeedBar() {
+    const bar = document.getElementById("gameBar");
+    const info = document.getElementById("gameInfo");
+    if (bar) bar.style.width = `${(game.left / 60) * 100}%`;
+    if (info) info.textContent = `${game.left} с`;
+  }
+  function nextSpeed() {
+    const g = game;
+    if (g.i >= g.words.length) { g.words = Exercises.shuffle(g.words); g.i = 0; }
+    const w = g.words[g.i++];
+    const pool = Object.values(WORDS).filter((x) => x.ru !== w.ru && x.en !== w.en);
+    const opts = Exercises.shuffle([w, ...Exercises.shuffle(pool).slice(0, 3)]);
+    const root = document.getElementById("gameRoot");
+    root.innerHTML = `
+      <div class="game-score">Верно: <b>${g.score}</b></div>
+      <div class="game-word">${esc(w.en)}</div>
+      <div class="options options--grid">${opts.map((o, i) => `<button class="option" data-i="${i}"><span class="option__key">${i + 1}</span><span>${esc(o.ru)}</span></button>`).join("")}</div>`;
+    g.lock = false;
+    root.querySelectorAll(".option").forEach((b, i) => b.addEventListener("click", () => {
+      if (g.lock || !game) return;
+      g.lock = true;
+      if (opts[i] === w) {
+        g.score++;
+        b.classList.add("is-correct");
+        Sound.play("match");
+        setTimeout(() => game && nextSpeed(), 220);
+      } else {
+        g.mistakes++;
+        b.classList.add("is-wrong");
+        root.querySelectorAll(".option")[opts.indexOf(w)].classList.add("is-correct");
+        Sound.play("wrong");
+        setTimeout(() => game && nextSpeed(), 700);
+      }
+    }));
+  }
+
+  /* --- Пары на скорость --- */
+  function startPairs() {
+    game = { kind: "pairs", round: 0, words: Exercises.shuffle(gameWords(15)), mistakes: 0, startedAt: Date.now(), penalty: 0, timer: null, score: 0 };
+    renderGameShell("Пары на скорость");
+    game.timer = setInterval(() => {
+      const info = document.getElementById("gameInfo");
+      if (info && game) info.textContent = `${Math.round((Date.now() - game.startedAt) / 1000) + game.penalty} с`;
+    }, 250);
+    nextPairsRound();
+  }
+  function nextPairsRound() {
+    const g = game;
+    if (g.round >= 3) { endGame(); return; }
+    const set = g.words.slice(g.round * 5, g.round * 5 + 5);
+    if (set.length < 5) { g.words = Exercises.shuffle(g.words.concat(gameWords(15))); }
+    const pairs = g.words.slice(g.round * 5, g.round * 5 + 5);
+    g.round++;
+    document.getElementById("gameBar").style.width = `${((g.round - 1) / 3) * 100}%`;
+    const left = Exercises.shuffle(pairs), right = Exercises.shuffle(pairs);
+    const root = document.getElementById("gameRoot");
+    root.innerHTML = `
+      <div class="game-score">Раунд <b>${g.round}</b> из 3</div>
+      <div class="match">
+        <div class="match__col">${left.map((p) => `<button class="option" data-side="en" data-key="${esc(p.en)}">${esc(p.en)}</button>`).join("")}</div>
+        <div class="match__col">${right.map((p) => `<button class="option" data-side="ru" data-key="${esc(p.en)}">${esc(p.ru)}</button>`).join("")}</div>
+      </div>`;
+    let picked = { en: null, ru: null }, done = 0;
+    root.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => {
+      const side = b.dataset.side;
+      if (picked[side]) picked[side].classList.remove("is-selected");
+      picked[side] = b;
+      b.classList.add("is-selected");
+      if (!picked.en || !picked.ru) return;
+      const a = picked.en, c = picked.ru;
+      picked = { en: null, ru: null };
+      if (a.dataset.key === c.dataset.key) {
+        Sound.play("match");
+        [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched"); });
+        g.score++;
+        if (++done === pairs.length) setTimeout(() => game && nextPairsRound(), 300);
+      } else {
+        Sound.play("wrong");
+        g.mistakes++;
+        g.penalty += 3;
+        [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-wrong"); });
+        setTimeout(() => [a, c].forEach((x) => x.classList.remove("is-wrong")), 420);
+      }
+    }));
+  }
+
+  /* --- Звуки --- */
+  function startSounds() {
+    const all = SOUND_PAIRS.flatMap((g) => g.pairs.map((p) => ({ p, tip: g.tip })));
+    game = { kind: "sounds", rounds: Exercises.shuffle(all).slice(0, 10), i: 0, score: 0, mistakes: 0, startedAt: Date.now(), timer: null };
+    renderGameShell("Звуки");
+    nextSound();
+  }
+  function nextSound() {
+    const g = game;
+    if (g.i >= g.rounds.length) { endGame(); return; }
+    const { p, tip } = g.rounds[g.i++];
+    const targetIdx = Math.random() < 0.5 ? 0 : 2;
+    const target = p[targetIdx];
+    document.getElementById("gameBar").style.width = `${((g.i - 1) / g.rounds.length) * 100}%`;
+    document.getElementById("gameInfo").textContent = `${g.i} / ${g.rounds.length}`;
+    const root = document.getElementById("gameRoot");
+    root.innerHTML = `
+      <div class="ex-head"><span class="ex-kicker">${esc(tip)}</span><h2 class="ex-title">Какое слово прозвучало?</h2></div>
+      <div class="listen-row">
+        <button class="speak-btn speak-btn--xl" data-again aria-label="Прослушать ещё раз">${SVG.icon("speaker")}</button>
+        <button class="speak-btn speak-btn--slow" data-slow aria-label="Медленно">${SVG.icon("turtle")}</button>
+      </div>
+      <div class="options options--grid">
+        ${[0, 2].map((k, i) => `<button class="option sound-option" data-k="${k}"><span class="option__key">${i + 1}</span><span><b>${esc(p[k])}</b><br><small>${esc(p[k + 1])}</small></span></button>`).join("")}
+      </div>`;
+    const play = (slow) => say(target, slow);
+    setTimeout(() => play(false), 250);
+    root.querySelector("[data-again]").addEventListener("click", () => play(false));
+    root.querySelector("[data-slow]").addEventListener("click", () => play(true));
+    let lock = false;
+    root.querySelectorAll(".sound-option").forEach((b) => b.addEventListener("click", () => {
+      if (lock) return;
+      lock = true;
+      const ok = Number(b.dataset.k) === targetIdx;
+      b.classList.add(ok ? "is-correct" : "is-wrong");
+      if (!ok) root.querySelector(`[data-k="${targetIdx}"]`).classList.add("is-correct");
+      if (ok) { g.score++; Sound.play("correct"); } else { g.mistakes++; Sound.play("wrong"); }
+      setTimeout(() => game && nextSound(), ok ? 650 : 1300);
+    }));
+  }
+
+  /* --- Итог игры: награды и рекорды --- */
+  function endGame() {
+    const g = game;
+    if (!g) return;
+    if (g.timer) clearInterval(g.timer);
+    game = null;
+    const data = d();
+    const r = data.records;
+    let xp = 0, coins = 0, title = "", subtitle = "", record = false;
+    if (g.kind === "speed") {
+      xp = g.score;
+      coins = Math.min(15, Math.floor(g.score / 2));
+      record = g.score > (r.speed || 0);
+      if (record) r.speed = g.score;
+      title = record ? "Новый рекорд!" : "Время вышло!";
+      subtitle = `Верных переводов за минуту: ${g.score}`;
+    } else if (g.kind === "pairs") {
+      const secs = Math.round((Date.now() - g.startedAt) / 1000) + g.penalty;
+      xp = 15;
+      coins = 10;
+      record = !r.pairs || secs < r.pairs;
+      if (record) r.pairs = secs;
+      title = record ? "Новый рекорд!" : "Все пары найдены!";
+      subtitle = `Время: ${secs} сек${g.penalty ? ` (штраф ${g.penalty} сек)` : ""}`;
+    } else {
+      xp = g.score * 2;
+      coins = g.score >= 8 ? 10 : 5;
+      record = g.score > (r.sounds || 0);
+      if (record) r.sounds = g.score;
+      title = g.score >= 9 ? "Отличный слух!" : record ? "Новый рекорд!" : "Хорошая тренировка!";
+      subtitle = `Верно: ${g.score} из ${g.rounds.length}`;
+    }
+    const s = settle(xp, coins, { startedAt: g.startedAt, correctAnswers: g.score, mistakes: g.mistakes });
+    renderResult(Object.assign(s, {
+      xp, coins, perfect: g.mistakes === 0 && g.score > 0, title, subtitle,
+      mood: record ? "cool" : g.kind === "sounds" && g.score < 5 ? "worried" : "cheer",
+      again: () => startGame(g.kind), againLabel: "Сыграть ещё", backPage: "games"
+    }));
+  }
+
+  /* ======================================================================
+     Словарь: все изученные слова с озвучкой, поиском и фильтрами
+     ====================================================================== */
+  let dictFilter = "all";
+  let dictQuery = "";
+
+  function wordsPage() {
+    const data = d();
+    const st = data.wordStats;
+    const learned = Object.keys(WORDS).filter((k) => data.words.includes(k) || st[k]);
+    const due = dueWords().length;
+    if (!learned.length) {
+      return `
+        <div class="page">
+          <div class="page__head"><h1>Словарь</h1></div>
+          <div class="card empty reveal">
+            <div class="empty__fox">${SVG.mascot({ mood: "sleep" })}</div>
+            <h3>Здесь пока пусто</h3>
+            <p>Пройдите первый урок со словами, и они появятся в словаре.</p>
+            <button class="btn" data-go="learn">К маршруту</button>
+          </div>
+        </div>`;
+    }
+    const weak = learned.filter((k) => st[k] && st[k].wrong > 0).length;
+    return `
+      <div class="page">
+        <div class="page__head">
+          <h1>Словарь</h1>
+          <p>Изучено слов: ${learned.length}. Пора повторить: ${due}.</p>
+        </div>
+        <div class="dict-tools">
+          <div class="search">${SVG.icon("search")}<input class="input" id="dictSearch" type="search" placeholder="Поиск по-английски или по-русски" value="${esc(dictQuery)}" aria-label="Поиск слова"></div>
+          <div class="chips-row">
+            <button class="filter-chip ${dictFilter === "all" ? "is-active" : ""}" data-filter="all">Все (${learned.length})</button>
+            <button class="filter-chip ${dictFilter === "due" ? "is-active" : ""}" data-filter="due">К повторению (${due})</button>
+            <button class="filter-chip ${dictFilter === "weak" ? "is-active" : ""}" data-filter="weak">Трудные (${weak})</button>
+            <button class="btn btn--sm" data-review style="margin-left:auto">${SVG.icon("repeat")}Повторить</button>
+          </div>
+        </div>
+        <div id="dictList"></div>
+      </div>`;
+  }
+
+  function renderDictList() {
+    const box = document.getElementById("dictList");
+    if (!box) return;
+    const data = d();
+    const st = data.wordStats;
+    const now = Date.now();
+    const q = dictQuery.trim().toLowerCase();
+    let keys = Object.keys(WORDS).filter((k) => data.words.includes(k) || st[k]);
+    if (dictFilter === "due") keys = keys.filter((k) => st[k] && st[k].due <= now);
+    if (dictFilter === "weak") keys = keys.filter((k) => st[k] && st[k].wrong > 0);
+    if (q) keys = keys.filter((k) => k.includes(q) || WORDS[k].ru.toLowerCase().includes(q));
+    if (!keys.length) {
+      box.innerHTML = `<div class="card empty"><div class="empty__fox">${SVG.mascot({ mood: "idle" })}</div><p>Ничего не найдено</p></div>`;
+      return;
+    }
+    // Группируем по главам
+    const groups = {};
+    keys.forEach((k) => (groups[WORDS[k].ui] = groups[WORDS[k].ui] || []).push(k));
+    box.innerHTML = Object.keys(groups).sort((a, b) => a - b).map((ui) => `
+      <div class="dict-group">
+        <div class="dict-group__title">${esc(COURSE.units[ui].title)}</div>
+        ${groups[ui].map((k) => {
+          const w = WORDS[k];
+          const s = st[k] || { lvl: 1, wrong: 0 };
+          const weakW = s.wrong > 0 && s.lvl <= 2;
+          const bars = Array.from({ length: 6 }, (_, i) => `<i class="${i < s.lvl ? "on" : ""}"></i>`).join("");
+          return `
+            <div class="card word-row">
+              <div class="word-row__pic">${w.pic && SVG.hasPic(w.pic) ? SVG.pic(w.pic) : `<span>${esc(w.en[0].toUpperCase())}</span>`}</div>
+              <div><div class="word-row__en">${esc(w.en)}</div><div class="word-row__ru">${esc(w.ru)}</div></div>
+              <div class="strength ${weakW ? "is-weak" : ""}" title="Насколько хорошо слово запомнено">${bars}</div>
+              ${Speech.canSay(w.en) ? `<button class="speak-btn" data-say-word="${esc(w.en)}" aria-label="Прослушать ${esc(w.en)}">${SVG.icon("speaker")}</button>` : "<span></span>"}
+            </div>`;
+        }).join("")}
+      </div>`).join("");
+    box.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+  }
+
+  function bindWords(main) {
+    main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+    main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-filter]").forEach((b) =>
+      b.addEventListener("click", () => {
+        dictFilter = b.dataset.filter;
+        main.querySelectorAll("[data-filter]").forEach((x) => x.classList.toggle("is-active", x === b));
+        renderDictList();
+      })
+    );
+    const input = main.querySelector("#dictSearch");
+    if (input) input.addEventListener("input", () => { dictQuery = input.value; renderDictList(); });
+    renderDictList();
+  }
+
+  /* ======================================================================
+     Достижения
+     ====================================================================== */
+  function metric(name) {
+    const data = d();
+    switch (name) {
+      case "lessons":
+      case "allLessons": return lessonsDone();
+      case "units": return unitsDone();
+      case "bestStreak": return data.bestStreak;
+      case "xp": return data.xp;
+      case "perfect": return data.perfectCount;
+      case "words": return data.words.length;
+      case "gemsEarned": return data.gemsEarned;
+      case "night": return data.flags.night;
+      case "morning": return data.flags.morning;
+      default: return 0;
+    }
+  }
+  const goalOf = (a) => (a.metric === "allLessons" ? TOTAL : a.goal);
+
+  function checkAchievements() {
+    const data = d();
+    const fresh = [];
+    for (const a of ACHIEVEMENTS) {
+      if (data.achievements[a.id]) continue;
+      if (metric(a.metric) >= goalOf(a)) {
+        data.achievements[a.id] = Date.now();
+        fresh.push(a);
+      }
+    }
+    if (fresh.length) Store.save();
+    return fresh;
+  }
+
+  function achievementsPage() {
+    const data = d();
+    const got = ACHIEVEMENTS.filter((a) => data.achievements[a.id]).length;
+    return `
+      <div class="page">
+        <div class="page__head">
+          <h1>Награды</h1>
+          <p>Получено ${got} из ${ACHIEVEMENTS.length}. Значки выдаются за уроки, серии и точность.</p>
+        </div>
+        ${leaderboard()}
+        <div class="badges">
+          ${ACHIEVEMENTS.map((a, i) => {
+            const have = !!data.achievements[a.id];
+            const goal = goalOf(a);
+            const val = Math.min(goal, metric(a.metric));
+            return `
+              <div class="card badge reveal ${have ? "" : "is-locked"}" style="transition-delay:${(i % 6) * 40}ms">
+                ${SVG.badge(a.badge, a.colors)}
+                <div class="badge__name">${esc(a.title)}</div>
+                <div class="badge__desc">${esc(a.desc)}</div>
+                ${have
+                  ? `<span class="tag">${new Date(data.achievements[a.id]).toLocaleDateString("ru-RU")}</span>`
+                  : `<div class="badge__progress"><div class="progress"><div class="progress__fill" style="width:${(val / goal) * 100}%"></div></div><div class="badge__desc" style="margin-top:4px">${val} / ${goal}</div></div>`}
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+  }
+
+  /* ======================================================================
+     Магазин
+     ====================================================================== */
+  function buy(itemId) {
+    const data = d();
+    const item = SHOP_ITEMS.find((i) => i.id === itemId);
+    if (!item || data.gems < item.price) return false;
+    if (itemId === "freeze") {
+      if (data.freezes >= 2) return false;
+      data.freezes++;
+    } else if (item.hat) {
+      if (data.owned.includes(item.id)) return false;
+      data.owned.push(item.id);
+      data.hat = item.hat;
+    }
+    data.gems -= item.price;
+    Store.save();
+    Sound.play("coin");
+    refreshStats();
+    bumpStat("gems");
+    Toast.show({ title: "Покупка совершена", text: item.title, icon: SVG.shopPic(item.pic) });
+    return true;
+  }
+
+  function shopPage() {
+    const data = d();
+    return `
+      <div class="page">
+        <div class="page__head">
+          <h1>Магазин</h1>
+          <p>На счету: <b style="color:var(--amber)">${data.gems}</b> монет. Монеты даются за каждый урок.</p>
+        </div>
+        <div class="shop-list">
+          ${SHOP_ITEMS.map((item) => {
+            let btn;
+            const afford = data.gems >= item.price;
+            const price = `<span class="price">${coinIcon(18)}${item.price}</span>`;
+            if (item.id === "freeze") {
+              const max = data.freezes >= 2;
+              btn = `<button class="btn btn--sm" data-buy="${item.id}" ${max || !afford ? "disabled" : ""}>${max ? `Есть ${data.freezes}` : price}</button>`;
+            } else {
+              const owned = data.owned.includes(item.id);
+              const worn = data.hat === item.hat;
+              btn = owned
+                ? `<button class="btn btn--sm ${worn ? "btn--ghost" : "btn--blue"}" data-wear="${item.hat}">${worn ? "Снять" : "Надеть"}</button>`
+                : `<button class="btn btn--sm" data-buy="${item.id}" ${!afford ? "disabled" : ""}>${price}</button>`;
+            }
+            return `
+              <div class="card shop-item reveal">
+                ${SVG.shopPic(item.pic)}
+                <div class="shop-item__main">
+                  <div class="shop-item__name">${esc(item.title)}</div>
+                  <div class="shop-item__desc">${esc(item.desc)}</div>
+                </div>
+                ${btn}
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+  }
+
+  function bindShop(main) {
+    main.querySelectorAll("[data-buy]").forEach((b) => b.addEventListener("click", () => { if (buy(b.dataset.buy)) renderPage(); }));
+    main.querySelectorAll("[data-wear]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const data = d();
+        data.hat = data.hat === b.dataset.wear ? null : b.dataset.wear;
+        Store.save();
+        Sound.play("tap");
+        renderPage();
+      })
+    );
+  }
+
+  /* ======================================================================
+     Профиль
+     ====================================================================== */
+  function profilePage() {
+    const data = d();
+    const user = Store.user();
+    const week = Store.weekXP();
+    const maxXP = Math.max(20, ...week.map((w) => w.xp));
+    const days = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+    const accuracy = data.totalAnswers ? Math.round((data.correctAnswers / data.totalAnswers) * 100) : 0;
+    const stats = [
+      { icon: "streak", value: data.streak, label: `Дней подряд (рекорд ${data.bestStreak})` },
+      { icon: "bolt", value: data.xp, label: "Всего опыта" },
+      { icon: "book", value: `${lessonsDone()}/${TOTAL}`, label: "Уроков пройдено" },
+      { icon: "words", value: data.words.length, label: "Слов изучено" },
+      { icon: "target", value: `${accuracy}%`, label: "Точность ответов" },
+      { icon: "clock", value: Math.round(data.minutes), label: "Минут занятий" }
+    ];
+    return `
+      <div class="page">
+        <div class="profile-head reveal">
+          <span class="avatar avatar--lg" style="background:${user.color}">${esc(user.username[0].toUpperCase())}</span>
+          <div class="profile-head__info">
+            <div class="profile-head__name">${esc(user.username)}</div>
+            <div class="profile-head__meta">С нами с ${new Date(user.createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}</div>
+            <div class="profile-head__meta">Наград: ${Object.keys(data.achievements).length}. Монет: ${data.gems}</div>
+          </div>
+          <button class="btn btn--sm btn--ghost" data-act="switch">Сменить профиль</button>
+        </div>
+
+        <h2>Статистика</h2>
+        <div class="stats-grid">
+          ${stats.map((s) => `
+            <div class="card stat-card reveal">${SVG.icon(s.icon)}
+              <div class="stat-card__value">${s.value}</div><div class="stat-card__label">${s.label}</div>
+            </div>`).join("")}
+        </div>
+
+        <div class="card reveal">
+          <div class="widget__head"><span class="widget__title">Опыт за неделю</span><span class="tag">${week.reduce((a, w) => a + w.xp, 0)} XP</span></div>
+          <div class="week-chart">
+            ${week.map((w, i) => `
+              <div class="week-chart__col">
+                <span class="week-chart__val">${w.xp || ""}</span>
+                <div class="week-chart__bar ${w.xp ? "" : "is-empty"}" style="height:${Math.max(6, Math.round((w.xp / maxXP) * 100))}px;animation-delay:${i * 60}ms"></div>
+                <span class="week-chart__day">${days[w.date.getDay()]}</span>
+              </div>`).join("")}
+          </div>
+        </div>
+
+        ${statsExtra()}
+
+        <h2>Главы</h2>
+        <div class="card skills-list reveal">
+          ${COURSE.units.map((u, ui) => {
+            const done = unitDone(ui);
+            return `
+              <div class="skill-row">
+                <div class="skill-row__icon" style="background:linear-gradient(135deg,${u.colors[0]},${u.colors[1]})">${SVG.unitIcon(u.icon, "")}</div>
+                <div class="skill-row__main">
+                  <div class="skill-row__top"><span>${esc(u.title)}</span><span>${done}/${u.lessons.length}</span></div>
+                  <div class="progress"><div class="progress__fill" style="width:${(done / u.lessons.length) * 100}%;background:linear-gradient(90deg,${u.colors[0]},${u.colors[1]})"></div></div>
+                </div>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+  }
+
+  function bindProfile(main) {
+    main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+  }
+
+  /* ======================================================================
+     Синхронизация прогресса между устройствами (см. sync.js)
+     ====================================================================== */
+  let syncTimer = null;
+  let syncBusy = false;
+  let lastSyncAt = 0;
+  const syncCode = () => (d() && d().sync && d().sync.code) || null;
+
+  // Настройки и сам код синхронизации у каждого устройства свои
+  function keepLocal(merged, local) {
+    merged.sync = local.sync;
+    merged.settings = local.settings;
+    return merged;
+  }
+
+  // Забрать данные другого устройства, объединить и отправить общий результат
+  async function syncNow({ silent = true } = {}) {
+    const code = syncCode();
+    if (!code || syncBusy) return;
+    syncBusy = true;
+    try {
+      const local = d();
+      const remote = await Sync.download(code);
+      if (remote) {
+        const changed = Sync.differs(local, remote.data);
+        const merged = keepLocal(Sync.merge(local, remote.data), local);
+        Store.setData(merged);
+        if (changed) {
+          if (!lesson && !game) renderShell();
+          Toast.show({ title: "Прогресс обновлён", text: "Подтянуты данные с другого устройства", icon: SVG.icon("repeat").replace("<svg", '<svg style="color:var(--teal)"') });
+        }
+      }
+      await Sync.upload(code, d());
+      d().sync.lastSync = Date.now();
+      Store.save({ silent: true });
+      lastSyncAt = Date.now();
+      if (!silent) Toast.show({ title: "Синхронизировано", icon: SVG.icon("check").replace("<svg", '<svg style="color:var(--teal)"') });
+    } catch (e) {
+      if (!silent) Toast.show({ title: "Не получилось синхронизировать", text: navigator.onLine ? e.message : "Нет интернета, попробуем позже", icon: SVG.icon("close") });
+    } finally {
+      syncBusy = false;
+      const st = document.getElementById("syncStatus");
+      if (st) st.textContent = syncStatusText();
+    }
+  }
+
+  function syncStatusText() {
+    const t = d() && d().sync && d().sync.lastSync;
+    return t ? `Последняя синхронизация: ${new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}` : "Ещё не синхронизировалось";
+  }
+
+  // После каждого сохранения отправляем изменения (с задержкой, чтобы не спамить)
+  Store.onSave(() => {
+    if (!syncCode()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncNow(), 4000);
+  });
+  // Вернулись в приложение - забираем свежие данные с другого устройства
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && syncCode() && Date.now() - lastSyncAt > 30000) syncNow();
+  });
+
+  function syncSection() {
+    const code = syncCode();
+    if (code) {
+      return `
+        <h2>Синхронизация</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Код синхронизации<small>Введите его на другом устройстве (телефон, планшет, второй компьютер). Никому его не показывайте</small></div>
+            <div class="sync-code"><span>${esc(Sync.pretty(code))}</span><button class="btn btn--sm btn--ghost" data-act="sync-copy">Копировать</button></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Обмен прогрессом<small id="syncStatus">${syncStatusText()}</small></div>
+            <button class="btn btn--sm btn--blue" data-act="sync-now">${SVG.icon("repeat")}Синхронизировать</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Отключить синхронизацию<small>Прогресс на этом устройстве останется</small></div>
+            <button class="btn btn--sm btn--ghost" data-act="sync-off">Отключить</button>
+          </div>
+        </div>`;
+    }
+    return `
+      <h2>Синхронизация</h2>
+      <div class="card settings-list reveal">
+        <div class="setting-row">
+          <div class="setting-row__label">Общий прогресс на телефоне и ПК<small>Создайте код на этом устройстве и введите его на другом. Регистрация не нужна</small></div>
+          <button class="btn btn--sm" data-act="sync-create">Создать код</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-row__label">Уже есть код?<small>Введите код с другого устройства, и прогресс объединится</small></div>
+          <div class="sync-join">
+            <input class="input" id="syncInput" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Код синхронизации">
+            <button class="btn btn--sm btn--blue" data-act="sync-join">Подключить</button>
+          </div>
+        </div>
+        <p class="sync-note">Прогресс хранится на бесплатном сервисе textdb.dev под вашим секретным кодом. Пароль не передаётся. Нужен интернет в момент синхронизации.</p>
+      </div>`;
+  }
+
+  function bindSync(main) {
+    const rerender = () => { const y = scrollY; renderPage(); window.scrollTo({ top: y }); };
+    const on = (sel, fn) => { const el = main.querySelector(sel); if (el) el.addEventListener("click", fn); };
+    on('[data-act="sync-create"]', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      const code = Sync.makeCode();
+      try {
+        await Sync.upload(code, d());
+        d().sync = { code, lastSync: Date.now() };
+        Store.save({ silent: true });
+        Toast.show({ title: "Код создан", text: "Введите его на другом устройстве в Настройках", icon: SVG.icon("check") });
+        rerender();
+      } catch (err) {
+        btn.disabled = false;
+        Toast.show({ title: "Не получилось создать код", text: navigator.onLine ? err.message : "Нужен интернет", icon: SVG.icon("close") });
+      }
+    });
+    on('[data-act="sync-join"]', async (e) => {
+      const input = main.querySelector("#syncInput");
+      const code = Sync.clean(input.value);
+      if (!Sync.isValid(code)) {
+        Toast.show({ title: "Неверный код", text: "Код состоит из 16 букв и цифр", icon: SVG.icon("close") });
+        return;
+      }
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        const remote = await Sync.download(code);
+        if (!remote) throw new Error("По этому коду ничего не найдено. Проверьте код");
+        const r = remote.data;
+        const ok = await confirmModal({
+          pic: `<div class="modal__pic">${SVG.mascot({ mood: "love" })}</div>`,
+          title: "Объединить прогресс?",
+          text: `На другом устройстве: ${r.xp || 0} XP, уроков ${Object.keys(r.completed || {}).length}. Здесь: ${d().xp} XP, уроков ${lessonsDone()}. Всё будет объединено, ничего не потеряется.`,
+          ok: "Объединить",
+          okClass: "",
+          cancel: "Отмена"
+        });
+        if (!ok) { btn.disabled = false; return; }
+        const local = d();
+        const merged = keepLocal(Sync.merge(local, r), local);
+        merged.sync = { code, lastSync: Date.now() };
+        Store.setData(merged);
+        await Sync.upload(code, d());
+        lastSyncAt = Date.now();
+        Toast.show({ title: "Устройства связаны", text: "Прогресс теперь общий", icon: SVG.icon("check") });
+        renderShell();
+        go("settings");
+      } catch (err) {
+        btn.disabled = false;
+        Toast.show({ title: "Не получилось подключиться", text: navigator.onLine ? err.message : "Нужен интернет", icon: SVG.icon("close") });
+      }
+    });
+    on('[data-act="sync-now"]', () => syncNow({ silent: false }));
+    on('[data-act="sync-copy"]', async () => {
+      const code = Sync.pretty(syncCode());
+      try { await navigator.clipboard.writeText(code); Toast.show({ title: "Код скопирован", text: code, icon: SVG.icon("check") }); }
+      catch (e) { Toast.show({ title: "Скопируйте код вручную", text: code, icon: SVG.icon("check") }); }
+    });
+    on('[data-act="sync-off"]', async () => {
+      const ok = await confirmModal({
+        pic: `<div class="modal__pic">${SVG.mascot({ mood: "worried" })}</div>`,
+        title: "Отключить синхронизацию?",
+        text: "Это устройство перестанет обмениваться прогрессом. Код можно будет ввести снова.",
+        ok: "Отключить",
+        cancel: "Оставить"
+      });
+      if (!ok) return;
+      d().sync = null;
+      Store.save({ silent: true });
+      rerender();
+    });
+  }
+
+  /* Расширенная статистика: календарь занятий, точность, трудные слова */
+  function statsExtra() {
+    const data = d();
+    // Календарь за 15 недель: колонки - недели, строки - дни (пн..вс)
+    const today = new Date(Store.dayKey() + "T00:00:00");
+    const offset = (today.getDay() + 6) % 7; // пн = 0
+    const start = Store.shiftDay(Store.dayKey(), -(14 * 7 + offset));
+    const cells = [];
+    let activeDays = 0;
+    for (let i = 0; i < 15 * 7; i++) {
+      const key = Store.shiftDay(start, i);
+      const future = i > 14 * 7 + offset;
+      const xp = data.xpByDay[key] || 0;
+      if (xp) activeDays++;
+      const lvl = future ? -1 : xp === 0 ? 0 : xp < 15 ? 1 : xp < 30 ? 2 : xp < 60 ? 3 : 4;
+      cells.push(`<i class="heat__cell lvl-${lvl}" title="${key}: ${xp} XP"></i>`);
+    }
+    // Точность за 7 дней
+    const days = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+    const acc = Store.weekXP().map((w) => {
+      const a = data.accByDay[w.key];
+      return { day: days[w.date.getDay()], val: a && a.t ? Math.round((a.c / a.t) * 100) : null };
+    });
+    // Трудные слова: больше всего ошибок
+    const st = data.wordStats;
+    const hard = Object.keys(st).filter((k) => WORDS[k] && st[k].wrong > 0).sort((a, b) => st[b].wrong - st[a].wrong).slice(0, 8);
+    return `
+      <div class="card reveal">
+        <div class="widget__head"><span class="widget__title">Календарь занятий</span><span class="tag">${activeDays} дн. за 15 недель</span></div>
+        <div class="heat">
+          <div class="heat__days"><span>Пн</span><span></span><span>Ср</span><span></span><span>Пт</span><span></span><span>Вс</span></div>
+          <div class="heat__grid">${cells.join("")}</div>
+        </div>
+        <div class="heat__legend"><span>Меньше</span><i class="heat__cell lvl-0"></i><i class="heat__cell lvl-1"></i><i class="heat__cell lvl-2"></i><i class="heat__cell lvl-3"></i><i class="heat__cell lvl-4"></i><span>Больше</span></div>
+      </div>
+
+      <div class="card reveal">
+        <div class="widget__head"><span class="widget__title">Точность ответов за неделю</span></div>
+        <div class="acc-row">
+          ${acc.map((a) => `<div class="acc-day"><div class="acc-day__val ${a.val === null ? "is-empty" : a.val >= 80 ? "is-good" : a.val >= 50 ? "is-mid" : "is-low"}">${a.val === null ? "-" : a.val + "%"}</div><span>${a.day}</span></div>`).join("")}
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="widget__head"><span class="widget__title">Самые трудные слова</span>${hard.length ? `<button class="btn btn--sm" data-review>${SVG.icon("repeat")}Повторить</button>` : ""}</div>
+        ${hard.length
+          ? `<div class="hard-words">${hard.map((k) => `<button class="hard-word" data-say-word="${esc(WORDS[k].en)}"><b>${esc(WORDS[k].en)}</b><small>${esc(WORDS[k].ru)}</small><span class="tag">ошибок: ${st[k].wrong}</span></button>`).join("")}</div>`
+          : `<p class="widget__body">Пока ни одной ошибки. Так держать!</p>`}
+      </div>`;
+  }
+
+  /* Рейтинг профилей на этом устройстве (по опыту за 7 дней) */
+  function leaderboard() {
+    const me = Store.user().username;
+    const users = Store.listUsers().sort((a, b) => b.weekXP - a.weekXP || b.xp - a.xp);
+    if (users.length < 2) {
+      return `<div class="card reveal leader-empty"><div class="leader-empty__fox">${SVG.mascot({ mood: "hello" })}</div><div><div class="widget__title">Рейтинг на устройстве</div><p class="widget__body">Создайте ещё профили на этом устройстве (например, для семьи или друга), и здесь появится соревнование по опыту за неделю.</p></div></div>`;
+    }
+    return `
+      <div class="card reveal">
+        <div class="widget__head"><span class="widget__title">Рейтинг на устройстве</span><span class="tag">опыт за 7 дней</span></div>
+        <div class="leader">
+          ${users.map((u, i) => `
+            <div class="leader__row ${u.username === me ? "is-me" : ""}">
+              <span class="leader__place">${i + 1}</span>
+              <span class="avatar" style="background:${u.color}">${esc(u.username[0].toUpperCase())}</span>
+              <span class="leader__name">${esc(u.username)}${u.username === me ? " (вы)" : ""}<small>всего ${u.xp} XP, дней подряд: ${u.streak}</small></span>
+              <b class="leader__xp">${u.weekXP} XP</b>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  /* ======================================================================
+     Настройки
+     ====================================================================== */
+  function voiceOptions() {
+    const s = d().settings;
+    const list = Speech.getVoices();
+    if (!list.length) return `<option value="">Английских голосов нет</option>`;
+    const cur = Speech.currentVoice();
+    return list.map((v, i) => {
+      const nice = /Natural|Neural|Online|Premium|Enhanced|Google/i.test(v.name);
+      const label = `${v.name.replace(/^Microsoft\s+/i, "").replace(/\s*-\s*English.*$/i, "")} (${v.lang})${nice ? ", естественный" : ""}${i === 0 ? ", рекомендуем" : ""}`;
+      const selected = s.voice ? v.voiceURI === s.voice : cur && v.voiceURI === cur.voiceURI;
+      return `<option value="${esc(v.voiceURI)}" ${selected ? "selected" : ""}>${esc(label)}</option>`;
+    }).join("");
+  }
+
+  function settingsPage() {
+    const data = d();
+    const s = data.settings;
+    const seg = (name, items, value) =>
+      `<div class="segmented" role="radiogroup">${items.map((it) => `<button type="button" role="radio" aria-checked="${it.v === value}" class="${it.v === value ? "is-active" : ""}" data-${name}="${it.v}">${it.icon ? SVG.icon(it.icon) : ""}${it.label}</button>`).join("")}</div>`;
+    const rates = [{ v: 0.75, label: "Медленно" }, { v: 0.9, label: "Обычно" }, { v: 1.05, label: "Быстро" }];
+    const curRate = rates.reduce((a, b) => (Math.abs(b.v - s.rate) < Math.abs(a.v - s.rate) ? b : a)).v;
+    return `
+      <div class="page">
+        <div class="page__head"><h1>Настройки</h1><p>Изменения сохраняются сразу.</p></div>
+
+        <h2>Озвучка</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Озвучка слов<small>${Speech.hasRecorded() ? "Все слова и фразы курса записаны заранее приятным американским голосом и работают без интернета" : "Произношение через синтез речи браузера"}</small></div>
+            <label class="switch"><input type="checkbox" data-set="speech" ${s.speech ? "checked" : ""} aria-label="Озвучка слов"><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Проверить звук<small>Прослушать пример фразы</small></div>
+            <button class="btn btn--sm btn--blue" data-act="test-voice" aria-label="Прослушать голос">${SVG.icon("speaker")}Прослушать</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Скорость речи<small>Как быстро говорит голос</small></div>
+            ${seg("rate", rates, curRate)}
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Озвучивать автоматически<small>Произносить новые слова сами. Если выключить, звук будет только по кнопке и в заданиях на слух</small></div>
+            <label class="switch"><input type="checkbox" data-set="autoSpeak" ${s.autoSpeak ? "checked" : ""} aria-label="Озвучивать автоматически"><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Задания на говорение<small>${SpeechRec.supported ? "Произносите фразы в микрофон. Работает в Chrome и Edge, нужен интернет" : "Этот браузер не умеет распознавать речь. Откройте приложение в Chrome или Edge"}</small></div>
+            <label class="switch"><input type="checkbox" data-set="speaking" ${s.speaking !== false && SpeechRec.supported ? "checked" : ""} ${SpeechRec.supported ? "" : "disabled"} aria-label="Задания на говорение"><span></span></label>
+          </div>
+          ${Speech.getVoices().length ? `
+          <div class="setting-row">
+            <div class="setting-row__label">Запасной голос<small>Нужен только для фраз без записи. Обычно не используется</small></div>
+            <div class="voice-pick"><select class="select" id="voiceSelect" aria-label="Запасной голос">${voiceOptions()}</select></div>
+          </div>` : ""}
+        </div>
+
+        <h2>Оформление и цели</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Тема<small>Тёмная, светлая или как в системе</small></div>
+            ${seg("theme", [{ v: "dark", label: "Тёмная", icon: "moon" }, { v: "light", label: "Светлая", icon: "sun" }, { v: "system", label: "Авто", icon: "monitor" }], s.theme)}
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Звуковые эффекты<small>Сигналы правильных и неправильных ответов</small></div>
+            <label class="switch"><input type="checkbox" data-set="sound" ${s.sound ? "checked" : ""} aria-label="Звуковые эффекты"><span></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Цель на день<small>Сколько XP набирать ежедневно</small></div>
+            ${seg("goal", RULES.dailyGoals.map((g) => ({ v: g, label: String(g) })), data.dailyGoal)}
+          </div>
+        </div>
+
+        ${syncSection()}
+
+        <h2>Резервная копия</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Сохранить прогресс в файл<small>Пригодится, если очистится браузер или нужно перенести прогресс на другой компьютер</small></div>
+            <button class="btn btn--sm btn--ghost" data-act="export">${SVG.icon("download")}Скачать</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Загрузить прогресс из файла<small>Заменит текущий прогресс этого профиля данными из копии</small></div>
+            <button class="btn btn--sm btn--ghost" data-act="import">${SVG.icon("upload")}Загрузить</button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden>
+          </div>
+        </div>
+
+        <h2>Профиль</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Сменить профиль<small>Вернуться к экрану входа</small></div>
+            <button class="btn btn--sm btn--ghost" data-act="switch">${SVG.icon("logout")}Выйти</button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Удалить профиль<small>Весь прогресс этого профиля будет стёрт с устройства</small></div>
+            <button class="btn btn--sm btn--rose" data-act="delete">Удалить</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function bindSettings(main) {
+    const data = d();
+    bindSync(main);
+    const rerender = () => { const y = scrollY; renderPage(); window.scrollTo({ top: y }); };
+    main.querySelectorAll("[data-theme]").forEach((b) =>
+      b.addEventListener("click", () => {
+        data.settings.theme = b.dataset.theme;
+        Store.setDevice({ theme: b.dataset.theme });
+        Store.save();
+        applyTheme(b.dataset.theme);
+        rerender();
+      })
+    );
+    main.querySelectorAll("[data-goal]").forEach((b) =>
+      b.addEventListener("click", () => {
+        data.dailyGoal = Number(b.dataset.goal);
+        Store.save();
+        const rail = document.getElementById("rail");
+        rail.innerHTML = railHTML();
+        bindShellCommon(rail);
+        Reveal.observe(document);
+        rerender();
+      })
+    );
+    main.querySelectorAll("[data-rate]").forEach((b) =>
+      b.addEventListener("click", () => {
+        data.settings.rate = Number(b.dataset.rate);
+        Speech.setRate(data.settings.rate);
+        Store.save();
+        rerender();
+        say("This is how fast I speak.");
+      })
+    );
+    main.querySelectorAll("[data-set]").forEach((inp) =>
+      inp.addEventListener("change", () => {
+        data.settings[inp.dataset.set] = inp.checked;
+        Store.save();
+        applySettings();
+        if (inp.dataset.set === "sound" && inp.checked) Sound.play("correct");
+      })
+    );
+    const sel = main.querySelector("#voiceSelect");
+    if (sel) {
+      sel.addEventListener("change", () => {
+        data.settings.voice = sel.value || null;
+        Speech.setVoice(data.settings.voice);
+        Store.save();
+      });
+    }
+    main.querySelector('[data-act="test-voice"]').addEventListener("click", () => say("Hello! Nice to meet you. How are you today?"));
+
+    // Резервная копия: скачивание файла
+    main.querySelector('[data-act="export"]').addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(Store.exportData(), null, 1)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `linguaquest-${Store.user().username}-${Store.dayKey()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      Toast.show({ title: "Копия сохранена", text: "Файл в папке загрузок", icon: SVG.icon("download") });
+    });
+    // Резервная копия: загрузка файла
+    const fileInput = main.querySelector("#importFile");
+    main.querySelector('[data-act="import"]').addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async () => {
+      const f = fileInput.files[0];
+      fileInput.value = "";
+      if (!f) return;
+      let obj;
+      try { obj = JSON.parse(await f.text()); } catch (e) { obj = null; }
+      if (!obj || obj.app !== "LinguaQuest") {
+        Toast.show({ title: "Не получилось загрузить", text: "Это не файл резервной копии LinguaQuest", icon: SVG.icon("close") });
+        return;
+      }
+      const ok = await confirmModal({
+        pic: `<div class="modal__pic">${SVG.mascot({ mood: "determined" })}</div>`,
+        title: "Загрузить копию?",
+        text: `Прогресс из файла (${esc(obj.username || "без имени")}, ${obj.data && obj.data.xp ? obj.data.xp : 0} XP) заменит текущий прогресс профиля.`,
+        ok: "Загрузить",
+        okClass: "",
+        cancel: "Отмена"
+      });
+      if (!ok) return;
+      try {
+        Store.importData(obj);
+        applySettings();
+        renderShell();
+        Toast.show({ title: "Прогресс загружен", icon: SVG.icon("check") });
+      } catch (e) {
+        Toast.show({ title: "Ошибка загрузки", text: e.message, icon: SVG.icon("close") });
+      }
+    });
+    main.querySelector('[data-act="delete"]').addEventListener("click", async () => {
+      const ok = await confirmModal({
+        pic: `<div class="modal__pic">${SVG.mascot({ mood: "cry" })}</div>`,
+        title: "Удалить профиль?",
+        text: `Профиль «${esc(Store.user().username)}» и весь его прогресс будут удалены с этого устройства. Это нельзя отменить.`,
+        ok: "Удалить навсегда",
+        cancel: "Оставить"
+      });
+      if (ok) {
+        Store.deleteCurrent();
+        renderAuth("login");
+        Toast.show({ title: "Профиль удалён", icon: SVG.icon("close") });
+      }
+    });
+  }
+
+  /* ======================================================================
+     Клавиатура: Enter - проверить/продолжить, 1-9 - выбор варианта, Esc - закрыть окно
+     ====================================================================== */
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$modal.hidden) {
+      closeModal();
+      return;
+    }
+    // Цифры 1-4 в играх "60 секунд" и "Звуки"
+    if (game && $modal.hidden && /^[1-4]$/.test(e.key)) {
+      const btns = document.querySelectorAll("#gameRoot .options .option");
+      if (btns[Number(e.key) - 1]) btns[Number(e.key) - 1].click();
+      return;
+    }
+    if (!lesson || !$modal.hidden) return;
+    const inText = e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT";
+    if (e.key === "Enter" && !e.shiftKey) {
+      // Enter на сфокусированной кнопке варианта не перехватываем
+      if (!inText && e.target.tagName === "BUTTON" && e.target.id !== "mainBtn") return;
+      e.preventDefault();
+      onMain();
+      return;
+    }
+    if (!inText && lesson.phase === "answer" && /^[1-9]$/.test(e.key) && lesson.ctrl && lesson.ctrl.select) {
+      const btns = document.querySelectorAll("#exRoot .option, #exRoot .pic-card");
+      const i = Number(e.key) - 1;
+      if (btns[i]) lesson.ctrl.select(i);
+    }
+  });
+
+  // Сохраняем прогресс при закрытии вкладки
+  window.addEventListener("beforeunload", () => Store.save());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) Store.save(); });
+
+  /* ======================================================================
+     Запуск
+     ====================================================================== */
+  function init() {
+    Background.init();
+    // Офлайн-кэш и установка на телефон работают, только если сайт открыт по http(s)
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+    if (Store.restore()) {
+      applySettings();
+      const s = Store.checkStreak();
+      renderShell();
+      streakToasts(s);
+      syncNow();
+    } else {
+      renderAuth("login");
+    }
+  }
+
+  return { init };
+})();
+
+document.addEventListener("DOMContentLoaded", App.init);

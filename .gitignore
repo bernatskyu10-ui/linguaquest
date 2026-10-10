@@ -1,0 +1,7 @@
+# Служебные файлы редактора и Claude Code
+.claude/
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
