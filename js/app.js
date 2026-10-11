@@ -316,7 +316,16 @@ const App = (() => {
       return;
     }
     if (!navigator.onLine) throw new Error("Нет интернета. Чтобы войти в аккаунт на этом устройстве, подключитесь к сети");
-    const s = await Cloud.signIn(name, pass);
+    let s;
+    try {
+      s = await Cloud.signIn(name, pass);
+    } catch (e) {
+      // Аккаунта с таким именем нет: скорее всего, профиль на другом устройстве ещё не подключён к облаку
+      if (e.code === "invalid_credentials" && (await Cloud.available(name).catch(() => false))) {
+        throw new Error("Аккаунта с таким именем пока нет. Если вы занимались на другом устройстве, откройте там Настройки, раздел «Аккаунт», и нажмите «Подключить». Или зарегистрируйтесь");
+      }
+      throw e;
+    }
     const remote = await Cloud.load(s);
     await Store.register((remote && remote.username) || name, pass);
     if (remote && remote.data && typeof remote.data === "object" && Object.keys(remote.data).length) {
@@ -1205,6 +1214,7 @@ const App = (() => {
     notice: "Посмотрите ответы и нажмите «Дальше»",
     grammar: "Прочитайте правило и нажмите «Дальше»",
     choose: "Выберите вариант или нажмите 1-4",
+    firstLetter: "Послушайте слово и выберите первую букву",
     picture: "Выберите подходящую картинку",
     match: "Соедините слова и переводы",
     type: "Напишите ответ и нажмите Enter",

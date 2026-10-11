@@ -1341,3 +1341,13 @@ img, svg { display: block; }
 .modal__form { width: 100%; text-align: left; }
 .tag--ok { color: var(--teal); }
 .tag--ok svg { width: 14px; height: 14px; }
+
+/* Алфавит: крупные буквы и первая буква слова */
+.letter-big { font-family: var(--font-display); font-size: 44px; font-weight: 700; line-height: 1; }
+.letter-name { color: var(--text-2); font-weight: 600; }
+.options--letters .option > span:last-child { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.first-letter { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-4); border-radius: var(--r-md, 20px); background: var(--surface); border: 1px solid var(--line); }
+.first-letter__pic { width: 110px; height: 110px; }
+.first-letter__word { display: flex; align-items: center; gap: var(--s-3); font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 0.04em; }
+.first-letter__gap { display: inline-block; min-width: 0.8em; text-align: center; color: var(--accent); border-bottom: 3px solid var(--accent); margin-right: 2px; }
+.first-letter__ru { color: var(--text-2); font-weight: 600; }

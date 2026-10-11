@@ -114,6 +114,58 @@ const Exercises = (() => {
   }
 
   /**
+   * Задания для уроков алфавита:
+   * название -> буква, заглавная -> строчная, первая буква слова, пары заглавных и строчных, буква на слух.
+   */
+  function letterBody(words, pool, courseWords) {
+    const ws = shuffle(words);
+    const others = (w, n) => sample(pool.filter((x) => x.en !== w.en), n);
+    const opts = (w) => shuffle([w, ...others(w, 3)]);
+    const body = [];
+
+    // Название буквы ("би", звучит) -> выбрать букву
+    ws.slice(0, 2).forEach((w) => body.push({ type: "choose", dir: "ru-en", word: w, letters: true, options: opts(w) }));
+
+    // Заглавная -> строчная
+    ws.slice(2, 4).forEach((w) => body.push({ type: "choose", dir: "case", word: w, letters: true, options: opts(w) }));
+
+    // С какой буквы начинается слово (берём простые слова курса, лучше с картинкой)
+    const simple = courseWords.filter((v) => /^[a-z]{3,7}$/i.test(v.en));
+    let added = 0;
+    for (const w of ws) {
+      if (added >= 2) break;
+      const cand = simple.filter((v) => v.en[0].toLowerCase() === w.en.toLowerCase());
+      if (!cand.length) continue;
+      const withPic = cand.filter((v) => v.pic && SVG.hasPic(v.pic));
+      // Сначала слова с картинкой, иначе самые ранние (простые) слова курса
+      const v = withPic.length ? sample(withPic, 1)[0] : sample(cand.slice(0, 3), 1)[0];
+      body.push({ type: "firstLetter", word: w, vocab: v, options: opts(w) });
+      added++;
+    }
+
+    // Пары: заглавные и строчные
+    if (words.length >= 4) {
+      body.push({ type: "match", title: "Соедините заглавные и строчные буквы", pairs: sample(words, Math.min(5, words.length)).map((w) => ({ en: w.en, ru: w.en.toLowerCase() })) });
+    }
+
+    // Буква на слух: выбрать и написать
+    const lw = ws[4] || ws[0];
+    const dw = ws[5] || ws[1];
+    if (Speech.isEnabled()) {
+      body.push({ type: "listen", target: lw.en, ru: lw.ru, options: shuffle([lw.en, ...others(lw, 3).map((x) => x.en)]) });
+      if (dw) body.push({ type: "dictation", target: dw.en, ru: dw.ru, alt: [], letters: true });
+    } else {
+      body.push({ type: "choose", dir: "ru-en", word: lw, letters: true, options: opts(lw) });
+    }
+
+    // Сопоставление не ставим первым
+    let mixed = shuffle(body);
+    const mi = mixed.findIndex((e) => e.type === "match");
+    if (mi === 0 && mixed.length > 2) mixed.splice(2, 0, mixed.shift());
+    return mixed;
+  }
+
+  /**
    * Собирает упражнения для урока.
    * @param unit - раздел, lesson - урок, opts.isReplay - повторное прохождение
    */
@@ -147,11 +199,15 @@ const Exercises = (() => {
       ws.slice(0, letters ? 3 : 2).forEach((w) => out.push({ type: "teach", word: w, letters }));
     }
 
+    // Алфавит: свои задания, которые учат узнавать буквы, а не переписывать название
+    if (letters) return out.concat(letterBody(words, pool, courseWords));
+
     const body = [];
 
     // 2. Выбор перевода en -> ru
     ws.slice(0, 2).forEach((w) => {
-      body.push({ type: "choose", dir: "en-ru", word: w, letters, options: shuffle([w, ...distractors(w, 3)]) });
+      // В алфавите наоборот: звучит и написано название буквы ("си"), а выбрать нужно саму букву
+      body.push({ type: "choose", dir: letters ? "ru-en" : "en-ru", word: w, letters, options: shuffle([w, ...distractors(w, 3)]) });
     });
 
     // 3. Выбор перевода ru -> en
@@ -180,10 +236,10 @@ const Exercises = (() => {
       body.push({ type: "match", pairs: sample(matchable, Math.min(5, matchable.length)) });
     }
 
-    // 6. Аудирование: выбор услышанного
+    // 6. Аудирование: услышать слово и выбрать, что оно значит (а не то же слово на английском)
     const listenWord = ws[3] || ws[0];
     if (listenWord) {
-      body.push({ type: "listen", target: listenWord.en, ru: listenWord.ru, options: shuffle([listenWord.en, ...distractors(listenWord, 3).map((w) => w.en)]) });
+      body.push({ type: "listen", meaning: true, target: listenWord.en, ru: listenWord.ru, answer: listenWord.ru, options: shuffle([listenWord.ru, ...distractors(listenWord, 3).map((w) => w.ru)]) });
     }
 
     // 7. Ввод перевода с клавиатуры
@@ -208,8 +264,9 @@ const Exercises = (() => {
     if (sentences.length) {
       const s = sentences[(Math.random() * sentences.length) | 0];
       if (Math.random() < 0.5) {
-        const others = sample(uniqBy(unitSentences.concat(courseSentences).filter((x) => x.en !== s.en), (x) => x.en), 3).map((x) => x.en);
-        body.push({ type: "listen", target: s.en, ru: s.ru, options: shuffle([s.en, ...others]) });
+        // Услышать фразу и выбрать её перевод
+        const others = sample(uniqBy(unitSentences.concat(courseSentences).filter((x) => x.en !== s.en && x.ru !== s.ru), (x) => x.ru), 3).map((x) => x.ru);
+        body.push({ type: "listen", meaning: true, target: s.en, ru: s.ru, answer: s.ru, options: shuffle([s.ru, ...others]) });
       } else {
         body.push({ type: "dictation", target: s.en, ru: s.ru, alt: s.alt || [] });
       }
@@ -296,6 +353,7 @@ const Exercises = (() => {
   // Карточка с вопросом: маленький лисёнок и текст задания
   // Что именно было неправильно: пара "английский - перевод" для списка ошибок
   function errorItem(ex, res) {
+    if (ex.vocab) return { en: ex.vocab.en, ru: `${ex.vocab.ru}, буква ${ex.word.en.toUpperCase()}` };
     if (ex.word) return { en: ex.word.en, ru: ex.word.ru };
     if (ex.sentence) return { en: ex.sentence.en, ru: ex.sentence.ru };
     if (ex.line) return { en: ex.line.en, ru: ex.line.ru };
@@ -374,6 +432,51 @@ const Exercises = (() => {
       return { check: () => ({ correct: true, silent: true }) };
     },
 
+    // Заглавная буква -> найти строчную
+    letterCase(ex, root, ctx) {
+      const w = ex.word;
+      root.innerHTML = `<h2 class="ex-title">Найдите строчную букву</h2>
+        ${mascotBubble(`${speakBtn(w.en)}<span class="letter-big">${esc(w.en.toUpperCase())}</span><small class="letter-name">${esc(w.ru)}</small>`, ctx)}
+        ${optionsList(ex.options.map((o) => ({ label: o.en.toLowerCase() })), "options--letters")}`;
+      bindSpeak(root, ctx);
+      ctx.auto(w.en);
+      const sel = bindSingleSelect(root, ctx);
+      const correctIdx = ex.options.findIndex((o) => o.en === w.en);
+      return {
+        select: sel.select,
+        check() {
+          sel.mark(correctIdx);
+          return { correct: sel.selected === correctIdx, solution: `${w.en.toUpperCase()} и ${w.en.toLowerCase()} (${w.ru})` };
+        }
+      };
+    },
+
+    // С какой буквы начинается слово: картинка, озвучка и слово без первой буквы
+    firstLetter(ex, root, ctx) {
+      const v = ex.vocab;
+      const rest = v.en.slice(1).toLowerCase();
+      const pic = v.pic && SVG.hasPic(v.pic) ? SVG.pic(v.pic, "first-letter__pic") : "";
+      root.innerHTML = `<h2 class="ex-title">С какой буквы начинается слово?</h2>
+        <div class="first-letter">
+          ${pic}
+          <div class="first-letter__word">${speakBtn(v.en)}<span><b class="first-letter__gap">_</b>${esc(rest)}</span></div>
+          <div class="first-letter__ru">${esc(v.ru)}</div>
+        </div>
+        ${optionsList(ex.options.map((o) => ({ label: o.en.toUpperCase() })), "options--letters")}`;
+      bindSpeak(root, ctx);
+      ctx.auto(v.en);
+      const sel = bindSingleSelect(root, ctx);
+      const correctIdx = ex.options.findIndex((o) => o.en === ex.word.en);
+      return {
+        select: sel.select,
+        check() {
+          sel.mark(correctIdx);
+          root.querySelector(".first-letter__gap").textContent = v.en[0].toLowerCase();
+          return { correct: sel.selected === correctIdx, solution: `${v.en} (${v.ru}), буква ${ex.word.en.toUpperCase()}` };
+        }
+      };
+    },
+
     // Перед повтором ошибок: напоминаем правильные ответы
     notice(ex, root, ctx) {
       const items = ex.errors.slice(0, 6);
@@ -410,21 +513,23 @@ const Exercises = (() => {
     choose(ex, root, ctx) {
       const enRu = ex.dir === "en-ru";
       const w = ex.word;
+      if (ex.dir === "case") return renderers.letterCase(ex, root, ctx);
       let title;
       if (ex.letters) title = enRu ? "Как называется эта буква?" : "Какая буква так называется?";
       else title = enRu ? "Выберите правильный перевод" : "Как это будет по-английски?";
-      const prompt = enRu ? `${speakBtn(w.en)}<span>${esc(w.en)}</span>` : `<span>${esc(w.ru)}</span>`;
+      // Для букв показываем название и даём его послушать
+      const prompt = enRu ? `${speakBtn(w.en)}<span>${esc(w.en)}</span>` : ex.letters ? `${speakBtn(w.en)}<span>${esc(w.ru)}</span>` : `<span>${esc(w.ru)}</span>`;
       const items = ex.options.map((o) => ({ label: enRu ? o.ru : o.en, en: o.en }));
       root.innerHTML = `<h2 class="ex-title">${title}</h2>${mascotBubble(prompt, ctx)}${optionsList(items)}`;
       bindSpeak(root, ctx);
-      if (enRu) ctx.auto(w.en);
+      if (enRu || ex.letters) ctx.auto(w.en);
       const sel = bindSingleSelect(root, ctx);
       const correctIdx = ex.options.findIndex((o) => o.en === w.en);
       return {
         select: sel.select,
         check() {
           sel.mark(correctIdx);
-          return { correct: sel.selected === correctIdx, solution: enRu ? w.ru : w.en };
+          return { correct: sel.selected === correctIdx, solution: ex.letters ? `${w.en} (${w.ru})` : enRu ? w.ru : w.en };
         }
       };
     },
@@ -449,7 +554,7 @@ const Exercises = (() => {
     match(ex, root, ctx) {
       const left = shuffle(ex.pairs);
       const right = shuffle(ex.pairs);
-      root.innerHTML = `<h2 class="ex-title">Найдите пары</h2>
+      root.innerHTML = `<h2 class="ex-title">${esc(ex.title || "Найдите пары")}</h2>
         <div class="match">
           <div class="match__col">${left.map((p) => `<button class="option" type="button" data-side="en" data-key="${esc(p.en)}">${esc(p.en)}</button>`).join("")}</div>
           <div class="match__col">${right.map((p) => `<button class="option" type="button" data-side="ru" data-key="${esc(p.en)}">${esc(p.ru)}</button>`).join("")}</div>
@@ -493,9 +598,11 @@ const Exercises = (() => {
       const w = ex.word;
       const title = ex.letters ? "Напишите букву, которая так читается" : "Напишите по-английски";
       root.innerHTML = `<h2 class="ex-title">${title}</h2>
-        ${mascotBubble(`<span>${esc(w.ru)}</span>`, ctx)}
-        <textarea class="type-area" rows="3" placeholder="Введите ответ по-английски" aria-label="Ваш ответ" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        ${mascotBubble(ex.letters ? `${speakBtn(w.en)}<span>${esc(w.ru)}</span>` : `<span>${esc(w.ru)}</span>`, ctx)}
+        <textarea class="type-area" rows="3" placeholder="${ex.letters ? "Введите букву" : "Введите ответ по-английски"}" aria-label="Ваш ответ" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
         <p class="type-hint">Нажмите Enter, чтобы проверить</p>`;
+      bindSpeak(root, ctx);
+      if (ex.letters) ctx.auto(w.en);
       const ta = root.querySelector("textarea");
       ta.addEventListener("input", () => ctx.onReady(ta.value.trim().length > 0));
       setTimeout(() => ta.focus({ preventScroll: true }), 60);
@@ -555,13 +662,14 @@ const Exercises = (() => {
     },
 
     listen(ex, root, ctx) {
-      root.innerHTML = `<h2 class="ex-title">Что вы услышали?</h2>
+      root.innerHTML = `<h2 class="ex-title">${ex.meaning ? "Что это значит?" : "Что вы услышали?"}</h2>
+        ${ex.meaning ? `<p class="type-hint">Послушайте и выберите перевод</p>` : ""}
         <div class="listen-row">${speakBtn(ex.target, "speak-btn--xl")}${speakBtn(ex.target, "speak-btn--slow", true)}</div>
         ${optionsList(ex.options.map((o) => ({ label: o })))}`;
       bindSpeak(root, ctx);
       setTimeout(() => ctx.speak(ex.target), 250);
       const sel = bindSingleSelect(root, ctx);
-      const correctIdx = ex.options.indexOf(ex.target);
+      const correctIdx = ex.options.indexOf(ex.meaning ? ex.answer : ex.target);
       return {
         select: sel.select,
         check() {
