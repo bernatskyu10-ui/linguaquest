@@ -5,14 +5,14 @@
    открыт по адресу http(s), при открытии файла с диска не используется.
    Стратегия "сначала сеть": обновления видны сразу, кэш нужен для офлайна.
    ========================================================================== */
-const VERSION = "lq-v15";
+const VERSION = "lq-v16";
 // Озвучка лежит в отдельном кэше: при обновлении приложения её не нужно качать заново
 const AUDIO_CACHE = "lq-audio-v1";
 
 importScripts("js/audio-manifest.js");
 
 const CORE = [
-  "./", "index.html", "manifest.webmanifest",
+  "./", "index.html", "russian.html", "manifest.webmanifest",
   "css/styles.css", "css/fonts.css",
   "js/data.js", "js/stories.js", "js/grammar.js", "js/reference.js", "js/svg.js", "js/storage.js", "js/sync.js", "js/cloud.js", "js/audio-manifest.js", "js/audio.js",
   "js/effects.js", "js/exercises.js", "js/app.js",

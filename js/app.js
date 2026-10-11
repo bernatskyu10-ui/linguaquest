@@ -54,7 +54,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "15";
+  const APP_VERSION = "16";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -170,6 +170,7 @@ const App = (() => {
       <section class="auth screen-enter">
         <div class="auth__hero">
           <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+          <a class="auth__ege" href="russian.html">Готовитесь к ЕГЭ по русскому? Откройте «Грамотей» - тот же аккаунт</a>
           <h1 class="auth__title">Английский с нуля, <em>в своём темпе</em></h1>
           <p class="auth__sub">Короткие уроки, озвучка слов и маршрут из ${COURSE.units.length} глав. Без жизней и штрафов: ошибайтесь и учитесь.</p>
           <div class="auth__showcase">
@@ -281,6 +282,21 @@ const App = (() => {
     }, 50);
   }
 
+  /* ---------- Русский язык («Грамотей», russian.html) ----------
+     Тот же аккаунт: при входе по паролю сразу входим и туда, чтобы не вводить пароль второй раз. */
+  const GRAMOTEY_SESSION = "gramotey-session";
+  async function linkGramotey(name, pass) {
+    try {
+      const cur = JSON.parse(localStorage.getItem(GRAMOTEY_SESSION) || "null");
+      if (cur && cur.refresh && String(cur.name || "").toLowerCase() === String(name).toLowerCase()) return;
+      const s = await Cloud.signIn(name, pass);
+      localStorage.setItem(GRAMOTEY_SESSION, JSON.stringify(Object.assign(s, { name })));
+    } catch (e) { /* войти в русский можно будет и там, тем же ником и паролем */ }
+  }
+
+  // Переключатель предметов
+  const subjectSwitch = (cls) => `<nav class="subject-switch ${cls}" aria-label="Предмет"><a href="./" class="is-on" aria-current="page" title="Английский">EN<span> Английский</span></a><a href="russian.html" title="Русский язык, ЕГЭ">RU<span> Русский</span></a></nav>`;
+
   /* ---------- Аккаунт: регистрация и вход по имени и паролю ---------- */
   const cleanName = (n) => String(n || "").trim().replace(/\s+/g, " ");
   const snapshot = (x) => ({ gems: Number(x.gems) || 0, freezes: Number(x.freezes) || 0, xp: Number(x.xp) || 0 });
@@ -296,6 +312,7 @@ const App = (() => {
     await Store.register(name, pass);
     Store.setCloudSession(Object.assign(s, { base: snapshot(d()) }));
     afterLogin(true);
+    linkGramotey(name, pass);
   }
 
   // Вход: сначала профиль на этом устройстве, иначе аккаунт из облака
@@ -312,6 +329,7 @@ const App = (() => {
         await Store.loginVerified(name, pass);
         Store.setCloudSession(Object.assign({}, Store.cloudSession() || {}, s));
         afterLogin(false);
+        linkGramotey(name, pass);
         return;
       }
       afterLogin(false);
@@ -338,6 +356,7 @@ const App = (() => {
     }
     Store.setCloudSession(Object.assign(s, { base: snapshot(d()) }));
     afterLogin(false);
+    linkGramotey(name, pass);
   }
 
   // Создать облачный аккаунт для уже существующего профиля и отправить в него прогресс
@@ -356,6 +375,7 @@ const App = (() => {
       const s = await Cloud.signIn(name, pass);
       Store.setCloudSession(Object.assign({}, had || {}, s, { expired: false }));
       syncNow();
+      linkGramotey(name, pass);
       return;
     } catch (e) {
       if (e.code !== "invalid_credentials") return;
@@ -370,6 +390,7 @@ const App = (() => {
       }
       if (pass.length < 6) { askNewPassword(); return; }
       await createCloudFor(name, pass);
+      linkGramotey(name, pass);
     } catch (e) { /* попробуем при следующем входе */ }
   }
 
@@ -414,6 +435,7 @@ const App = (() => {
             await createCloudFor(name, pass);
           }
           if (cur !== pass) await Store.setPassword(pass);
+          linkGramotey(name, pass);
           closeModal();
           syncNow({ silent: false });
           if (page === "settings") renderPage();
@@ -547,11 +569,13 @@ const App = (() => {
       <div class="shell">
         <aside class="sidebar">
           <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+          ${subjectSwitch("subject-switch--side")}
           ${navItems()}
         </aside>
         <div class="center">
           <header class="topbar">
             <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+            ${subjectSwitch("subject-switch--top")}
             <div style="display:flex;gap:6px" data-stats>${statsChips()}</div>
           </header>
           <div class="main" id="main"></div>

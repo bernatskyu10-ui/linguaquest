@@ -1370,3 +1370,13 @@ img, svg { display: block; }
 .plan__hint { margin: 0; font-size: 14px; color: var(--text-2); font-weight: 600; }
 .plan.is-complete { border-color: color-mix(in srgb, var(--teal) 40%, transparent); }
 .result__actions .btn svg { width: 18px; height: 18px; }
+
+/* Переключатель предметов: английский (LinguaQuest) и русский (Грамотей) */
+.subject-switch { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); flex: none; }
+.subject-switch a { display: inline-flex; align-items: center; justify-content: center; padding: 6px 11px; border-radius: 999px; font-weight: 800; font-size: 13px; color: var(--muted); text-decoration: none; white-space: nowrap; transition: background-color 160ms ease, color 160ms ease; }
+.subject-switch a.is-on { background: var(--accent); color: var(--accent-ink, #2a0d05); }
+@media (hover: hover) and (pointer: fine) { .subject-switch a:not(.is-on):hover { color: var(--text); } }
+.subject-switch--side { display: flex; margin: 10px 0 14px; }
+.subject-switch--side a { flex: 1; }
+.subject-switch--top span { display: none; }
+.auth__ege { display: inline-block; margin: var(--s-2) 0; font-size: 14px; font-weight: 700; color: var(--accent); text-underline-offset: 3px; }
