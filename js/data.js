@@ -709,16 +709,16 @@ const COURSE = {
         {
           id: "q-3", title: "Короткие ответы",
           words: [
-            { en: "yes, I do", ru: "да (ответ на Do you…?)" },
-            { en: "no, I don't", ru: "нет (ответ на Do you…?)", alt: ["no, i do not"] },
+            { en: "yes, I do", ru: "да, люблю (на вопрос «Ты любишь кофе?»)" },
+            { en: "no, I don't", ru: "нет, не люблю (на вопрос «Ты любишь кофе?»)", alt: ["no, i do not"] },
             { en: "maybe", ru: "может быть" },
             { en: "of course", ru: "конечно" },
             { en: "right", ru: "правильно, верно" },
             { en: "wrong", ru: "неправильно" }
           ],
           sentences: [
-            { en: "Yes, she does", ru: "Да (ответ на Does she…?)" },
-            { en: "No, he isn't", ru: "Нет (ответ на Is he…?)", alt: ["No, he is not"] },
+            { en: "Yes, she does", ru: "Да, любит (на вопрос «Она любит чай?»)" },
+            { en: "No, he isn't", ru: "Нет, не устал (на вопрос «Он устал?»)", alt: ["No, he is not"] },
             { en: "Of course, I know", ru: "Конечно, я знаю" }
           ],
           gaps: [
@@ -1638,11 +1638,11 @@ const COURSE = {
               title: "Регистрация на рейс",
               lines: [
                 { who: "Сотрудник", en: "Good morning! Can I see your passport, please?", ru: "Доброе утро! Можно ваш паспорт?" },
-                { me: true, en: "Yes, here it is.", ru: "Да, вот он.", wrong: ["Yes, I am fine.", "No, I am a passport."] },
+                { me: true, en: "Yes, here it is.", ru: "Да, вот он.", wrong: ["Yes, here is it.", "No, I don't have any luggage."] },
                 { who: "Сотрудник", en: "Do you have any luggage?", ru: "У вас есть багаж?" },
-                { me: true, en: "Yes, one bag.", ru: "Да, одна сумка.", wrong: ["Yes, at six o'clock.", "No, I have a ticket."] },
+                { me: true, en: "Yes, one bag.", ru: "Да, одна сумка.", wrong: ["Yes, one bags.", "Gate number five, please."] },
                 { who: "Сотрудник", en: "Your gate is number five. Have a nice flight!", ru: "Ваш выход номер пять. Хорошего полёта!" },
-                { me: true, en: "Thank you very much!", ru: "Большое спасибо!", wrong: ["You are welcome to the gate.", "Goodbye, my passport!"] }
+                { me: true, en: "Thank you very much!", ru: "Большое спасибо!", wrong: ["You're welcome!", "Nice to meet you!"] }
               ]
             }
           ]
@@ -1667,11 +1667,11 @@ const COURSE = {
               title: "Заселение в отель",
               lines: [
                 { who: "Администратор", en: "Hello! How can I help you?", ru: "Здравствуйте! Чем могу помочь?" },
-                { me: true, en: "Hi! I have a reservation.", ru: "Здравствуйте! У меня есть бронь.", wrong: ["Hi! I have a breakfast.", "Hi! I am a hotel."] },
+                { me: true, en: "Hi! I have a reservation.", ru: "Здравствуйте! У меня есть бронь.", wrong: ["Hi! I has a reservation.", "I'm fine, thank you."] },
                 { who: "Администратор", en: "What is your name?", ru: "Как вас зовут?" },
-                { me: true, en: "My name is Alex Smirnov.", ru: "Меня зовут Алекс Смирнов.", wrong: ["I am from room five.", "It is on the third floor."] },
+                { me: true, en: "My name is Alex Smirnov.", ru: "Меня зовут Алекс Смирнов.", wrong: ["I am from Russia.", "My name are Alex Smirnov."] },
                 { who: "Администратор", en: "Here is your key. Room 305.", ru: "Вот ваш ключ. Номер 305." },
-                { me: true, en: "What time is breakfast?", ru: "Во сколько завтрак?", wrong: ["My favourite colour is blue.", "How old is the key?"] }
+                { me: true, en: "What time is breakfast?", ru: "Во сколько завтрак?", wrong: ["What time breakfast is?", "Where is my key?"] }
               ]
             }
           ]
@@ -1732,11 +1732,11 @@ const COURSE = {
               title: "Заказ в ресторане",
               lines: [
                 { who: "Официант", en: "Good evening! Are you ready to order?", ru: "Добрый вечер! Готовы сделать заказ?" },
-                { me: true, en: "Yes, I would like the fish, please.", ru: "Да, я бы хотел рыбу, пожалуйста.", wrong: ["Yes, I am a fish.", "No, I am ready to order."] },
+                { me: true, en: "Yes, I would like the fish, please.", ru: "Да, я бы хотел рыбу, пожалуйста.", wrong: ["Yes, I like fish, please.", "No, I'd like the bill, please."] },
                 { who: "Официант", en: "Anything to drink?", ru: "Что-нибудь выпить?" },
-                { me: true, en: "A glass of water, please.", ru: "Стакан воды, пожалуйста.", wrong: ["A plate of bread to drink.", "Yes, I am thirsty fish."] },
+                { me: true, en: "A glass of water, please.", ru: "Стакан воды, пожалуйста.", wrong: ["A piece of water, please.", "Some fish, please."] },
                 { who: "Официант", en: "Would you like a dessert?", ru: "Хотите десерт?" },
-                { me: true, en: "No, thank you. Can I have the bill?", ru: "Нет, спасибо. Можно счёт?", wrong: ["Yes, the bill is spicy.", "I would like a waiter."] }
+                { me: true, en: "No, thank you. Can I have the bill?", ru: "Нет, спасибо. Можно счёт?", wrong: ["No, thanks. Can I has the bill?", "Yes, a glass of water, please."] }
               ]
             }
           ]
@@ -1761,9 +1761,9 @@ const COURSE = {
               title: "Звонок другу",
               lines: [
                 { who: "Голос", en: "Hello, this is Mary speaking.", ru: "Алло, это Мэри." },
-                { me: true, en: "Hi Mary! It's Tom. How are you?", ru: "Привет, Мэри! Это Том. Как дела?", wrong: ["Hi Mary! I am a phone.", "Goodbye, Mary speaking."] },
+                { me: true, en: "Hi Mary! It's Tom. How are you?", ru: "Привет, Мэри! Это Том. Как дела?", wrong: ["Hi Mary! I am is Tom. How are you?", "Hello! Who is speaking?"] },
                 { who: "Мэри", en: "I'm fine, but I'm busy now. Can I call you back?", ru: "Нормально, но я сейчас занята. Можно я перезвоню?" },
-                { me: true, en: "Sure, no problem. Talk later!", ru: "Конечно, без проблем. Поговорим позже!", wrong: ["Sure, I am busy number.", "No, call back yesterday."] }
+                { me: true, en: "Sure, no problem. Talk later!", ru: "Конечно, без проблем. Поговорим позже!", wrong: ["Sure, no problem. Talk yesterday!", "Great, let's talk now then!"] }
               ]
             }
           ]
@@ -1788,9 +1788,9 @@ const COURSE = {
               title: "Приглашение на день рождения",
               lines: [
                 { who: "Кейт", en: "Hi! It's my birthday on Saturday.", ru: "Привет! В субботу мой день рождения." },
-                { me: true, en: "Happy birthday! How old will you be?", ru: "С днём рождения! Сколько тебе исполнится?", wrong: ["Happy Saturday! Where is my cake?", "Good night, birthday!"] },
+                { me: true, en: "Happy birthday! How old will you be?", ru: "С днём рождения! Сколько тебе исполнится?", wrong: ["Happy birthday! How old are you be?", "Merry Christmas! See you on Saturday."] },
                 { who: "Кейт", en: "Twenty! Would you like to come to my party?", ru: "Двадцать! Хочешь прийти на мою вечеринку?" },
-                { me: true, en: "I'd love to! What time?", ru: "С удовольствием! Во сколько?", wrong: ["I'd love to be twenty.", "No, I am a party."] }
+                { me: true, en: "I'd love to! What time?", ru: "С удовольствием! Во сколько?", wrong: ["I'd love! What time?", "Yes, I'm twenty too."] }
               ]
             }
           ],
@@ -2137,11 +2137,11 @@ const COURSE = {
               title: "Собеседование",
               lines: [
                 { who: "Менеджер", en: "Good morning! Please tell me about yourself.", ru: "Доброе утро! Расскажите о себе." },
-                { me: true, en: "I am a designer with three years of experience.", ru: "Я дизайнер с трёхлетним опытом.", wrong: ["I am three years and a designer.", "Good morning, tell me about you."] },
+                { me: true, en: "I am a designer with three years of experience.", ru: "Я дизайнер с трёхлетним опытом.", wrong: ["I am designer with three years experience.", "I'm fine, thank you. And you?"] },
                 { who: "Менеджер", en: "What are your strengths?", ru: "Какие у вас сильные стороны?" },
-                { me: true, en: "I am responsible and I work well in a team.", ru: "Я ответственный и хорошо работаю в команде.", wrong: ["My strengths are very salary.", "I am a strong team of coffee."] },
+                { me: true, en: "I am responsible and I work well in a team.", ru: "Я ответственный и хорошо работаю в команде.", wrong: ["I am responsible and I works well in a team.", "I want a higher salary."] },
                 { who: "Менеджер", en: "Why do you want to work for our company?", ru: "Почему вы хотите работать в нашей компании?" },
-                { me: true, en: "Because I want to grow and learn new skills.", ru: "Потому что хочу расти и учиться новому.", wrong: ["Because your office is a company.", "I want to hire my goals."] }
+                { me: true, en: "Because I want to grow and learn new skills.", ru: "Потому что хочу расти и учиться новому.", wrong: ["Because of I want to grow.", "I worked there for three years."] }
               ]
             }
           ]
@@ -2513,9 +2513,9 @@ const COURSE = {
               title: "Спор о технологиях",
               lines: [
                 { who: "Анна", en: "I think phones make people less social.", ru: "Мне кажется, телефоны делают людей менее общительными." },
-                { me: true, en: "I see your point, but they also help us stay in touch.", ru: "Понимаю твою мысль, но они также помогают нам общаться.", wrong: ["I see your phone, but it is social.", "Yes, the point is a phone."] },
+                { me: true, en: "I see your point, but they also help us stay in touch.", ru: "Понимаю твою мысль, но они также помогают нам общаться.", wrong: ["I see your point, but they also help us staying in touch.", "Yes, I have a new phone."] },
                 { who: "Анна", en: "That's true. But many teenagers are addicted to them.", ru: "Это правда. Но многие подростки от них зависимы." },
-                { me: true, en: "I agree. Parents should limit screen time.", ru: "Согласен. Родителям стоит ограничивать время у экрана.", wrong: ["I agree. Screens should limit parents.", "No, teenagers are a screen."] }
+                { me: true, en: "I agree. Parents should limit screen time.", ru: "Согласен. Родителям стоит ограничивать время у экрана.", wrong: ["I agree. Parents should to limit screen time.", "I agree, teenagers should use phones more."] }
               ]
             }
           ]
@@ -2761,9 +2761,9 @@ const COURSE = {
               title: "Переговоры о цене",
               lines: [
                 { who: "Партнёр", en: "Our price for the project is fifty thousand dollars.", ru: "Наша цена за проект - пятьдесят тысяч долларов." },
-                { me: true, en: "I'm afraid that's beyond our budget.", ru: "Боюсь, это выходит за рамки нашего бюджета.", wrong: ["I'm afraid of your dollars.", "Our budget is beyond the project."] },
+                { me: true, en: "I'm afraid that's beyond our budget.", ru: "Боюсь, это выходит за рамки нашего бюджета.", wrong: ["I'm afraid that's beyond of our budget.", "You're welcome, it's our pleasure."] },
                 { who: "Партнёр", en: "What would you suggest?", ru: "Что бы вы предложили?" },
-                { me: true, en: "Perhaps we could reach a compromise at forty thousand.", ru: "Возможно, сойдёмся на сорока тысячах?", wrong: ["Perhaps the compromise is forty.", "I suggest your price is a project."] }
+                { me: true, en: "Perhaps we could reach a compromise at forty thousand.", ru: "Возможно, сойдёмся на сорока тысячах?", wrong: ["Perhaps we could reaching a compromise at forty thousand.", "I suggest sixty thousand."] }
               ]
             }
           ]
@@ -2901,9 +2901,9 @@ const COURSE = {
               title: "Научная дискуссия",
               lines: [
                 { who: "Профессор", en: "Social media has made people more isolated.", ru: "Соцсети сделали людей более изолированными." },
-                { me: true, en: "With all due respect, I'm not entirely convinced.", ru: "При всём уважении, я не совсем убеждён.", wrong: ["With all due media, I am isolated.", "I'm convinced of all respect."] },
+                { me: true, en: "With all due respect, I'm not entirely convinced.", ru: "При всём уважении, я не совсем убеждён.", wrong: ["With all due respect, I'm not entirely convincing.", "Thank you, have a nice day."] },
                 { who: "Профессор", en: "Do you have any evidence?", ru: "У вас есть доказательства?" },
-                { me: true, en: "Research suggests that online communities reduce loneliness.", ru: "Исследования показывают, что онлайн-сообщества уменьшают одиночество.", wrong: ["Evidence suggests that research is lonely.", "Yes, I have a significant media."] }
+                { me: true, en: "Research suggests that online communities reduce loneliness.", ru: "Исследования показывают, что онлайн-сообщества уменьшают одиночество.", wrong: ["Research suggest that online communities reduce loneliness.", "Yes, I have a lot of friends online."] }
               ]
             }
           ]

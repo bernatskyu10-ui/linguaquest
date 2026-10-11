@@ -54,7 +54,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "12";
+  const APP_VERSION = "13";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -1217,7 +1217,7 @@ const App = (() => {
     notice: "Посмотрите ответы и нажмите «Дальше»",
     grammar: "Прочитайте правило и нажмите «Дальше»",
     choose: "Выберите вариант или нажмите 1-4",
-    firstLetter: "Послушайте слово и выберите первую букву",
+    firstLetter: "Послушайте слово и выберите букву",
     picture: "Выберите подходящую картинку",
     match: "Соедините слова и переводы",
     type: "Напишите ответ и нажмите Enter",
@@ -1247,7 +1247,7 @@ const App = (() => {
       ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу слушать</button>`
       : ex.type === "speak"
       ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу говорить</button>`
-      : `<span class="foot-hint">${HINTS[ex.type] || ""}</span>`;
+      : `<span class="foot-hint">${ex.hint || HINTS[ex.type] || ""}</span>`;
     const skip = document.getElementById("skipBtn");
     if (skip) skip.addEventListener("click", skipExercise);
     // Останавливаем озвучку и микрофон прошлого задания

@@ -1343,8 +1343,6 @@ img, svg { display: block; }
 .tag--ok svg { width: 14px; height: 14px; }
 
 /* Алфавит: крупные буквы и первая буква слова */
-.letter-big { font-family: var(--font-display); font-size: 44px; font-weight: 700; line-height: 1; }
-.letter-name { color: var(--text-2); font-weight: 600; }
 .options--letters .option > span:last-child { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
 .first-letter { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-4); border-radius: var(--r-md, 20px); background: var(--surface); border: 1px solid var(--line); }
 .first-letter__pic { width: 110px; height: 110px; }

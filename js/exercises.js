@@ -126,26 +126,58 @@ const Exercises = (() => {
     // Название буквы ("би", звучит) -> выбрать букву
     ws.slice(0, 2).forEach((w) => body.push({ type: "choose", dir: "ru-en", word: w, letters: true, options: opts(w) }));
 
-    // Заглавная -> строчная
-    ws.slice(2, 4).forEach((w) => body.push({ type: "choose", dir: "case", word: w, letters: true, options: opts(w) }));
+    // Простые слова уровня A1 для заданий: сначала те, у которых картинка изображает само слово
+    const a1 = new Set(COURSE.units.filter((u) => u.level === "A1").flatMap((u) => u.lessons.flatMap((l) => l.words.map((w) => w.en))));
+    const simple = courseWords.filter((v) => /^[a-z]{3,6}$/i.test(v.en) && a1.has(v.en));
+    const ownPic = (v) => v.pic && SVG.hasPic(v.pic) && (v.pic === v.en.toLowerCase() || v.pic === "c-" + v.en.toLowerCase());
+    const pickWord = (cand) => {
+      if (!cand.length) return null;
+      const withPic = cand.filter(ownPic);
+      return withPic.length ? sample(withPic, 1)[0] : sample(cand.slice(0, 3), 1)[0];
+    };
+    const used = new Set();
+    // Варианты без букв, которые тоже дают слово (c_t: a - cat, но и u - cut)
+    const vocabSet = new Set(courseWords.map((x) => x.en.toLowerCase()));
+    const optsIn = (w, v, pos) => {
+      const word = v.en.toLowerCase();
+      const bad = (x) => vocabSet.has(word.slice(0, pos) + x.en.toLowerCase() + word.slice(pos + 1));
+      return shuffle([w, ...sample(pool.filter((x) => x.en !== w.en && !bad(x)), 3)]);
+    };
 
-    // С какой буквы начинается слово (берём простые слова курса, лучше с картинкой)
-    const simple = courseWords.filter((v) => /^[a-z]{3,7}$/i.test(v.en));
+    // С какой буквы начинается слово: картинка, озвучка, "_og (собака)"
     let added = 0;
     for (const w of ws) {
       if (added >= 2) break;
-      const cand = simple.filter((v) => v.en[0].toLowerCase() === w.en.toLowerCase());
-      if (!cand.length) continue;
-      const withPic = cand.filter((v) => v.pic && SVG.hasPic(v.pic));
-      // Сначала слова с картинкой, иначе самые ранние (простые) слова курса
-      const v = withPic.length ? sample(withPic, 1)[0] : sample(cand.slice(0, 3), 1)[0];
-      body.push({ type: "firstLetter", word: w, vocab: v, options: opts(w) });
+      const v = pickWord(simple.filter((x) => x.en[0].toLowerCase() === w.en.toLowerCase() && !used.has(x.en)));
+      if (!v) continue;
+      used.add(v.en);
+      body.push({ type: "firstLetter", pos: 0, word: w, vocab: v, options: optsIn(w, v, 0) });
       added++;
     }
 
-    // Пары: заглавные и строчные
-    if (words.length >= 4) {
-      body.push({ type: "match", title: "Соедините заглавные и строчные буквы", pairs: sample(words, Math.min(5, words.length)).map((w) => ({ en: w.en, ru: w.en.toLowerCase() })) });
+    // Какой буквы не хватает внутри слова: "c_t (кошка)" -> a. Учит слышать звук в слове
+    added = 0;
+    for (const w of shuffle(words)) {
+      if (added >= 2) break;
+      const l = w.en.toLowerCase();
+      const v = pickWord(simple.filter((x) => x.en.slice(1).toLowerCase().includes(l) && !used.has(x.en)));
+      if (!v) continue;
+      used.add(v.en);
+      const positions = [...v.en.toLowerCase()].map((c, i) => (i > 0 && c === l ? i : -1)).filter((i) => i > 0);
+      const pos = positions[(Math.random() * positions.length) | 0];
+      body.push({ type: "firstLetter", pos, word: w, vocab: v, options: optsIn(w, v, pos) });
+      added++;
+    }
+
+    // Пары: буква и слово, которое с неё начинается
+    const pairs = [];
+    for (const w of shuffle(words)) {
+      if (pairs.length >= 4) break;
+      const v = pickWord(simple.filter((x) => x.en[0].toLowerCase() === w.en.toLowerCase()));
+      if (v) pairs.push({ en: w.en, ru: `${v.en.toLowerCase()} (${v.ru})` });
+    }
+    if (pairs.length >= 3) {
+      body.push({ type: "match", title: "Соедините букву и слово, которое с неё начинается", hint: "Послушайте слово в голове: какой звук первый?", pairs });
     }
 
     // Буква на слух: выбрать и написать
@@ -182,9 +214,15 @@ const Exercises = (() => {
     const unitSentences = unit.lessons.flatMap((l) => l.sentences || []);
     const courseSentences = COURSE.units.flatMap((u) => u.lessons.flatMap((l) => l.sentences || []));
 
-    // Отвлекающие варианты, не совпадающие с правильным ни по en, ни по ru
-    const distractors = (word, n, from = pool) =>
-      sample(from.filter((w) => w.en !== word.en && w.ru !== word.ru), n);
+    // Отвлекающие варианты, не совпадающие с правильным ни по en, ни по ru.
+    // Сначала из той же главы (цвета среди цветов, еда среди еды), чтобы ответ нельзя было угадать по теме
+    const unitKeys = new Set(unitWords.map((w) => w.en));
+    const distractors = (word, n, from = pool) => {
+      const ok = (w) => w.en !== word.en && w.ru !== word.ru;
+      const near = sample(from.filter((w) => ok(w) && unitKeys.has(w.en)), n);
+      const nearRu = new Set(near.map((w) => w.ru));
+      return near.concat(sample(from.filter((w) => ok(w) && !unitKeys.has(w.en) && !nearRu.has(w.ru)), n - near.length));
+    };
 
     const out = [];
     const ws = shuffle(words);
@@ -432,37 +470,19 @@ const Exercises = (() => {
       return { check: () => ({ correct: true, silent: true }) };
     },
 
-    // Заглавная буква -> найти строчную
-    letterCase(ex, root, ctx) {
-      const w = ex.word;
-      root.innerHTML = `<h2 class="ex-title">Найдите строчную букву</h2>
-        ${mascotBubble(`${speakBtn(w.en)}<span class="letter-big">${esc(w.en.toUpperCase())}</span><small class="letter-name">${esc(w.ru)}</small>`, ctx)}
-        ${optionsList(ex.options.map((o) => ({ label: o.en.toLowerCase() })), "options--letters")}`;
-      bindSpeak(root, ctx);
-      ctx.auto(w.en);
-      const sel = bindSingleSelect(root, ctx);
-      const correctIdx = ex.options.findIndex((o) => o.en === w.en);
-      return {
-        select: sel.select,
-        check() {
-          sel.mark(correctIdx);
-          return { correct: sel.selected === correctIdx, solution: `${w.en.toUpperCase()} и ${w.en.toLowerCase()} (${w.ru})` };
-        }
-      };
-    },
-
-    // С какой буквы начинается слово: картинка, озвучка и слово без первой буквы
+    // Буква в слове: первая ("_og") или пропущенная внутри ("c_t"), с картинкой и озвучкой
     firstLetter(ex, root, ctx) {
       const v = ex.vocab;
-      const rest = v.en.slice(1).toLowerCase();
+      const word = v.en.toLowerCase();
+      const pos = ex.pos || 0;
       const pic = v.pic && SVG.hasPic(v.pic) ? SVG.pic(v.pic, "first-letter__pic") : "";
-      root.innerHTML = `<h2 class="ex-title">С какой буквы начинается слово?</h2>
+      root.innerHTML = `<h2 class="ex-title">${pos === 0 ? "С какой буквы начинается слово?" : "Какой буквы не хватает?"}</h2>
         <div class="first-letter">
           ${pic}
-          <div class="first-letter__word">${speakBtn(v.en)}<span><b class="first-letter__gap">_</b>${esc(rest)}</span></div>
+          <div class="first-letter__word">${speakBtn(v.en)}<span>${esc(word.slice(0, pos))}<b class="first-letter__gap">_</b>${esc(word.slice(pos + 1))}</span></div>
           <div class="first-letter__ru">${esc(v.ru)}</div>
         </div>
-        ${optionsList(ex.options.map((o) => ({ label: o.en.toUpperCase() })), "options--letters")}`;
+        ${optionsList(ex.options.map((o) => ({ label: `${o.en.toUpperCase()} ${o.en.toLowerCase()}` })), "options--letters")}`;
       bindSpeak(root, ctx);
       ctx.auto(v.en);
       const sel = bindSingleSelect(root, ctx);
@@ -471,7 +491,7 @@ const Exercises = (() => {
         select: sel.select,
         check() {
           sel.mark(correctIdx);
-          root.querySelector(".first-letter__gap").textContent = v.en[0].toLowerCase();
+          root.querySelector(".first-letter__gap").textContent = word[pos];
           return { correct: sel.selected === correctIdx, solution: `${v.en} (${v.ru}), буква ${ex.word.en.toUpperCase()}` };
         }
       };
@@ -513,7 +533,6 @@ const Exercises = (() => {
     choose(ex, root, ctx) {
       const enRu = ex.dir === "en-ru";
       const w = ex.word;
-      if (ex.dir === "case") return renderers.letterCase(ex, root, ctx);
       let title;
       if (ex.letters) title = enRu ? "Как называется эта буква?" : "Какая буква так называется?";
       else title = enRu ? "Выберите правильный перевод" : "Как это будет по-английски?";
