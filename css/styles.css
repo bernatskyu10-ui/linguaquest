@@ -1351,3 +1351,4 @@ img, svg { display: block; }
 .first-letter__word { display: flex; align-items: center; gap: var(--s-3); font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 0.04em; }
 .first-letter__gap { display: inline-block; min-width: 0.8em; text-align: center; color: var(--accent); border-bottom: 3px solid var(--accent); margin-right: 2px; }
 .first-letter__ru { color: var(--text-2); font-weight: 600; }
+.app-version { margin: var(--s-3) 0 0; text-align: center; font-size: 12px; color: var(--muted); }

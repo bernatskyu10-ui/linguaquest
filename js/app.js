@@ -53,6 +53,8 @@ const App = (() => {
   });
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
+  // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
+  const APP_VERSION = "11";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -198,6 +200,7 @@ const App = (() => {
                 <span>${esc(u.username)}<small>${Number(u.xp) || 0} XP, дней подряд: ${Number(u.streak) || 0}</small></span>
               </button>`).join("")}
           </div>` : ""}
+          <p class="app-version">Версия ${APP_VERSION}</p>
         </div>
       </section>`;
 
@@ -3130,7 +3133,7 @@ const App = (() => {
             <button class="btn btn--sm btn--ghost" data-act="switch">${SVG.icon("logout")}Выйти</button>
           </div>
           <div class="setting-row">
-            <div class="setting-row__label">Удалить профиль<small>Весь прогресс этого профиля будет стёрт с устройства</small></div>
+            <div class="setting-row__label">Удалить профиль<small>Весь прогресс этого профиля будет стёрт с устройства. Версия приложения ${APP_VERSION}</small></div>
             <button class="btn btn--sm btn--rose" data-act="delete">Удалить</button>
           </div>
         </div>
@@ -3320,7 +3323,21 @@ const App = (() => {
     initReminders();
     // Офлайн-кэш и установка на телефон работают, только если сайт открыт по http(s)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        // Проверяем обновления при каждом возвращении в приложение
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+      }).catch(() => {});
+      // Новая версия приложения установилась: перезагружаемся, как только пользователь не в уроке
+      let hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController) { hadController = true; return; } // первая установка, перезагрузка не нужна
+        const reloadWhenFree = () => {
+          if (lesson || game || cards || !$modal.hidden) { setTimeout(reloadWhenFree, 3000); return; }
+          Store.save({ silent: true });
+          location.reload();
+        };
+        reloadWhenFree();
+      });
     }
     if (Store.restore()) {
       applySettings();
