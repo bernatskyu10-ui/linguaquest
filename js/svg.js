@@ -75,7 +75,7 @@ const SVG = (() => {
 
   /* Логотип: мордочка лисёнка */
   function logo() {
-    return `<img class="logo-img" src="${MASCOT_DIR}fox-face.webp" alt="" draggable="false">`;
+    return `<img class="logo-img" src="${MASCOT_DIR}logo.webp" alt="" draggable="false">`;
   }
 
   /* ------------------------------------------------------------------

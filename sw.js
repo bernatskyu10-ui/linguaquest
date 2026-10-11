@@ -5,7 +5,7 @@
    открыт по адресу http(s), при открытии файла с диска не используется.
    Стратегия "сначала сеть": обновления видны сразу, кэш нужен для офлайна.
    ========================================================================== */
-const VERSION = "lq-v11";
+const VERSION = "lq-v12";
 // Озвучка лежит в отдельном кэше: при обновлении приложения её не нужно качать заново
 const AUDIO_CACHE = "lq-audio-v1";
 
@@ -18,7 +18,7 @@ const CORE = [
   "js/effects.js", "js/exercises.js", "js/app.js",
   "assets/mascot/fox-main.webp", "assets/mascot/fox-wink.webp", "assets/mascot/fox-read.webp",
   "assets/mascot/fox-laugh.webp", "assets/mascot/fox-determined.webp", "assets/mascot/fox-back.webp",
-  "assets/mascot/fox-sleep.webp", "assets/mascot/fox-face.webp",
+  "assets/mascot/fox-sleep.webp", "assets/mascot/logo.webp", "assets/mascot/favicon-64.png", "assets/mascot/apple-touch-icon.png",
   "assets/mascot/fox-cheer.webp", "assets/mascot/fox-cry.webp", "assets/mascot/fox-surprised.webp", "assets/mascot/fox-think.webp",
   "assets/mascot/fox-party.webp", "assets/mascot/fox-readlaugh.webp", "assets/mascot/fox-cool.webp", "assets/mascot/fox-angry.webp",
   "assets/mascot/fox-love.webp", "assets/mascot/fox-sleepy.webp", "assets/mascot/fox-hello.webp", "assets/mascot/fox-worried.webp",

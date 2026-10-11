@@ -54,7 +54,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "11";
+  const APP_VERSION = "12";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
