@@ -1380,3 +1380,40 @@ img, svg { display: block; }
 .subject-switch--side a { flex: 1; }
 .subject-switch--top span { display: none; }
 .auth__ege { display: inline-block; margin: var(--s-2) 0; font-size: 14px; font-weight: 700; color: var(--accent); text-underline-offset: 3px; }
+/* Обучение: пример к слову, правило по шагам, подсказки */
+.teach__example { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-3); padding: 10px 12px; border-radius: 14px; background: var(--surface-2); text-align: left; max-width: 100%; }
+.teach__example b { display: block; font-weight: 800; }
+.teach__example small { display: block; color: var(--text-2); }
+.rule__points li.is-hidden, .rule__table.is-hidden, .rule__examples.is-hidden { display: none; }
+.rule__point--new { animation: ruleIn 360ms var(--ease-out, ease) both; }
+@keyframes ruleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.rule__steps { margin: 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); }
+.option.is-hinted-out, .pic-card.is-hinted-out { opacity: 0.32; text-decoration: line-through; }
+@media (prefers-reduced-motion: reduce) { .rule__point--new { animation: none; } }
+
+/* Подсказка, объяснения ошибок, слабые места */
+.foot-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.foot-actions .btn svg, .foot-hint--tip svg { width: 16px; height: 16px; }
+.foot-hint--tip { display: flex; align-items: flex-start; gap: 6px; color: var(--amber); font-weight: 700; }
+.foot-hint--tip svg { flex: none; margin-top: 2px; }
+.feedback__why { margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--text); opacity: 0.9; }
+.feedback__more { justify-self: start; padding: 2px 0; margin-top: 2px; color: inherit; }
+.explain { display: grid; gap: var(--s-2); width: 100%; text-align: left; }
+.explain__row { display: flex; align-items: center; gap: var(--s-3); padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.explain__row small, .explain__rule small { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.explain__row b { display: block; font-weight: 800; }
+.explain__row span { display: block; color: var(--text-2); font-size: 14px; }
+.explain__row--ok { background: color-mix(in srgb, var(--teal) 12%, var(--surface-2)); }
+.explain__row--bad { background: color-mix(in srgb, var(--rose) 12%, var(--surface-2)); }
+.explain__why { margin: 0; font-weight: 600; }
+.explain__rule { padding: 10px 12px; border-radius: 14px; border: 1px dashed var(--line-strong); }
+.explain__rule p { margin: 4px 0 0; }
+.weak { display: grid; gap: var(--s-3); }
+.weak__lead { margin: 0; color: var(--text-2); font-size: 14px; font-weight: 600; }
+.weak__list { display: grid; gap: var(--s-2); }
+.weak__item { display: flex; align-items: center; gap: var(--s-3); padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.weak__info { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.weak__title { font-weight: 800; overflow-wrap: anywhere; }
+.weak__sub { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.progress--bad .progress__fill { background: var(--rose); }
+.weak .tag svg { width: 14px; height: 14px; }

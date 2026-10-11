@@ -128,6 +128,7 @@ const SVG = (() => {
     clock: `<circle cx="12" cy="12" r="9.5" fill="#9b7bff"/><path d="M12 6.5V12l3.5 2.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
     words: `<rect x="2.5" y="4" width="13" height="10" rx="3" fill="#2fd18b"/><path d="M5 14v4l4-4" fill="#2fd18b"/><rect x="9" y="9" width="12.5" height="9" rx="3" fill="#3bb7f6"/><path d="M19 18v3.5l-3.5-3.5" fill="#3bb7f6"/>`,
     play: `<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`,
+    bulb: `<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`,
     bell: `<path d="M6 10a6 6 0 0 1 12 0c0 4.5 1.5 6 2.5 7h-17C4.5 16 6 14.5 6 10z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
     plus: `<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>`,
     freeze: `<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7" stroke="#3bb7f6" stroke-width="2.4" stroke-linecap="round"/><path d="M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5" stroke="#3bb7f6" stroke-width="2" fill="none" stroke-linecap="round"/>`

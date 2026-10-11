@@ -54,7 +54,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "16";
+  const APP_VERSION = "17";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -774,6 +774,7 @@ const App = (() => {
       <div class="journey">
         ${nextUp}
         ${planCard()}
+        ${weakCard()}
         ${placementCard()}
         ${homeRow()}
         ${chapters}
@@ -787,6 +788,7 @@ const App = (() => {
 
   function bindLearn(main) {
     bindPlan(main);
+    main.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => startTopic(b.dataset.topic)));
     main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
@@ -1336,6 +1338,74 @@ const App = (() => {
     showExercise();
   }
 
+  // Подробное объяснение ответа: правильный вариант, ваш, почему, пример и правило темы
+  function explainModal(info) {
+    if (!info) return;
+    const { ex, res, exp } = info;
+    const t = exp.topic && typeof TOPICS === "object" ? TOPICS[exp.topic] : null;
+    const sayBtn = (en) => (Speech.canSay(en) ? `<button class="speak-btn" type="button" data-say-word="${esc(en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : "");
+    const solEn = (res.solution || "").replace(/ \(.*\)$/, "");
+    openModal(`
+      <div class="modal__pic">${SVG.mascot({ mood: "think", hat: d().hat })}</div>
+      <h2>Почему так</h2>
+      <div class="explain">
+        <div class="explain__row explain__row--ok">${sayBtn(solEn)}<div><small>Правильно</small><b>${esc(res.solution || "")}</b></div></div>
+        ${res.given && !res.correct ? `<div class="explain__row explain__row--bad"><div><small>Ваш ответ</small><b>${esc(res.given)}</b></div></div>` : ""}
+        ${exp.why ? `<p class="explain__why">${esc(exp.why)}</p>` : ""}
+        ${exp.contrast && !/^(Ваш ответ|Вы написали)/.test(exp.contrast) ? `<p class="explain__why">${esc(exp.contrast)}</p>` : ""}
+        ${exp.example ? `<div class="explain__row">${sayBtn(exp.example.en)}<div><small>Пример</small><b>${esc(exp.example.en)}</b><span>${esc(exp.example.ru)}</span></div></div>` : ""}
+        ${t ? `<div class="explain__rule"><small>Правило: ${esc(t.title)}</small><p>${esc(t.rule)}</p></div>` : ""}
+      </div>
+      ${t && GRAMMAR[t.lesson] ? `<button class="btn btn--ghost" data-full-rule>Открыть правило полностью</button>` : ""}
+      <button class="btn" data-close-btn>Понятно</button>`, (card) => {
+      card.querySelector("[data-close-btn]").onclick = closeModal;
+      const full = card.querySelector("[data-full-rule]");
+      if (full) full.onclick = () => showGrammar(t.lesson);
+      card.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+    });
+  }
+
+  /* ---------- Слабые места: темы, в которых много ошибок ---------- */
+  function weakTopics() {
+    const w = d().weak || {};
+    return Object.entries(w)
+      .filter(([k, v]) => TOPICS[k] && v.t >= 3 && v.w >= 2 && v.w / v.t >= 0.3)
+      .map(([k, v]) => ({ id: k, rate: v.w / v.t, w: v.w, t: v.t }))
+      .sort((a, b) => b.rate - a.rate || b.w - a.w);
+  }
+
+  function weakCard() {
+    const list = weakTopics().slice(0, 3);
+    if (!list.length) return "";
+    return `
+      <section class="card weak reveal">
+        <div class="widget__head"><span class="widget__title">Ваши слабые места</span><span class="tag">${SVG.icon("target")}разбор</span></div>
+        <p class="weak__lead">Здесь вы чаще всего ошибаетесь. Короткое правило и тренировка именно этой темы помогут закрепить.</p>
+        <div class="weak__list">
+          ${list.map((x) => `
+            <div class="weak__item">
+              <div class="weak__info"><div class="weak__title">${esc(TOPICS[x.id].title)}</div><div class="weak__sub">Ошибок: ${x.w} из ${x.t}</div>
+                <div class="progress progress--bad"><div class="progress__fill" style="width:${Math.round(x.rate * 100)}%"></div></div></div>
+              <button class="btn btn--sm" data-topic="${x.id}">Разобрать</button>
+            </div>`).join("")}
+        </div>
+      </section>`;
+  }
+
+  // Тренировка одной темы: правило, затем задания этой темы из пройденных уроков
+  function startTopic(id) {
+    const t = TOPICS[id];
+    if (!t) return;
+    const cur = currentIndex();
+    const all = FLAT.flatMap((x) => (x.lesson.gaps || []).filter((g) => GAP_WHY[g.text] && GAP_WHY[g.text][0] === id).map((g) => ({ g, gi: x.gi })));
+    let pool = all.filter((x) => x.gi <= cur);
+    if (pool.length < 3) pool = all;
+    if (!pool.length) return;
+    const gaps = Exercises.shuffle(pool).slice(0, 6).map((x) => ({ type: "gap", gap: x.g, options: Exercises.shuffle(x.g.options), drill: true }));
+    const rule = GRAMMAR[t.lesson] || { title: t.title, points: [t.rule], examples: [] };
+    beginSession("review", [{ type: "grammar", g: rule }].concat(gaps), { topic: id, reviewKeys: [], colors: ["#7c5cff", "#3ec7ff"] });
+  }
+
   // Окно с правилом урока (кнопка "Подсказка")
   function showGrammar(id) {
     const g = GRAMMAR[id];
@@ -1383,14 +1453,6 @@ const App = (() => {
     btn.className = "btn";
     btn.textContent = ex.type === "teach" || ex.type === "grammar" || ex.type === "notice" ? "Дальше" : "Проверить";
     btn.disabled = true;
-    // Для заданий на слух можно пропустить (нет наушников или звука)
-    left.innerHTML = ex.type === "listen" || ex.type === "dictation"
-      ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу слушать</button>`
-      : ex.type === "speak"
-      ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу говорить</button>`
-      : `<span class="foot-hint">${ex.hint || HINTS[ex.type] || ""}</span>`;
-    const skip = document.getElementById("skipBtn");
-    if (skip) skip.addEventListener("click", skipExercise);
     // Останавливаем озвучку и микрофон прошлого задания
     Speech.stop();
     SpeechRec.abort();
@@ -1403,6 +1465,24 @@ const App = (() => {
       auto,
       sfx: (n) => Sound.play(n),
       hat: d().hat
+    });
+    // Нижняя панель: пропуск задания на слух или говорение и подсказка (кроме тестов)
+    const canHint = L.ctrl.hint && L.mode !== "test" && L.mode !== "placement";
+    const skipHTML = ex.type === "listen" || ex.type === "dictation"
+      ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу слушать</button>`
+      : ex.type === "speak" ? `<button class="btn btn--ghost btn--sm" id="skipBtn">Не могу говорить</button>` : "";
+    left.innerHTML = skipHTML || canHint
+      ? `<div class="foot-actions">${skipHTML}${canHint ? `<button class="btn btn--ghost btn--sm" id="hintBtn">${SVG.icon("bulb")}Подсказка</button>` : ""}</div>`
+      : `<span class="foot-hint">${ex.hint || HINTS[ex.type] || ""}</span>`;
+    const skip = document.getElementById("skipBtn");
+    if (skip) skip.addEventListener("click", skipExercise);
+    const hintBtn = document.getElementById("hintBtn");
+    if (hintBtn) hintBtn.addEventListener("click", () => {
+      if (L.phase !== "answer" || lesson !== L) return;
+      const text = L.ctrl.hint();
+      L.hints = (L.hints || 0) + 1;
+      Sound.play("tap");
+      hintBtn.outerHTML = `<span class="foot-hint foot-hint--tip">${SVG.icon("bulb")}<span>${esc(text || "")}</span></span>`;
     });
     updateLessonProgress();
     window.scrollTo({ top: 0 });
@@ -1435,6 +1515,11 @@ const App = (() => {
 
     const res = L.ctrl.check();
     const ex = L.queue[L.idx];
+    // Правило показывается по шагам: следующий пункт, а не следующее задание
+    if (res.pending) return;
+    const lessonId = L.entry ? L.entry.lesson.id : null;
+    const exp = Exercises.explain(ex, res, lessonId);
+    L.lastExplain = { ex, res, exp };
 
     // Задания без проверки (карточка слова, пары) засчитываются сразу
     if (res.silent) {
@@ -1452,6 +1537,14 @@ const App = (() => {
     const data = d();
     data.totalAnswers++;
     trackAnswer(ex, res.correct);
+    // Статистика по грамматическим темам для разбора слабых мест
+    const topic = Exercises.topicOf(ex);
+    if (topic && L.mode !== "placement") {
+      const ws = data.weak[topic] || (data.weak[topic] = { w: 0, t: 0, at: 0 });
+      ws.t++;
+      if (!res.correct) ws.w++;
+      ws.at = Date.now();
+    }
     // Точность по дням для статистики
     const acc = data.accByDay[Store.dayKey()] || (data.accByDay[Store.dayKey()] = { c: 0, t: 0 });
     acc.t++;
@@ -1474,6 +1567,7 @@ const App = (() => {
           <div>
             <div class="feedback__title">${res.typo ? "Почти идеально!" : PRAISE[(Math.random() * PRAISE.length) | 0]}</div>
             ${res.typo ? `<div class="feedback__text">Есть опечатка. Правильно: <b>${esc(res.solution)}</b></div>` : ""}
+            ${ex.practice && exp.why ? `<div class="feedback__why">${esc(exp.why)}</div>` : ""}
           </div>
         </div>`;
       btn.className = "btn btn--teal";
@@ -1504,6 +1598,8 @@ const App = (() => {
           <div>
             <div class="feedback__title">Не совсем</div>
             <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${L.mode === "placement" ? "" : isTest ? ` Ошибок: ${L.mistakes}. Допускается не больше ${TEST_MAX_MISTAKES}.` : " Задание вернётся в конце."}</div>
+            ${L.mode === "placement" ? "" : `${exp.why && ex.gap ? `<div class="feedback__why">${esc(exp.why)}</div>` : exp.contrast ? `<div class="feedback__why">${esc(exp.contrast)}</div>` : ""}
+            <button class="link-btn feedback__more" type="button" id="whyBtn">Почему так?</button>`}
           </div>
         </div>`;
       btn.className = "btn btn--rose";
@@ -1511,6 +1607,8 @@ const App = (() => {
     btn.textContent = "Продолжить";
     btn.disabled = false;
     btn.focus({ preventScroll: true });
+    const whyBtn = document.getElementById("whyBtn");
+    if (whyBtn) whyBtn.addEventListener("click", () => explainModal(L.lastExplain));
     updateLessonProgress();
     Store.save();
   }
@@ -1639,13 +1737,16 @@ const App = (() => {
     lesson = null;
     renderResult(Object.assign(s, {
       xp, coins, perfect,
-      title: L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
-      subtitle: L.yesterday
+      title: L.topic ? "Тема разобрана!" : L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
+      subtitle: L.topic
+        ? `«${TOPICS[L.topic].title}»: верных ответов ${L.correctAnswers} из ${L.correctAnswers + L.mistakes}`
+        : L.yesterday
         ? `Слов из занятия (${dayLabel(L.yesterday)}): ${L.reviewKeys.length}. Теперь можно идти дальше`
         : `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
       mood: L.yesterday ? "cheer" : "readlaugh",
       errors: L.errors,
-      again: L.yesterday ? startYesterday : startReview, againLabel: L.yesterday ? "Ещё раз" : "Повторить ещё"
+      again: L.topic ? () => startTopic(L.topic) : L.yesterday ? startYesterday : startReview,
+      againLabel: L.topic ? "Ещё раз эту тему" : L.yesterday ? "Ещё раз" : "Повторить ещё"
     }));
   }
 
@@ -2823,6 +2924,8 @@ const App = (() => {
 
         ${weekCard()}
 
+        ${weakCard()}
+
         ${statsExtra()}
 
         <h2>Главы</h2>
@@ -2843,6 +2946,7 @@ const App = (() => {
   }
 
   function bindProfile(main) {
+    main.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => startTopic(b.dataset.topic)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
     main.querySelectorAll("[data-cards]").forEach((b) => b.addEventListener("click", startCards));

@@ -226,15 +226,22 @@ const Exercises = (() => {
 
     const out = [];
     const ws = shuffle(words);
+    let practiced = null; // задание, уже показанное сразу после правила
 
     // 0. Объяснение грамматики перед первым прохождением урока
     if (!isReplay && typeof GRAMMAR === "object" && GRAMMAR[lesson.id]) {
       out.push({ type: "grammar", g: GRAMMAR[lesson.id] });
+      // Сначала учим, потом проверяем: сразу после правила одно задание на него с объяснением
+      if (gaps.length) {
+        const first = gaps[(Math.random() * gaps.length) | 0];
+        out.push({ type: "gap", gap: first, options: shuffle(first.options), practice: true });
+        practiced = first;
+      }
     }
 
     // 1. Карточки новых слов (только при первом прохождении)
     if (!isReplay) {
-      ws.slice(0, letters ? 3 : 2).forEach((w) => out.push({ type: "teach", word: w, letters }));
+      ws.slice(0, letters ? 3 : 2).forEach((w) => out.push({ type: "teach", word: w, letters, example: letters ? null : exampleFor(w.en, lesson.id) }));
     }
 
     // Алфавит: свои задания, которые учат узнавать буквы, а не переписывать название
@@ -296,7 +303,7 @@ const Exercises = (() => {
     });
 
     // 9. Пропуски с формой глагола
-    sample(gaps, 3).forEach((g) => body.push({ type: "gap", gap: g, options: shuffle(g.options) }));
+    sample(gaps.filter((g) => g !== practiced), 3).forEach((g) => body.push({ type: "gap", gap: g, options: shuffle(g.options) }));
 
     // 10. Аудирование предложения или диктант слова
     if (sentences.length) {
@@ -427,6 +434,7 @@ const Exercises = (() => {
     const btns = [...root.querySelectorAll(".option, .pic-card")];
     let selected = -1;
     const select = (i) => {
+      if (!btns[i] || btns[i].disabled) return;
       selected = i;
       btns.forEach((b, j) => b.classList.toggle("is-selected", j === i));
       ctx.sfx("tap");
@@ -462,12 +470,30 @@ const Exercises = (() => {
   }
 
   const renderers = {
+    // Правило показываем по шагам: каждый пункт отдельно, таблица и примеры в конце
     grammar(ex, root, ctx) {
       root.innerHTML = `<div class="ex-head"><span class="ex-kicker">Как это работает</span><h2 class="ex-title">${esc(ex.g.title)}</h2></div>
-        <div class="rule-wrap">${grammarCard(ex.g)}<div class="rule__fox">${SVG.mascot({ mood: "readlaugh", hat: ctx.hat })}</div></div>`;
+        <div class="rule-wrap">${grammarCard(ex.g)}<div class="rule__fox">${SVG.mascot({ mood: "readlaugh", hat: ctx.hat })}</div></div>
+        <p class="rule__steps" aria-live="polite"></p>`;
       bindSpeak(root, ctx);
+      const points = [...root.querySelectorAll(".rule__points li")];
+      const extras = [...root.querySelectorAll(".rule__table, .rule__examples")];
+      const steps = root.querySelector(".rule__steps");
+      let shown = points.length > 1 ? 1 : points.length;
+      const update = () => {
+        points.forEach((p, i) => p.classList.toggle("is-hidden", i >= shown));
+        extras.forEach((x) => x.classList.toggle("is-hidden", shown < points.length));
+        steps.textContent = points.length > 1 ? (shown < points.length ? `Шаг ${shown} из ${points.length}. Нажмите «Дальше», чтобы продолжить` : "Правило целиком. Дальше - проверим на практике") : "";
+        if (points[shown - 1]) points[shown - 1].classList.add("rule__point--new");
+      };
+      update();
       ctx.onReady(true);
-      return { check: () => ({ correct: true, silent: true }) };
+      return {
+        check() {
+          if (shown < points.length) { shown++; update(); ctx.sfx("tap"); return { pending: true }; }
+          return { correct: true, silent: true };
+        }
+      };
     },
 
     // Буква в слове: первая ("_og") или пропущенная внутри ("c_t"), с картинкой и озвучкой
@@ -523,6 +549,7 @@ const Exercises = (() => {
           <div class="teach__word">${esc(w.en)} ${speakBtn(w.en)}</div>
           <div class="teach__tr">${esc(w.ru)}</div>
           ${w.tip ? `<div class="teach__tip">${esc(w.tip)}</div>` : ""}
+          ${ex.example ? `<div class="teach__example">${speakBtn(ex.example.en)}<div><b>${esc(ex.example.en)}</b><small>${esc(ex.example.ru)}</small></div></div>` : ""}
         </div>`;
       bindSpeak(root, ctx);
       ctx.auto(w.en);
@@ -874,14 +901,177 @@ const Exercises = (() => {
     return best;
   }
 
+  /* ---------- Объяснения ошибок ---------- */
+  let byRu = null, byEn = null;
+  function indexWords() {
+    byRu = Object.create(null); byEn = Object.create(null);
+    COURSE.units.forEach((u) => u.lessons.forEach((l) => l.words.forEach((w) => {
+      if (!byRu[w.ru.toLowerCase()]) byRu[w.ru.toLowerCase()] = w;
+      if (!byEn[w.en.toLowerCase()]) byEn[w.en.toLowerCase()] = w;
+    })));
+  }
+  const wordByRu = (ru) => { if (!byRu) indexWords(); return byRu[String(ru).toLowerCase()] || null; };
+  const wordByEn = (en) => { if (!byEn) indexWords(); return byEn[String(en).toLowerCase()] || null; };
+
+  // Пример фразы со словом: сначала из того же урока, потом из любого
+  function exampleFor(en, lessonId) {
+    const key = en.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp("(^|[^a-z'])" + key + "([^a-z']|$)", "i");
+    let best = null;
+    for (const u of COURSE.units) for (const l of u.lessons) for (const s of l.sentences || []) {
+      if (!re.test(s.en) || s.en.toLowerCase() === en.toLowerCase()) continue;
+      if (l.id === lessonId) return s;
+      if (!best) best = s;
+    }
+    return best;
+  }
+
+  const topicOf = (ex) => (ex && ex.gap && typeof GAP_WHY === "object" && GAP_WHY[ex.gap.text] ? GAP_WHY[ex.gap.text][0] : null);
+
+  // Главная тема урока: та, к которой относится больше всего его заданий с пропуском
+  function lessonTopic(lessonId) {
+    if (typeof GAP_WHY !== "object" || !lessonId) return null;
+    const count = {};
+    for (const u of COURSE.units) for (const l of u.lessons) if (l.id === lessonId)
+      for (const g of l.gaps || []) { const t = GAP_WHY[g.text]; if (t) count[t[0]] = (count[t[0]] || 0) + 1; }
+    const best = Object.entries(count).sort((a, b) => b[1] - a[1])[0];
+    return best ? best[0] : null;
+  }
+
+  // Что объяснить после ответа: почему так, чем отличается выбранный вариант, пример и тема
+  function explain(ex, res, lessonId) {
+    const out = { why: "", contrast: "", example: null, topic: null, word: null };
+    const given = String((res && res.given) || "").trim();
+    if (ex.gap) {
+      const g = typeof GAP_WHY === "object" ? GAP_WHY[ex.gap.text] : null;
+      if (g) { out.topic = g[0]; out.why = g[1]; }
+      if (given && given !== ex.gap.answer) out.contrast = `Вы выбрали «${given}»: ${ex.gap.text.replace("___", given)} - так нельзя.`;
+      return out;
+    }
+    if (ex.type === "firstLetter") {
+      out.why = `${ex.vocab.en} (${ex.vocab.ru}): нужная буква ${ex.word.en.toUpperCase()}, она называется «${ex.word.ru}».`;
+      return out;
+    }
+    if (ex.letters) {
+      const l = ex.word || { en: ex.target, ru: ex.ru };
+      out.why = `Буква ${String(l.en).toUpperCase()} называется «${l.ru}».`;
+      return out;
+    }
+    const w = ex.word && ex.word.en.length > 1 ? ex.word
+      : (ex.type === "listen" || ex.type === "dictation") && !ex.letters ? wordByEn(ex.target) : null;
+    if (w) {
+      out.word = w;
+      out.why = `${w.en} - ${w.ru}`;
+      out.example = exampleFor(w.en, lessonId);
+      if (given && given.toLowerCase() !== w.en.toLowerCase() && given.toLowerCase() !== w.ru.toLowerCase()) {
+        const o = wordByRu(given) || wordByEn(given);
+        if (o && o.en !== w.en) {
+          out.contrast = o.ru.toLowerCase() === given.toLowerCase()
+            ? `«${given}» - это «${o.en}», а «${w.en}» - это «${w.ru}».`
+            : `«${o.en}» означает «${o.ru}», а нужно было «${w.en}» (${w.ru}).`;
+        } else if (ex.type === "type" || ex.type === "dictation") {
+          out.contrast = `Вы написали: «${given}».`;
+        }
+      }
+      out.topic = lessonTopic(lessonId);
+      return out;
+    }
+    if (ex.type === "dialog") {
+      const q = ex.context.length ? ex.context[ex.context.length - 1].en : "";
+      out.why = q ? `На реплику «${q}» подходит «${ex.line.en}» (${ex.line.ru}).` : `Подходит «${ex.line.en}» (${ex.line.ru}).`;
+      if (given && given !== ex.line.en) out.contrast = `«${given}» не подходит: в нём ошибка или он не отвечает на сказанное.`;
+    } else if (ex.type === "story") {
+      out.why = `Ответ есть в тексте. Перевод текста: ${ex.story.ru}`;
+    } else {
+      const s = ex.sentence || (ex.target ? { en: ex.target, ru: ex.ru } : null);
+      if (s) out.why = `${s.en} - ${s.ru}`;
+      if (given) out.contrast = `Ваш ответ: «${given}».`;
+    }
+    out.topic = lessonTopic(lessonId);
+    return out;
+  }
+
+  /* ---------- Ответ пользователя и подсказки для любого задания ---------- */
+  function readGiven(root) {
+    const sel = root.querySelector(".option.is-selected, .pic-card.is-selected");
+    if (sel) {
+      const spans = sel.querySelectorAll("span");
+      return (spans.length ? spans[spans.length - 1] : sel).textContent.trim();
+    }
+    const ta = root.querySelector("textarea");
+    if (ta) return ta.value.trim();
+    const chips = root.querySelectorAll(".builder__answer .chip");
+    return chips.length ? [...chips].map((c) => c.textContent.trim()).join(" ") : "";
+  }
+
+  // Номер правильного варианта для заданий с выбором
+  function correctIndex(ex) {
+    switch (ex.type) {
+      case "choose": case "picture": case "firstLetter": return ex.options.findIndex((o) => o.en === ex.word.en);
+      case "listen": return ex.options.indexOf(ex.meaning ? ex.answer : ex.target);
+      case "gap": return ex.options.indexOf(ex.gap.answer);
+      case "dialog": return ex.options.indexOf(ex.line.en);
+      case "story": return ex.options.indexOf(ex.question.answer);
+      default: return -1;
+    }
+  }
+
+  // Подсказка: убрать неверные варианты, показать правило или начало ответа
+  function makeHint(ex, root, ctx) {
+    const ci = correctIndex(ex);
+    if (ci >= 0) {
+      return () => {
+        const list = [...root.querySelectorAll(".option, .pic-card")];
+        const wrong = list.map((b, i) => i).filter((i) => i !== ci && !list[i].disabled);
+        const remove = shuffle(wrong).slice(0, Math.max(1, wrong.length - 1));
+        remove.forEach((i) => {
+          const b = list[i];
+          if (b.classList.contains("is-selected")) { b.classList.remove("is-selected"); ctx.onReady(false); }
+          b.disabled = true;
+          b.classList.add("is-hinted-out");
+        });
+        const t = topicOf(ex);
+        if (t && TOPICS[t]) return `Правило: ${TOPICS[t].rule}`;
+        return remove.length > 1 ? "Убрали неверные варианты, осталось выбрать из двух" : "Убрали один неверный вариант";
+      };
+    }
+    if (ex.type === "type" || ex.type === "dictation") {
+      return () => {
+        const ans = ex.type === "type" ? ex.word.en : ex.target;
+        const k = Math.max(1, Math.ceil(ans.replace(/\s+/g, "").length / 4));
+        const words = ans.trim().split(/\s+/).length;
+        return `Начинается так: «${ans.slice(0, k)}…». ${words > 1 ? `Слов: ${words}` : `Букв: ${ans.length}`}`;
+      };
+    }
+    if (ex.type === "build") {
+      return () => {
+        const words = ex.sentence.en.split(/\s+/);
+        // Открываем только начало: одно слово в короткой фразе, два в длинной
+        const k = words.length >= 6 ? 2 : 1;
+        return `Начало фразы: «${words.slice(0, k).join(" ")} …». Всего слов: ${tokenize(ex.sentence.en).length}`;
+      };
+    }
+    return null;
+  }
+
   let renderSeq = 0;
   function render(ex, root, ctx) {
     root.dataset.renderId = String(++renderSeq);
     root.classList.remove("ex-enter");
     void root.offsetWidth;
     root.classList.add("ex-enter");
-    return renderers[ex.type](ex, root, ctx);
+    const ctrl = renderers[ex.type](ex, root, ctx);
+    // Запоминаем ответ пользователя, чтобы объяснить ошибку
+    const check = ctrl.check;
+    ctrl.check = () => {
+      const given = readGiven(root);
+      const r = check();
+      if (r && !r.silent && !r.pending) r.given = given;
+      return r;
+    };
+    if (!ctrl.hint) ctrl.hint = makeHint(ex, root, ctx);
+    return ctrl;
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor };
 })();

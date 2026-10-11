@@ -114,6 +114,8 @@ const Store = (() => {
       flags: { night: 0, morning: 0 },
       // Интервальное повторение: { "apple": { lvl, due, wrong, seen } }
       wordStats: {},
+      // Ошибки по грамматическим темам { "be": { w: ошибок, t: всего, at: время } }
+      weak: {},
       // Что изучалось в какой день: { "2026-10-10": { w: [слова], l: [id уроков] } }
       dayLog: {},
       // Понедельник недели, за которую уже показан итог ("2026-10-05")
@@ -176,6 +178,7 @@ const Store = (() => {
     };
     data.wordStats = clean(data.wordStats, (s) => (s && typeof s === "object" ? { lvl: Math.min(6, Math.max(0, num(s.lvl))), due: num(s.due), wrong: num(s.wrong), seen: num(s.seen) } : undefined));
     data.xpByDay = clean(data.xpByDay, num);
+    data.weak = clean(data.weak, (v) => (v && typeof v === "object" ? { w: num(v.w), t: num(v.t), at: num(v.at) } : undefined));
     data.deletedWords = clean(data.deletedWords, (t) => (Number(t) > 0 ? Number(t) : undefined));
     // Журнал по дням: только строки, не больше 14 последних дней
     const strs = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === "string").slice(0, 200) : []);
