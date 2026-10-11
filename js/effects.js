@@ -16,13 +16,36 @@ const Confetti = (() => {
   let raf = null;
   let dpr = 1;
 
+  // Размер холста берём из его реального размера на экране. На iPhone высота окна
+  // меняется, когда прячется панель браузера: без пересчёта часть экрана не очищалась
+  // и конфетти оставляли полосы внизу и справа
+  let cssW = 0, cssH = 0;
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = innerWidth * dpr;
-    canvas.height = innerHeight * dpr;
+    cssW = canvas.clientWidth || innerWidth;
+    cssH = canvas.clientHeight || innerHeight;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
   }
   resize();
   window.addEventListener("resize", resize);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
+
+  // Полная очистка всего холста, независимо от текущих размеров окна
+  function clearAll() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Приложение свернули: убираем конфетти, чтобы при возврате не осталось следов
+  function stop() {
+    parts = [];
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    clearAll();
+  }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });
+  window.addEventListener("pagehide", stop);
 
   // Создаёт частицы. x, y - точка вылета в долях экрана
   function burst({ x = 0.5, y = 0.6, count = 80, spread = 70, power = 13 } = {}) {
@@ -31,8 +54,8 @@ const Confetti = (() => {
       const angle = (-90 + (Math.random() - 0.5) * spread * 2) * (Math.PI / 180);
       const speed = power * (0.45 + Math.random() * 0.75);
       parts.push({
-        x: x * innerWidth,
-        y: y * innerHeight,
+        x: x * (cssW || innerWidth),
+        y: y * (cssH || innerHeight),
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         w: 6 + Math.random() * 7,
@@ -56,9 +79,11 @@ const Confetti = (() => {
   }
 
   function tick() {
+    // Размер экрана изменился во время анимации - подстраиваем холст
+    if (Math.round(canvas.clientWidth * dpr) !== canvas.width || Math.round(canvas.clientHeight * dpr) !== canvas.height) resize();
+    clearAll();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    parts = parts.filter((p) => p.life < p.ttl && p.y < innerHeight + 40);
+    parts = parts.filter((p) => p.life < p.ttl && p.y < cssH + 40 && p.x > -60 && p.x < cssW + 60);
     for (const p of parts) {
       p.life++;
       p.vy += 0.32;          // гравитация
@@ -86,7 +111,7 @@ const Confetti = (() => {
     if (parts.length) raf = requestAnimationFrame(tick);
     else {
       raf = null;
-      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      clearAll();
     }
   }
 
