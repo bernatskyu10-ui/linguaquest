@@ -174,7 +174,7 @@ const COURSE = {
             { en: "and", ru: "и" }
           ],
           sentences: [
-            { en: "I and you", ru: "Я и ты" },
+            { en: "You and I", ru: "Ты и я", alt: ["You and me"] },
             { en: "We are friends", ru: "Мы друзья" },
             { en: "They are here", ru: "Они здесь" }
           ]
@@ -448,7 +448,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "I have a sister", ru: "У меня есть сестра" },
-            { en: "My brother is young", ru: "Мой брат младше", alt: ["My brother is young"] },
+            { en: "My brother is young", ru: "Мой брат молодой" },
             { en: "They have two children", ru: "У них двое детей" }
           ]
         },
@@ -523,7 +523,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "The soup is hot", ru: "Суп горячий" },
-            { en: "I like fish and rice", ru: "Я люблю рыбу и рис" },
+            { en: "I like fish and rice", ru: "Я люблю рыбу и рис", alt: ["I love fish and rice"] },
             { en: "This salad is delicious", ru: "Этот салат вкусный", alt: ["This salad is tasty"] }
           ]
         }
@@ -675,7 +675,7 @@ const COURSE = {
             { en: "who", ru: "кто" },
             { en: "when", ru: "когда" },
             { en: "why", ru: "почему" },
-            { en: "which", ru: "который" },
+            { en: "which", ru: "который, какой" },
             { en: "how old", ru: "сколько лет" }
           ],
           sentences: [
@@ -709,16 +709,16 @@ const COURSE = {
         {
           id: "q-3", title: "Короткие ответы",
           words: [
-            { en: "yes, I do", ru: "да (я делаю)" },
-            { en: "no, I don't", ru: "нет (я не делаю)", alt: ["no, i do not"] },
+            { en: "yes, I do", ru: "да (ответ на Do you…?)" },
+            { en: "no, I don't", ru: "нет (ответ на Do you…?)", alt: ["no, i do not"] },
             { en: "maybe", ru: "может быть" },
             { en: "of course", ru: "конечно" },
             { en: "right", ru: "правильно, верно" },
             { en: "wrong", ru: "неправильно" }
           ],
           sentences: [
-            { en: "Yes, she does", ru: "Да, она любит (делает)" },
-            { en: "No, he isn't", ru: "Нет, он не такой" },
+            { en: "Yes, she does", ru: "Да (ответ на Does she…?)" },
+            { en: "No, he isn't", ru: "Нет (ответ на Is he…?)", alt: ["No, he is not"] },
             { en: "Of course, I know", ru: "Конечно, я знаю" }
           ],
           gaps: [
@@ -817,7 +817,7 @@ const COURSE = {
             { en: "were", ru: "были (you, we, they)" },
             { en: "last", ru: "прошлый" },
             { en: "ago", ru: "назад" },
-            { en: "busy", ru: "занятой" },
+            { en: "busy", ru: "занятый, занят" },
             { en: "sick", ru: "больной", alt: ["ill"] }
           ],
           sentences: [
@@ -848,7 +848,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "Yesterday I ___ in the park.", options: ["walk", "walked", "walking"], answer: "walked", ru: "Вчера я гулял в парке." },
-            { text: "They ___ their grandmother.", options: ["visit", "visited", "visits"], answer: "visited", ru: "Они навестили бабушку." },
+            { text: "They ___ their grandmother last week.", options: ["visit", "visited", "visits"], answer: "visited", ru: "Они навестили бабушку на прошлой неделе." },
             { text: "He ___ late last night.", options: ["work", "works", "worked"], answer: "worked", ru: "Он работал допоздна вчера вечером." }
           ]
         },
@@ -865,12 +865,12 @@ const COURSE = {
           sentences: [
             { en: "I went to London", ru: "Я поехал в Лондон" },
             { en: "We saw a big dog", ru: "Мы видели большую собаку" },
-            { en: "Did you eat breakfast?", ru: "Ты завтракал?" }
+            { en: "Did you eat breakfast?", ru: "Ты завтракал?", alt: ["Did you have breakfast?"] }
           ],
           gaps: [
             { text: "She ___ a new bag.", options: ["buyed", "bought", "buy"], answer: "bought", ru: "Она купила новую сумку." },
             { text: "We ___ to the sea last year.", options: ["go", "goed", "went"], answer: "went", ru: "В прошлом году мы ездили на море." },
-            { text: "___ you see the film?", options: ["Do", "Did", "Was"], answer: "Did", ru: "Ты видел фильм?" }
+            { text: "___ you see the film yesterday?", options: ["Do", "Did", "Was"], answer: "Did", ru: "Ты видел фильм вчера?" }
           ]
         }
       ]
@@ -1027,7 +1027,7 @@ const COURSE = {
           id: "body-2", title: "Руки и ноги",
           words: [
             { en: "hand", ru: "рука (кисть)", pic: "hand" },
-            { en: "arm", ru: "рука" },
+            { en: "arm", ru: "рука (от плеча)" },
             { en: "leg", ru: "нога" },
             { en: "foot", ru: "стопа" },
             { en: "finger", ru: "палец" },
@@ -1039,7 +1039,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "I have two ___.", options: ["hand", "hands", "handes"], answer: "hands", ru: "У меня две руки." },
-            { text: "My leg ___.", options: ["hurt", "hurts", "hurting"], answer: "hurts", ru: "У меня болит нога." }
+            { text: "My leg ___ now.", options: ["hurt", "hurts", "hurting"], answer: "hurts", ru: "У меня сейчас болит нога." }
           ]
         },
         {
@@ -1053,7 +1053,7 @@ const COURSE = {
             { en: "rest", ru: "отдых" }
           ],
           sentences: [
-            { en: "I have a headache", ru: "У меня болит голова" },
+            { en: "I have a headache", ru: "У меня болит голова", alt: ["My head hurts"] },
             { en: "I feel better", ru: "Мне лучше" },
             { en: "You need to rest", ru: "Тебе нужно отдохнуть" }
           ]
@@ -1157,7 +1157,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "There is a lamp on the table", ru: "На столе есть лампа" },
-            { en: "There are two chairs", ru: "Там два стула" }
+            { en: "There are two chairs in the room", ru: "В комнате два стула" }
           ],
           gaps: [
             { text: "There ___ a bed in the room.", options: ["is", "are", "am"], answer: "is", ru: "В комнате есть кровать." },
@@ -1206,7 +1206,7 @@ const COURSE = {
             { en: "artist", ru: "художник", pic: "artist" }
           ],
           sentences: [
-            { en: "What is your job?", ru: "Кем ты работаешь?" },
+            { en: "What is your job?", ru: "Кем ты работаешь?", alt: ["What do you do?"] },
             { en: "My mother is a nurse", ru: "Моя мама медсестра" },
             { en: "I want to be an engineer", ru: "Я хочу быть инженером" }
           ]
@@ -1274,7 +1274,7 @@ const COURSE = {
             { en: "She won't come", ru: "Она не придёт" }
           ],
           gaps: [
-            { text: "I ___ help you.", options: ["will", "am", "did"], answer: "will", ru: "Я помогу тебе." },
+            { text: "I ___ help you.", options: ["will", "am", "was"], answer: "will", ru: "Я помогу тебе." },
             { text: "They ___ come today, they are busy.", options: ["will", "won't", "don't"], answer: "won't", ru: "Они не придут сегодня, они заняты." }
           ]
         },
@@ -1316,7 +1316,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "Yesterday she ___ a cake.", options: ["bakes", "baked", "will bake"], answer: "baked", ru: "Вчера она испекла торт." },
-            { text: "Every day he ___ to work.", options: ["goes", "went", "is going"], answer: "goes", ru: "Каждый день он ходит на работу." },
+            { text: "Every day he ___ to work.", options: ["goes", "gone", "is going"], answer: "goes", ru: "Каждый день он ходит на работу." },
             { text: "Next year I ___ in London.", options: ["live", "lived", "will live"], answer: "will live", ru: "В следующем году я буду жить в Лондоне." }
           ]
         }
@@ -1388,7 +1388,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "She is the ___ student in the class.", options: ["good", "better", "best"], answer: "best", ru: "Она лучшая ученица в классе." },
-            { text: "My cold is ___ today.", options: ["bad", "worse", "worst"], answer: "worse", ru: "Сегодня моя простуда хуже." }
+            { text: "My cold is ___ today than yesterday.", options: ["bad", "worse", "worst"], answer: "worse", ru: "Сегодня моя простуда хуже, чем вчера." }
           ]
         }
       ]
@@ -1415,7 +1415,7 @@ const COURSE = {
           sentences: [
             { en: "You must be quiet", ru: "Ты должен вести себя тихо" },
             { en: "You mustn't smoke here", ru: "Здесь нельзя курить" },
-            { en: "I must go now", ru: "Мне нужно идти" }
+            { en: "I must go now", ru: "Мне нужно идти сейчас", alt: ["I have to go now"] }
           ],
           gaps: [
             { text: "You ___ stop at a red light.", options: ["must", "mustn't", "can't"], answer: "must", ru: "Ты обязан остановиться на красный свет." },
@@ -1508,7 +1508,7 @@ const COURSE = {
             { en: "I met him while I was shopping", ru: "Я встретил его, пока ходил по магазинам" }
           ],
           gaps: [
-            { text: "She was cooking when the phone ___.", options: ["rang", "was ringing", "rings"], answer: "rang", ru: "Она готовила, когда зазвонил телефон." },
+            { text: "She was cooking when the phone ___.", options: ["rang", "ringed", "rings"], answer: "rang", ru: "Она готовила, когда зазвонил телефон." },
             { text: "While I ___ driving, I saw a deer.", options: ["was", "were", "did"], answer: "was", ru: "Пока я вёл машину, я увидел оленя." }
           ]
         },
@@ -1580,10 +1580,10 @@ const COURSE = {
           sentences: [
             { en: "Have you ever been to London?", ru: "Ты когда-нибудь был в Лондоне?" },
             { en: "I have never seen snow", ru: "Я никогда не видел снег" },
-            { en: "Have you tried sushi?", ru: "Ты пробовал суши?" }
+            { en: "Have you tried sushi?", ru: "Ты пробовал суши?", alt: ["Have you ever tried sushi?"] }
           ],
           gaps: [
-            { text: "Have you ___ been to Paris?", options: ["ever", "never", "yet"], answer: "ever", ru: "Ты когда-нибудь был в Париже?" },
+            { text: "Have you ___ been to Paris?", options: ["ever", "since", "yet"], answer: "ever", ru: "Ты когда-нибудь был в Париже?" },
             { text: "She has ___ flown on a plane.", options: ["ever", "never", "already ever"], answer: "never", ru: "Она никогда не летала на самолёте." }
           ]
         },
@@ -1603,7 +1603,7 @@ const COURSE = {
             { en: "We have lived here since 2020", ru: "Мы живём здесь с 2020 года" }
           ],
           gaps: [
-            { text: "Have you finished ___?", options: ["yet", "already", "since"], answer: "yet", ru: "Ты уже закончил?" },
+            { text: "Have you finished ___?", options: ["yet", "for", "since"], answer: "yet", ru: "Ты уже закончил?" },
             { text: "She has worked here ___ 2019.", options: ["for", "since", "yet"], answer: "since", ru: "Она работает здесь с 2019 года." }
           ]
         }
@@ -1671,7 +1671,7 @@ const COURSE = {
                 { who: "Администратор", en: "What is your name?", ru: "Как вас зовут?" },
                 { me: true, en: "My name is Alex Smirnov.", ru: "Меня зовут Алекс Смирнов.", wrong: ["I am from room five.", "It is on the third floor."] },
                 { who: "Администратор", en: "Here is your key. Room 305.", ru: "Вот ваш ключ. Номер 305." },
-                { me: true, en: "What time is breakfast?", ru: "Во сколько завтрак?", wrong: ["Where is my passport, please?", "How old is the key?"] }
+                { me: true, en: "What time is breakfast?", ru: "Во сколько завтрак?", wrong: ["My favourite colour is blue.", "How old is the key?"] }
               ]
             }
           ]
@@ -1820,13 +1820,13 @@ const COURSE = {
           words: [
             { en: "if", ru: "если" },
             { en: "unless", ru: "если не" },
-            { en: "stay at home", ru: "остаться дома" },
+            { en: "stay at home", ru: "остаться дома", alt: ["stay home"] },
             { en: "be late", ru: "опоздать" },
-            { en: "miss the bus", ru: "опоздать на автобус" },
+            { en: "miss the bus", ru: "не успеть на автобус" },
             { en: "hurry", ru: "спешить" }
           ],
           sentences: [
-            { en: "If it rains, I will stay at home", ru: "Если пойдёт дождь, я останусь дома" },
+            { en: "If it rains, I will stay at home", ru: "Если пойдёт дождь, я останусь дома", alt: ["If it rains, I will stay home", "If it rains, I'll stay at home", "If it rains, I'll stay home"] },
             { en: "If you hurry, you will catch the bus", ru: "Если поспешишь, успеешь на автобус" },
             { en: "We will be late unless we leave now", ru: "Мы опоздаем, если не выйдем сейчас" }
           ],
@@ -1972,13 +1972,13 @@ const COURSE = {
             { en: "true", ru: "правда, верный" }
           ],
           sentences: [
-            { en: "She said that she was tired", ru: "Она сказала, что устала" },
-            { en: "He told me that he was hungry", ru: "Он сказал мне, что голоден" },
-            { en: "They said it was true", ru: "Они сказали, что это правда" }
+            { en: "She said that she was tired", ru: "Она сказала, что устала", alt: ["She said she was tired"] },
+            { en: "He told me that he was hungry", ru: "Он сказал мне, что голоден", alt: ["He told me he was hungry"] },
+            { en: "They said it was true", ru: "Они сказали, что это правда", alt: ["They said that it was true"] }
           ],
           gaps: [
             { text: "Tom ___ me that he liked jazz.", options: ["said", "told", "say"], answer: "told", ru: "Том сказал мне, что любит джаз." },
-            { text: "She said that she ___ busy.", options: ["is", "was", "be"], answer: "was", ru: "Она сказала, что занята." }
+            { text: "She said that she ___ busy.", options: ["was", "were", "be"], answer: "was", ru: "Она сказала, что занята." }
           ]
         },
         {
@@ -1997,7 +1997,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "He asked ___ I liked coffee.", options: ["if", "that", "what if"], answer: "if", ru: "Он спросил, люблю ли я кофе." },
-            { text: "She asked where I ___.", options: ["live", "lived", "do live"], answer: "lived", ru: "Она спросила, где я живу." }
+            { text: "She asked where I ___.", options: ["lived", "living", "did live"], answer: "lived", ru: "Она спросила, где я живу." }
           ]
         },
         {
@@ -2005,18 +2005,18 @@ const COURSE = {
           words: [
             { en: "asked me to", ru: "попросил меня" },
             { en: "promised", ru: "пообещал" },
-            { en: "would", ru: "что будет (в косвенной речи)" },
+            { en: "would", ru: "будет (будущее в косвенной речи)" },
             { en: "call", ru: "позвонить", pic: "call" },
             { en: "help", ru: "помогать" }
           ],
           sentences: [
             { en: "She asked me to help her", ru: "Она попросила меня помочь ей" },
-            { en: "He promised that he would call", ru: "Он пообещал, что позвонит" },
+            { en: "He promised that he would call", ru: "Он пообещал, что позвонит", alt: ["He promised he would call"] },
             { en: "My boss told me to come early", ru: "Начальник велел мне прийти пораньше" }
           ],
           gaps: [
             { text: "Mom asked me ___ clean my room.", options: ["to", "that", "for"], answer: "to", ru: "Мама попросила меня убрать комнату." },
-            { text: "He said he ___ come tomorrow.", options: ["will", "would", "is"], answer: "would", ru: "Он сказал, что придёт завтра." }
+            { text: "He said he ___ come the next day.", options: ["will", "would", "is"], answer: "would", ru: "Он сказал, что придёт на следующий день." }
           ]
         }
       ]
@@ -2043,7 +2043,7 @@ const COURSE = {
           sentences: [
             { en: "I get up at seven", ru: "Я встаю в семь" },
             { en: "Turn off the light, please", ru: "Выключи свет, пожалуйста" },
-            { en: "We go out on Friday evening", ru: "В пятницу вечером мы идём гулять" }
+            { en: "We go out on Friday evening", ru: "В пятницу вечером мы идём гулять", alt: ["On Friday evening we go out", "On Friday evening, we go out"] }
           ],
           gaps: [
             { text: "Please turn ___ the TV, I want to sleep.", options: ["off", "on", "up"], answer: "off", ru: "Выключи, пожалуйста, телевизор, я хочу спать." },
@@ -2136,7 +2136,7 @@ const COURSE = {
             {
               title: "Собеседование",
               lines: [
-                { who: "Менеджер", en: "Good morning! Please, tell me about yourself.", ru: "Доброе утро! Расскажите о себе." },
+                { who: "Менеджер", en: "Good morning! Please tell me about yourself.", ru: "Доброе утро! Расскажите о себе." },
                 { me: true, en: "I am a designer with three years of experience.", ru: "Я дизайнер с трёхлетним опытом.", wrong: ["I am three years and a designer.", "Good morning, tell me about you."] },
                 { who: "Менеджер", en: "What are your strengths?", ru: "Какие у вас сильные стороны?" },
                 { me: true, en: "I am responsible and I work well in a team.", ru: "Я ответственный и хорошо работаю в команде.", wrong: ["My strengths are very salary.", "I am a strong team of coffee."] },
@@ -2209,7 +2209,7 @@ const COURSE = {
             { en: "didn't use to", ru: "раньше не", alt: ["did not use to"] },
             { en: "childhood", ru: "детство" },
             { en: "village", ru: "деревня", pic: "village" },
-            { en: "be used to", ru: "привыкнуть, быть привычным" },
+            { en: "be used to", ru: "быть привыкшим (к)" },
             { en: "get used to", ru: "привыкать" }
           ],
           sentences: [
@@ -2226,7 +2226,7 @@ const COURSE = {
           id: "nar-3", title: "Рассказываем историю",
           words: [
             { en: "at first", ru: "сначала" },
-            { en: "eventually", ru: "в конце концов" },
+            { en: "eventually", ru: "в конце концов (спустя время)" },
             { en: "meanwhile", ru: "тем временем" },
             { en: "afterwards", ru: "впоследствии, потом" },
             { en: "unexpectedly", ru: "неожиданно" },
@@ -2266,7 +2266,7 @@ const COURSE = {
             { en: "can't be", ru: "не может быть" },
             { en: "probably", ru: "вероятно" },
             { en: "certainly", ru: "безусловно" },
-            { en: "perhaps", ru: "возможно" }
+            { en: "perhaps", ru: "пожалуй, может быть" }
           ],
           sentences: [
             { en: "He must be at work", ru: "Он, должно быть, на работе" },
@@ -2275,7 +2275,7 @@ const COURSE = {
           ],
           gaps: [
             { text: "The lights are on. They ___ be at home.", options: ["must", "can't", "mustn't"], answer: "must", ru: "Свет горит. Они, должно быть, дома." },
-            { text: "He has just eaten. He ___ be hungry.", options: ["must", "can't", "might"], answer: "can't", ru: "Он только что поел. Не может быть, что он голоден." }
+            { text: "He has just eaten. He ___ be hungry.", options: ["must", "can't", "might"], answer: "can't", ru: "Он только что поел. Не может быть, чтобы он был голоден." }
           ]
         },
         {
@@ -2309,7 +2309,7 @@ const COURSE = {
             { en: "I suppose", ru: "полагаю" }
           ],
           sentences: [
-            { en: "It seems that he is right", ru: "Кажется, он прав" },
+            { en: "It seems that he is right", ru: "Кажется, он прав", alt: ["It seems he is right"] },
             { en: "It is unlikely to rain today", ru: "Сегодня вряд ли будет дождь" },
             { en: "Apparently, the shop is closed", ru: "По-видимому, магазин закрыт" }
           ]
@@ -2335,9 +2335,9 @@ const COURSE = {
             { en: "recommend", ru: "рекомендовать" }
           ],
           sentences: [
-            { en: "The woman who lives next door is a doctor", ru: "Женщина, которая живёт по соседству, врач" },
-            { en: "This is the book which I recommended", ru: "Это книга, которую я советовал" },
-            { en: "I like films that make me laugh", ru: "Мне нравятся фильмы, которые меня смешат" }
+            { en: "The woman who lives next door is a doctor", ru: "Женщина, которая живёт по соседству, врач", alt: ["The woman that lives next door is a doctor"] },
+            { en: "This is the book which I recommended", ru: "Это книга, которую я советовал", alt: ["This is the book that I recommended", "This is the book I recommended"] },
+            { en: "I like films that make me laugh", ru: "Мне нравятся фильмы, которые меня смешат", alt: ["I like films which make me laugh"] }
           ],
           gaps: [
             { text: "The man ___ called you is my uncle.", options: ["who", "which", "where"], answer: "who", ru: "Мужчина, который тебе звонил, мой дядя." },
@@ -2356,7 +2356,7 @@ const COURSE = {
           sentences: [
             { en: "This is the town where I grew up", ru: "Это город, где я вырос" },
             { en: "That is the girl whose dog bit me", ru: "Это та девушка, чья собака меня укусила" },
-            { en: "I remember the day when we met", ru: "Я помню день, когда мы познакомились" }
+            { en: "I remember the day when we met", ru: "Я помню день, когда мы познакомились", alt: ["I remember the day we met"] }
           ],
           gaps: [
             { text: "The hotel ___ we stayed was great.", options: ["which", "where", "who"], answer: "where", ru: "Отель, где мы жили, был отличный." },
@@ -2377,7 +2377,7 @@ const COURSE = {
             { en: "My brother, who lives in Canada, is a pilot", ru: "Мой брат, который живёт в Канаде, пилот" }
           ],
           gaps: [
-            { text: "London, ___ has a population of 9 million, is huge.", options: ["that", "which", "where"], answer: "which", ru: "Лондон, где живёт 9 миллионов человек, огромный." }
+            { text: "London, ___ has a population of 9 million, is huge.", options: ["that", "which", "where"], answer: "which", ru: "Лондон, население которого составляет 9 миллионов, огромен." }
           ]
         }
       ]
@@ -2422,8 +2422,8 @@ const COURSE = {
             { en: "manage", ru: "суметь, справиться" }
           ],
           sentences: [
-            { en: "We decided to stay at home", ru: "Мы решили остаться дома" },
-            { en: "I can't afford to buy a new car", ru: "Я не могу позволить себе новую машину" },
+            { en: "We decided to stay at home", ru: "Мы решили остаться дома", alt: ["We decided to stay home"] },
+            { en: "I can't afford to buy a new car", ru: "Я не могу позволить себе купить новую машину" },
             { en: "She managed to finish on time", ru: "Ей удалось закончить вовремя" }
           ],
           gaps: [
@@ -2608,7 +2608,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "Never have I seen such a beautiful sunset", ru: "Никогда я не видел такого красивого заката" },
-            { en: "Not only is he smart, but he is also kind", ru: "Он не только умный, но и добрый" },
+            { en: "Not only is he smart, but he is also kind", ru: "Он не только умный, но и добрый", alt: ["He is not only smart, but he is also kind"] },
             { en: "Under no circumstances should you open this door", ru: "Ни при каких обстоятельствах не открывайте эту дверь" }
           ],
           gaps: [
@@ -2623,7 +2623,7 @@ const COURSE = {
             { en: "it was ... that", ru: "именно ... (выделение)" },
             { en: "the thing is", ru: "дело в том, что" },
             { en: "do like", ru: "действительно нравится" },
-            { en: "indeed", ru: "действительно" }
+            { en: "indeed", ru: "в самом деле" }
           ],
           sentences: [
             { en: "What I need is a long holiday", ru: "Что мне нужно, так это долгий отпуск" },
@@ -2674,7 +2674,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "The exam was a piece of cake", ru: "Экзамен был проще простого" },
-            { en: "I'm feeling a bit under the weather", ru: "Я себя неважно чувствую" },
+            { en: "I'm feeling a bit under the weather", ru: "Мне что-то нездоровится" },
             { en: "That car cost an arm and a leg", ru: "Эта машина стоила целое состояние" }
           ]
         },
@@ -2682,7 +2682,7 @@ const COURSE = {
           id: "idi-2", title: "Работа и учёба",
           words: [
             { en: "get the hang of", ru: "наловчиться" },
-            { en: "on the same page", ru: "на одной волне" },
+            { en: "on the same page", ru: "одинаково понимать ситуацию" },
             { en: "think outside the box", ru: "мыслить нестандартно" },
             { en: "cut corners", ru: "халтурить, срезать углы" },
             { en: "the ball is in your court", ru: "теперь твоя очередь решать" },
@@ -2710,8 +2710,8 @@ const COURSE = {
             { en: "Let's keep in touch", ru: "Давай не теряться" }
           ],
           gaps: [
-            { text: "I need to ___ a decision today.", options: ["make", "do", "take"], answer: "make", ru: "Мне нужно принять решение сегодня." },
-            { text: "Just ___ your best!", options: ["make", "do", "give"], answer: "do", ru: "Просто постарайся изо всех сил!" }
+            { text: "I need to ___ a decision today.", options: ["make", "do", "get"], answer: "make", ru: "Мне нужно принять решение сегодня." },
+            { text: "Just ___ your best!", options: ["make", "do", "take"], answer: "do", ru: "Просто постарайся изо всех сил!" }
           ]
         }
       ]
@@ -2737,7 +2737,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "I am writing to enquire about the position", ru: "Пишу, чтобы узнать о вакансии" },
-            { en: "Please find attached my CV", ru: "Во вложении моё резюме" },
+            { en: "Please find attached my CV", ru: "Во вложении моё резюме", alt: ["Please find my CV attached"] },
             { en: "I look forward to hearing from you", ru: "С нетерпением жду вашего ответа" }
           ]
         },
@@ -2781,7 +2781,7 @@ const COURSE = {
           sentences: [
             { en: "How may I assist you?", ru: "Чем могу помочь?" },
             { en: "The meeting will commence at nine", ru: "Совещание начнётся в девять" },
-            { en: "I would like to inform you regarding the changes", ru: "Хочу сообщить вам об изменениях" }
+            { en: "I am writing to you regarding the changes", ru: "Пишу вам относительно изменений", alt: ["I'm writing to you regarding the changes"] }
           ],
           gaps: [
             { text: "Formal: We ___ further information.", options: ["want", "require", "wanna"], answer: "require", ru: "Нам требуется дополнительная информация." }
@@ -2829,7 +2829,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "She whispered the answer to me", ru: "Она шёпотом подсказала мне ответ" },
-            { en: "He admitted that he was wrong", ru: "Он признал, что был неправ" },
+            { en: "He admitted that he was wrong", ru: "Он признал, что был неправ", alt: ["He admitted he was wrong"] },
             { en: "They complained about the noise", ru: "Они жаловались на шум" }
           ],
           gaps: [
@@ -2848,7 +2848,7 @@ const COURSE = {
           ],
           sentences: [
             { en: "I'm absolutely exhausted after the trip", ru: "Я совершенно вымотан после поездки" },
-            { en: "She was furious with him", ru: "Она была в ярости на него" },
+            { en: "She was furious with him", ru: "Она была на него страшно зла" },
             { en: "We were delighted with the result", ru: "Мы были в восторге от результата" }
           ],
           gaps: [
@@ -2877,7 +2877,7 @@ const COURSE = {
             { en: "argue", ru: "утверждать, доказывать" }
           ],
           sentences: [
-            { en: "Research suggests that sleep improves memory", ru: "Исследования показывают, что сон улучшает память" },
+            { en: "Research suggests that sleep improves memory", ru: "Исследования показывают, что сон улучшает память", alt: ["Research suggests sleep improves memory"] },
             { en: "There is no evidence to support this claim", ru: "Нет доказательств в поддержку этого утверждения" },
             { en: "Consequently, prices have risen significantly", ru: "Вследствие этого цены значительно выросли" }
           ]

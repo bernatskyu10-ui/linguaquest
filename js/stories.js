@@ -9,7 +9,7 @@ const STORIES = {
     en: "The old bridge in our town was built in 1890. Last year it was closed because it was damaged by a storm. The repairs were paid for by the city. Now the bridge is used by thousands of people every day.",
     ru: "Старый мост в нашем городе был построен в 1890 году. В прошлом году его закрыли, потому что он был повреждён бурей. Ремонт оплатил город. Теперь мостом каждый день пользуются тысячи людей.",
     questions: [
-      { q: "Когда был построен мост?", options: ["В 1890 году", "В прошлом году", "Сто лет назад, в 1990"], answer: "В 1890 году" },
+      { q: "Когда был построен мост?", options: ["В 1890 году", "В прошлом году", "В 1990 году"], answer: "В 1890 году" },
       { q: "Почему мост закрыли?", options: ["Его повредила буря", "Он был слишком старым", "Его продали"], answer: "Его повредила буря" },
       { q: "Кто заплатил за ремонт?", options: ["Город", "Жители", "Строительная компания"], answer: "Город" }
     ]
@@ -44,10 +44,10 @@ const STORIES = {
     ]
   },
   "rel-3": {
-    en: "Marta is the woman who opened the café on our street. The café, which is very small, is always full. The cakes that she bakes are famous in the whole city. People who come once always come back.",
+    en: "Marta is the woman who opened the café on our street. The café, which is very small, is always full. The cakes that she bakes are famous all over the city. People who come once always come back.",
     ru: "Марта - та женщина, которая открыла кафе на нашей улице. Кафе, которое очень маленькое, всегда полное. Торты, которые она печёт, знамениты на весь город. Люди, которые приходят один раз, всегда возвращаются.",
     questions: [
-      { q: "Кто такая Марта?", options: ["Женщина, которая открыла кафе", "Повар в ресторане", "Соседка рассказчика"], answer: "Женщина, которая открыла кафе" },
+      { q: "Кто такая Марта?", options: ["Женщина, которая открыла кафе", "Повар в ресторане", "Учительница рассказчика"], answer: "Женщина, которая открыла кафе" },
       { q: "Какое это кафе?", options: ["Маленькое и всегда полное", "Большое и пустое", "Новое и дорогое"], answer: "Маленькое и всегда полное" },
       { q: "Чем знаменита Марта?", options: ["Своими тортами", "Своим кофе", "Своей музыкой"], answer: "Своими тортами" }
     ]

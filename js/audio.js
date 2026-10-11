@@ -16,7 +16,8 @@ const Sound = (() => {
       if (!AC) return null;
       ctx = new AC();
     }
-    if (ctx.state === "suspended") ctx.resume();
+    // На iPhone после звонка состояние "interrupted", а не "suspended"
+    if (ctx.state !== "running") { try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* не критично */ } }
     return ctx;
   }
 
@@ -201,10 +202,17 @@ const SpeechRec = (() => {
     "audio-capture": "Микрофон не найден",
     "network": "Для распознавания речи нужен интернет"
   };
+  let active = null;
+  // Остановить микрофон (переход к следующему заданию или выход из урока)
+  function abort() {
+    if (active) { try { active.abort(); } catch (e) { /* уже остановлен */ } active = null; }
+  }
   function listen() {
     return new Promise((resolve, reject) => {
       if (!supported) return reject(new Error("Браузер не умеет распознавать речь"));
+      abort();
       const r = new Rec();
+      active = r;
       r.lang = "en-US";
       r.interimResults = false;
       r.maxAlternatives = 5;
@@ -218,5 +226,5 @@ const SpeechRec = (() => {
       try { r.start(); } catch (e) { reject(new Error("Не получилось включить микрофон")); }
     });
   }
-  return { supported, listen };
+  return { supported, listen, abort };
 })();

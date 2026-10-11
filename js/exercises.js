@@ -47,11 +47,31 @@ const Exercises = (() => {
     "didn't": "did not", "wasn't": "was not", "weren't": "were not", "what's": "what is",
     "where's": "where is", "that's": "that is", "i'll": "i will", "you'll": "you will",
     "we'll": "we will", "they'll": "they will", "let's": "let us", "who's": "who is",
-    "how's": "how is", "there's": "there is", "i've": "i have", "i'd": "i would"
+    "how's": "how is", "there's": "there is", "i've": "i have", "i'd": "i would",
+    "wouldn't": "would not", "shouldn't": "should not", "couldn't": "could not", "mustn't": "must not",
+    "haven't": "have not", "hasn't": "has not", "hadn't": "had not", "needn't": "need not",
+    "he'll": "he will", "she'll": "she will", "it'll": "it will", "you've": "you have",
+    "we've": "we have", "they've": "they have", "you'd": "you would", "he'd": "he would",
+    "she'd": "she would", "we'd": "we would", "they'd": "they would", "here's": "here is",
+    "there're": "there are", "who'd": "who would", "what're": "what are"
   };
+
+  // Распознавание речи пишет числа цифрами: 10 -> ten, 3:00 -> three o'clock
+  const ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+    "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+  const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  function numWord(n) {
+    if (n < 20) return ONES[n];
+    if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
+    if (n === 100) return "one hundred";
+    return String(n);
+  }
 
   function norm(s) {
     let t = String(s || "").toLowerCase().replace(/[’`´]/g, "'").replace(/\s+/g, " ").trim();
+    t = t.replace(/\b(\d{1,2}):00\b/g, (m, h) => numWord(Number(h)) + " o'clock");
+    t = t.replace(/\b\d{1,3}\b/g, (m) => (Number(m) <= 100 ? numWord(Number(m)) : m));
+    t = t.replace(/-/g, " ");
     t = t.replace(/[a-z]+'[a-z]+/g, (w) => CONTRACTIONS[w] || w);
     t = t.replace(/\bcan not\b/g, "cannot");
     t = t.replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
@@ -154,8 +174,10 @@ const Exercises = (() => {
     }
 
     // 5. Сопоставление пар
-    if (words.length >= 4) {
-      body.push({ type: "match", pairs: sample(words, Math.min(5, words.length)) });
+    // Слова с одинаковым переводом (sick и ill - "больной") в одни пары не ставим
+    const matchable = uniqBy(uniqBy(words, (w) => w.ru.toLowerCase()), (w) => w.en.toLowerCase());
+    if (matchable.length >= 4) {
+      body.push({ type: "match", pairs: sample(matchable, Math.min(5, matchable.length)) });
     }
 
     // 6. Аудирование: выбор услышанного
@@ -638,7 +660,8 @@ const Exercises = (() => {
         if (reading) return;
         reading = true;
         readBtn.classList.add("is-playing");
-        for (const s of sentences) { if (!root.isConnected) break; await ctx.speak(s); }
+        const id = root.dataset.renderId;
+        for (const s of sentences) { if (!root.isConnected || root.dataset.renderId !== id) break; await ctx.speak(s); }
         readBtn.classList.remove("is-playing");
         reading = false;
       });
@@ -724,7 +747,9 @@ const Exercises = (() => {
     return best;
   }
 
+  let renderSeq = 0;
   function render(ex, root, ctx) {
+    root.dataset.renderId = String(++renderSeq);
     root.classList.remove("ex-enter");
     void root.offsetWidth;
     root.classList.add("ex-enter");

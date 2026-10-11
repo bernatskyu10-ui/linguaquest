@@ -125,6 +125,8 @@ const Store = (() => {
       sync: null,
       // Свои слова пользователя [{ en, ru }] и отметка о пройденном тесте уровня
       customWords: [],
+      // Удалённые свои слова { "word": время удаления } - для синхронизации
+      deletedWords: {},
       placementDone: false,
       // Рекорды мини-игр и точность ответов по дням
       records: { speed: 0, pairs: 0, sounds: 0 },
@@ -158,6 +160,11 @@ const Store = (() => {
     data.customWords = data.customWords.filter((w) => w && typeof w.en === "string" && typeof w.ru === "string" && /^[a-zA-Z' .-]+$/.test(w.en));
     if (data.hat !== null && !["cap", "party", "crown"].includes(data.hat)) data.hat = null;
     if (data.sync && (typeof data.sync !== "object" || typeof data.sync.code !== "string")) data.sync = null;
+    if (data.sync) {
+      const b = data.sync.base;
+      data.sync.base = b && typeof b === "object" ? { gems: Number(b.gems) || 0, freezes: Number(b.freezes) || 0, xp: Number(b.xp) || 0 } : null;
+      data.sync.force = !!data.sync.force;
+    }
     if (![10, 20, 30, 50].includes(data.dailyGoal)) data.dailyGoal = 20;
     if (typeof data.weekReport !== "string") data.weekReport = "";
     // Вложенные числа: статистика слов, опыт и точность по дням, рекорды
@@ -169,6 +176,7 @@ const Store = (() => {
     };
     data.wordStats = clean(data.wordStats, (s) => (s && typeof s === "object" ? { lvl: Math.min(6, Math.max(0, num(s.lvl))), due: num(s.due), wrong: num(s.wrong), seen: num(s.seen) } : undefined));
     data.xpByDay = clean(data.xpByDay, num);
+    data.deletedWords = clean(data.deletedWords, (t) => (Number(t) > 0 ? Number(t) : undefined));
     // Журнал по дням: только строки, не больше 14 последних дней
     const strs = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === "string").slice(0, 200) : []);
     data.dayLog = clean(data.dayLog, (v) => (v && typeof v === "object" ? { w: strs(v.w), l: strs(v.l) } : undefined));
@@ -304,6 +312,16 @@ const Store = (() => {
     if (!silent) saveListeners.forEach((fn) => fn());
   }
   function onSave(fn) { saveListeners.push(fn); }
+
+  const externalListeners = [];
+  function onExternal(fn) { externalListeners.push(fn); }
+  window.addEventListener("storage", (e) => {
+    if (e.key !== USERS_KEY || !currentKey || !current) return;
+    const u = allUsers()[currentKey];
+    if (!u || !u.data || (Number(u.data.savedAt) || 0) <= (current.savedAt || 0)) return;
+    current = migrate(u.data);
+    externalListeners.forEach((fn) => fn());
+  });
   // Полная замена прогресса (после синхронизации)
   function setData(data) {
     current = migrate(data);
@@ -335,7 +353,7 @@ const Store = (() => {
     // Код синхронизации и настройки этого устройства сохраняем свои
     const keep = { sync: current.sync, settings: current.settings };
     current = migrate(JSON.parse(JSON.stringify(obj.data)));
-    current.sync = keep.sync;
+    current.sync = keep.sync ? Object.assign({}, keep.sync, { force: true }) : null;
     current.settings = keep.settings;
     save();
   }
@@ -372,6 +390,7 @@ const Store = (() => {
     const d = current;
     const today = dayKey();
     let increased = false;
+    if (d.lastActiveDay !== today) checkStreak();
     if (d.lastActiveDay !== today) {
       if (d.lastActiveDay && daysBetween(d.lastActiveDay, today) === 1) d.streak += 1;
       else d.streak = 1;
@@ -404,7 +423,7 @@ const Store = (() => {
 
   return {
     listUsers, register, login, logout, restore, save, user, data, deleteCurrent,
-    device, setDevice, checkStreak, markActive, exportData, importData, shiftDay, onSave, setData,
+    device, setDevice, checkStreak, markActive, exportData, importData, shiftDay, onSave, onExternal, setData,
     migrateData: migrate,
     addXP, todayXP, weekXP, dayKey
   };

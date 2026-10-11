@@ -5,7 +5,9 @@
    открыт по адресу http(s), при открытии файла с диска не используется.
    Стратегия "сначала сеть": обновления видны сразу, кэш нужен для офлайна.
    ========================================================================== */
-const VERSION = "lq-v7";
+const VERSION = "lq-v8";
+// Озвучка лежит в отдельном кэше: при обновлении приложения её не нужно качать заново
+const AUDIO_CACHE = "lq-audio-v1";
 
 importScripts("js/audio-manifest.js");
 
@@ -20,26 +22,49 @@ const CORE = [
   "assets/mascot/fox-cheer.webp", "assets/mascot/fox-cry.webp", "assets/mascot/fox-surprised.webp", "assets/mascot/fox-think.webp",
   "assets/mascot/fox-party.webp", "assets/mascot/fox-readlaugh.webp", "assets/mascot/fox-cool.webp", "assets/mascot/fox-angry.webp",
   "assets/mascot/fox-love.webp", "assets/mascot/fox-sleepy.webp", "assets/mascot/fox-hello.webp", "assets/mascot/fox-worried.webp",
-  "assets/mascot/icon-192.png", "assets/mascot/icon-512.png"
+  "assets/mascot/icon-192.png", "assets/mascot/icon-512.png",
+  // Шрифты: без них офлайн текст был бы системным шрифтом
+  "assets/fonts/manrope-500-cyrillic-ext.woff2", "assets/fonts/manrope-500-cyrillic.woff2", "assets/fonts/manrope-500-latin-ext.woff2",
+  "assets/fonts/manrope-500-latin.woff2", "assets/fonts/manrope-600-cyrillic-ext.woff2", "assets/fonts/manrope-600-cyrillic.woff2",
+  "assets/fonts/manrope-600-latin-ext.woff2", "assets/fonts/manrope-600-latin.woff2", "assets/fonts/manrope-700-cyrillic-ext.woff2",
+  "assets/fonts/manrope-700-cyrillic.woff2", "assets/fonts/manrope-700-latin-ext.woff2", "assets/fonts/manrope-700-latin.woff2",
+  "assets/fonts/manrope-800-cyrillic-ext.woff2", "assets/fonts/manrope-800-cyrillic.woff2", "assets/fonts/manrope-800-latin-ext.woff2",
+  "assets/fonts/manrope-800-latin.woff2", "assets/fonts/unbounded-500-cyrillic-ext.woff2", "assets/fonts/unbounded-500-cyrillic.woff2",
+  "assets/fonts/unbounded-500-latin-ext.woff2", "assets/fonts/unbounded-500-latin.woff2", "assets/fonts/unbounded-700-cyrillic-ext.woff2",
+  "assets/fonts/unbounded-700-cyrillic.woff2", "assets/fonts/unbounded-700-latin-ext.woff2", "assets/fonts/unbounded-700-latin.woff2"
 ];
 
+// Установка: только сам интерфейс (около 1,5 МБ), чтобы приложение заработало сразу
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(VERSION);
     await cache.addAll(CORE);
-    // Озвучку и шрифты докачиваем по возможности: сбой одного файла не ломает установку
-    const manifest = typeof AUDIO_MANIFEST !== "undefined" ? AUDIO_MANIFEST : {};
-    const extra = Object.values(manifest).map((f) => "assets/audio/" + f);
-    await Promise.allSettled(extra.map((u) => cache.add(u)));
     self.skipWaiting();
   })());
 });
 
+// Озвучку (около 18 МБ) докачиваем в фоне небольшими порциями. В режиме экономии
+// трафика не качаем заранее: файлы сохранятся по мере прослушивания.
+async function precacheAudio() {
+  if (self.navigator && self.navigator.connection && self.navigator.connection.saveData) return;
+  const manifest = typeof AUDIO_MANIFEST !== "undefined" ? AUDIO_MANIFEST : {};
+  const cache = await caches.open(AUDIO_CACHE);
+  const urls = Object.values(manifest).map((f) => new URL("assets/audio/" + f, self.registration.scope).href);
+  for (let i = 0; i < urls.length; i += 6) {
+    await Promise.allSettled(urls.slice(i, i + 6).map(async (u) => {
+      if (await cache.match(u)) return;
+      const res = await fetch(u);
+      if (res.status === 200) await cache.put(u, res);
+    }));
+  }
+}
+
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== VERSION && k !== "lq-remind").map((k) => caches.delete(k)));
-    self.clients.claim();
+    await Promise.all(keys.filter((k) => k !== VERSION && k !== AUDIO_CACHE && k !== "lq-remind").map((k) => caches.delete(k)));
+    await self.clients.claim();
+    precacheAudio().catch(() => {});
   })());
 });
 
@@ -48,20 +73,28 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   event.respondWith((async () => {
+    const isAudio = new URL(req.url).pathname.includes("/assets/audio/");
+    // Озвучка не меняется: если файл уже есть, не тратим трафик
+    if (isAudio) {
+      const hit = await caches.match(req, { ignoreSearch: true });
+      if (hit) return hit;
+    }
     try {
-      // Файлы приложения всегда сверяем с сервером (иначе браузер может отдать старую версию
-      // из своего HTTP-кэша); озвучка не меняется, её берём как обычно
-      const isAudio = new URL(req.url).pathname.includes("/assets/audio/");
+      // Файлы приложения всегда сверяем с сервером (иначе браузер может отдать старую версию из своего HTTP-кэша)
       const res = await fetch(req, isAudio ? undefined : { cache: "no-cache" });
       // Частичные ответы (206, перемотка аудио) кэшировать нельзя
-      if (res.status === 200) caches.open(VERSION).then((c) => c.put(req, res.clone())).catch(() => {});
+      if (res.status === 200) caches.open(isAudio ? AUDIO_CACHE : VERSION).then((c) => c.put(req, res.clone())).catch(() => {});
       return res;
     } catch (e) {
       const cached = await caches.match(req, { ignoreSearch: true });
-      return cached || (await caches.match("index.html")) || Response.error();
+      if (cached) return cached;
+      // Страницу без интернета отдаём из кэша, а для картинок, звуков и шрифтов - честная ошибка
+      if (req.mode === "navigate") return (await caches.match("index.html")) || Response.error();
+      return Response.error();
     }
   })());
 });
+
 /* ---------- Напоминание о занятии ----------
    Приложение кладёт в кэш "lq-remind" состояние: включено ли напоминание,
    время и день последнего занятия. Браузер иногда будит service worker

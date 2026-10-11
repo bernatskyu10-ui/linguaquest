@@ -71,7 +71,9 @@ const Sync = (() => {
   /* ---------- Объединение прогресса двух устройств ----------
      Берём за основу более свежие данные и добавляем из других всё,
      чего в них нет: пройденные уроки, награды, слова, опыт по дням. */
-  function merge(a, b) {
+  // a - данные этого устройства, b - из облака,
+  // base - что было в облаке после прошлой синхронизации этого устройства (монеты, заморозки, опыт)
+  function merge(a, b, base) {
     const newer = (a.savedAt || 0) >= (b.savedAt || 0) ? a : b;
     const older = newer === a ? b : a;
     const m = JSON.parse(JSON.stringify(newer));
@@ -83,7 +85,10 @@ const Sync = (() => {
     // Свои слова: объединяем по английскому написанию
     const cw = new Map();
     [...(o.customWords || []), ...(m.customWords || [])].forEach((w) => cw.set(w.en.toLowerCase(), w));
-    m.customWords = [...cw.values()];
+    // Удалённые слова: запоминаем время удаления, чтобы слово не вернулось с другого устройства
+    m.deletedWords = Object.assign({}, o.deletedWords || {});
+    for (const [k, t] of Object.entries(newer.deletedWords || {})) m.deletedWords[k] = Math.max(m.deletedWords[k] || 0, t);
+    m.customWords = [...cw.values()].filter((w) => !(m.deletedWords[w.en.toLowerCase()] >= (Number(w.added) || 0)));
     m.placementDone = !!(m.placementDone || o.placementDone);
     m.wordStats = Object.assign({}, m.wordStats || {});
     for (const [k, s] of Object.entries(o.wordStats || {})) {
@@ -98,13 +103,35 @@ const Sync = (() => {
     }
     m.accByDay = Object.assign({}, m.accByDay || {});
     for (const [k, v] of Object.entries(o.accByDay || {})) if (!m.accByDay[k] || v.t > m.accByDay[k].t) m.accByDay[k] = v;
+    // Серия: берём с того устройства, где занимались позже (а не где позже сохранились)
+    const la = a.lastActiveDay || "", lb = b.lastActiveDay || "";
+    m.lastActiveDay = la > lb ? la : lb;
+    m.streak = la > lb ? (a.streak || 0) : lb > la ? (b.streak || 0) : Math.max(a.streak || 0, b.streak || 0);
+    // Задания дня: если оба устройства в одном дне, складываем прогресс по максимуму
+    const da = a.daily || {}, db = b.daily || {};
+    if (da.day && da.day === db.day) {
+      m.daily = Object.assign({}, da);
+      for (const k of ["lessons", "correct", "reviews", "perfect"]) m.daily[k] = Math.max(Number(da[k]) || 0, Number(db[k]) || 0);
+      m.daily.claimed = [...new Set([...(da.claimed || []), ...(db.claimed || [])])];
+    } else {
+      m.daily = JSON.parse(JSON.stringify((da.day || "") > (db.day || "") ? da : db));
+    }
     m.xp = Math.max(m.xp || 0, o.xp || 0);
     m.bestStreak = Math.max(m.bestStreak || 0, o.bestStreak || 0);
     m.perfectCount = Math.max(m.perfectCount || 0, o.perfectCount || 0);
     m.gemsEarned = Math.max(m.gemsEarned || 0, o.gemsEarned || 0);
-    // Монеты и заморозки берём по максимуму, чтобы заработанное на другом устройстве не пропало
-    m.gems = Math.max(Number(m.gems) || 0, Number(o.gems) || 0);
-    m.freezes = Math.max(Number(m.freezes) || 0, Number(o.freezes) || 0);
+    // Монеты, заморозки и опыт: к облачному значению прибавляем изменения этого устройства
+    // с прошлой синхронизации. Так покупка не "возвращается", а заработанное на обоих устройствах складывается.
+    // Без отметки о прошлой синхронизации (первое объединение) берём максимум.
+    const num = (x) => Number(x) || 0;
+    if (base && typeof base === "object") {
+      m.gems = Math.max(0, num(b.gems) + num(a.gems) - num(base.gems));
+      m.freezes = Math.max(0, num(b.freezes) + num(a.freezes) - num(base.freezes));
+      m.xp = Math.max(num(a.xp), num(b.xp), num(b.xp) + num(a.xp) - num(base.xp));
+    } else {
+      m.gems = Math.max(num(a.gems), num(b.gems));
+      m.freezes = Math.max(num(a.freezes), num(b.freezes));
+    }
     const r1 = m.records || {}, r2 = o.records || {};
     m.records = {
       speed: Math.max(r1.speed || 0, r2.speed || 0),

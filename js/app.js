@@ -116,6 +116,7 @@ const App = (() => {
      "code" - вход по коду синхронизации (перенос профиля с другого устройства)
      ====================================================================== */
   function renderAuth(mode = null, prefill = "") {
+    cards = null;
     applyTheme(Store.device().theme || "dark");
     const users = Store.listUsers();
     // При первом открытии на новом устройстве сразу показываем регистрацию,
@@ -290,6 +291,7 @@ const App = (() => {
     streakToasts(s);
     syncNow();
     maybeWeekReport();
+    resumeReminders();
   }
 
   function streakToasts(s) {
@@ -392,6 +394,7 @@ const App = (() => {
   }
 
   function renderShell() {
+    cards = null; // экран карточек закрыт
     $app.innerHTML = `
       <div class="shell">
         <aside class="sidebar">
@@ -903,6 +906,7 @@ const App = (() => {
     }
     if (data.customWords.some((w) => w.en.toLowerCase() === k)) return "Это слово уже есть в вашем словаре";
     data.customWords.push({ en, ru, added: Date.now() });
+    delete data.deletedWords[k];
     WORDS[k] = { en, ru, ui: -1, custom: true };
     if (!data.words.includes(k)) data.words.push(k);
     data.wordStats[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 };
@@ -913,6 +917,7 @@ const App = (() => {
   function removeCustomWord(k) {
     const data = d();
     data.customWords = data.customWords.filter((w) => w.en.toLowerCase() !== k);
+    data.deletedWords[k] = Date.now();
     data.words = data.words.filter((x) => x !== k);
     delete data.wordStats[k];
     delete WORDS[k];
@@ -1030,7 +1035,7 @@ const App = (() => {
         <div class="lesson__body" id="exRoot"></div>
         <footer class="lesson__foot" id="foot">
           <div class="lesson__foot-inner">
-            <div class="foot-left" id="footLeft"></div>
+            <div class="foot-left" id="footLeft" aria-live="polite"></div>
             <button class="btn" id="mainBtn" disabled>Проверить</button>
           </div>
         </footer>
@@ -1096,9 +1101,14 @@ const App = (() => {
       : `<span class="foot-hint">${HINTS[ex.type] || ""}</span>`;
     const skip = document.getElementById("skipBtn");
     if (skip) skip.addEventListener("click", skipExercise);
+    // Останавливаем озвучку и микрофон прошлого задания
+    Speech.stop();
+    SpeechRec.abort();
+    const token = (L.renderToken = (L.renderToken || 0) + 1);
 
     L.ctrl = Exercises.render(ex, root, {
-      onReady: (v) => { if (L.phase === "answer") btn.disabled = !v; },
+      // Ответ от прошлого задания (например, распознанная речь) сюда не попадёт
+      onReady: (v) => { if (lesson === L && L.renderToken === token && L.phase === "answer") btn.disabled = !v; },
       speak: say,
       auto,
       sfx: (n) => Sound.play(n),
@@ -1106,6 +1116,12 @@ const App = (() => {
     });
     updateLessonProgress();
     window.scrollTo({ top: 0 });
+    // Фокус на заголовок задания, чтобы клавиатура и экранный диктор не теряли место
+    setTimeout(() => {
+      if (lesson !== L || L.renderToken !== token || root.contains(document.activeElement)) return;
+      const h = root.querySelector("h2");
+      if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+    }, 150);
   }
 
   function skipExercise() {
@@ -1254,6 +1270,7 @@ const App = (() => {
   function exitLesson() {
     lesson = null;
     Speech.stop();
+    SpeechRec.abort();
     renderShell();
   }
 
@@ -1456,6 +1473,12 @@ const App = (() => {
     return keys.map((k) => WORDS[k]);
   }
 
+  // Без слов с одинаковым переводом: иначе в парах правильный ответ засчитается как ошибка
+  function uniqueRu(words) {
+    const seen = new Set();
+    return words.filter((w) => { const k = w.ru.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+  }
+
   const GAMES = [
     { id: "speed", title: "60 секунд", desc: "Переведите как можно больше слов за минуту", icon: "bolt", record: (r) => (r.speed ? `Рекорд: ${r.speed} слов` : "Рекорда пока нет") },
     { id: "pairs", title: "Пары на скорость", desc: "Три раунда по 5 пар. Ошибка добавляет 3 секунды", icon: "target", record: (r) => (r.pairs ? `Рекорд: ${r.pairs} сек` : "Рекорда пока нет") },
@@ -1584,7 +1607,7 @@ const App = (() => {
 
   /* --- Пары на скорость --- */
   function startPairs() {
-    game = { kind: "pairs", round: 0, words: Exercises.shuffle(gameWords(15)), mistakes: 0, startedAt: Date.now(), penalty: 0, timer: null, score: 0 };
+    game = { kind: "pairs", round: 0, words: uniqueRu(Exercises.shuffle(gameWords(15))), mistakes: 0, startedAt: Date.now(), penalty: 0, timer: null, score: 0 };
     renderGameShell("Пары на скорость");
     game.timer = setInterval(() => {
       const info = document.getElementById("gameInfo");
@@ -1595,9 +1618,8 @@ const App = (() => {
   function nextPairsRound() {
     const g = game;
     if (g.round >= 3) { endGame(); return; }
-    const set = g.words.slice(g.round * 5, g.round * 5 + 5);
-    if (set.length < 5) { g.words = Exercises.shuffle(g.words.concat(gameWords(15))); }
-    const pairs = g.words.slice(g.round * 5, g.round * 5 + 5);
+    // Если слов не хватает, добираем из общего списка без повторов и одинаковых переводов
+    const pairs = uniqueRu(g.words.slice(g.round * 5).concat(Exercises.shuffle(gameWords(15)))).slice(0, 5);
     g.round++;
     document.getElementById("gameBar").style.width = `${((g.round - 1) / 3) * 100}%`;
     const left = Exercises.shuffle(pairs), right = Exercises.shuffle(pairs);
@@ -1619,7 +1641,7 @@ const App = (() => {
       picked = { en: null, ru: null };
       if (a.dataset.key === c.dataset.key) {
         Sound.play("match");
-        [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched"); });
+        [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched"); x.disabled = true; });
         g.score++;
         if (++done === pairs.length) setTimeout(() => game === g && nextPairsRound(), 300);
       } else {
@@ -1893,7 +1915,7 @@ const App = (() => {
             </div>`;
         }).join("")}
       </div>`).join("");
-    box.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+    bindSayWords(box);
     box.querySelectorAll("[data-remove-word]").forEach((b) => b.addEventListener("click", () => { removeCustomWord(b.dataset.removeWord); renderPage(); }));
   }
 
@@ -1946,6 +1968,7 @@ const App = (() => {
     const k = c.queue[0];
     const w = WORDS[k];
     c.flipped = false;
+    c.revealed = false;
     document.getElementById("cardsBar").style.width = `${(c.done / c.total) * 100}%`;
     document.getElementById("cardsInfo").textContent = `${c.done} / ${c.total}`;
     const front = cardsDir === "en";
@@ -1984,6 +2007,7 @@ const App = (() => {
     const root = document.getElementById("cardsRoot");
     const card = root.querySelector(".flash");
     cards.flipped = !cards.flipped;
+    cards.revealed = true; // ответ уже видели: можно отвечать, даже если карточку перевернули обратно
     card.classList.toggle("is-flipped", cards.flipped);
     Sound.play("tap");
     root.querySelectorAll("[data-forgot], [data-known]").forEach((b) => (b.disabled = false));
@@ -1993,7 +2017,7 @@ const App = (() => {
 
   function answerCard(known) {
     const c = cards;
-    if (!c || !c.flipped) return;
+    if (!c || !c.revealed) return;
     const k = c.queue.shift();
     const st = d().wordStats;
     const s = st[k] || (st[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 });
@@ -2235,9 +2259,14 @@ const App = (() => {
     } catch (e) { /* хранилище недоступно - напоминания просто не придут */ }
   }
 
+  // service worker может ещё устанавливаться: ждём не дольше 5 секунд
+  function swReady() {
+    return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error("Приложение ещё загружается, попробуйте через минуту")), 5000))]);
+  }
+
   async function registerPeriodic(on) {
     try {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await swReady();
       if (!("periodicSync" in reg)) return;
       if (!on) { await reg.periodicSync.unregister("lq-remind"); return; }
       const p = await navigator.permissions.query({ name: "periodic-background-sync" });
@@ -2246,7 +2275,7 @@ const App = (() => {
   }
 
   async function showReminder(test) {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await swReady();
     const streak = d().streak;
     await reg.showNotification(test ? "Так будет выглядеть напоминание" : "Время английского", {
       body: streak ? `Сохраните серию: дней подряд ${streak}. Хватит 5 минут` : "Лиса ждёт: один короткий урок, и цель дня ближе",
@@ -2270,6 +2299,24 @@ const App = (() => {
       await c.put(remindUrl("notified"), new Response(today));
       await showReminder(false);
     } catch (e) { /* не получилось - попробуем через минуту */ }
+  }
+
+  // Профиль удалён: выключаем напоминания этого профиля
+  async function clearReminders() {
+    if (!canNotify()) return;
+    remindJSON = "";
+    try {
+      const c = await caches.open(REMIND_CACHE);
+      await c.put(remindUrl("state"), new Response(JSON.stringify({ on: false }), { headers: { "Content-Type": "application/json" } }));
+    } catch (e) { /* нечего выключать */ }
+    registerPeriodic(false);
+  }
+
+  // После входа: если напоминание включено, ещё раз просим браузер о фоновой проверке
+  function resumeReminders() {
+    if (!canNotify() || !d() || !d().settings.remind || Notification.permission !== "granted") return;
+    writeRemindState();
+    registerPeriodic(true);
   }
 
   function initReminders() {
@@ -2493,7 +2540,6 @@ const App = (() => {
   }
 
   function bindProfile(main) {
-    main.querySelectorAll(".week-report__hard [data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
     main.querySelectorAll("[data-cards]").forEach((b) => b.addEventListener("click", startCards));
@@ -2524,22 +2570,28 @@ const App = (() => {
       const remote = await Sync.download(code);
       // Пока шла загрузка, пользователь мог сменить профиль или отключить синхронизацию
       if (d() !== local || syncCode() !== code) return;
-      if (remote) {
+      // После загрузки из файла отправляем его данные как есть, без объединения
+      const force = !!(local.sync && local.sync.force);
+      if (remote && !force) {
         const changed = Sync.differs(local, remote.data);
-        const merged = keepLocal(Sync.merge(local, remote.data), local);
+        const merged = keepLocal(Sync.merge(local, remote.data, local.sync && local.sync.base), local);
         if (JSON.stringify(merged) !== JSON.stringify(local)) {
           Store.setData(merged);
           loadCustomWords();
         }
         if (changed) {
-          if (!lesson && !game) renderShell();
+          if (!lesson && !game && !cards) renderShell();
           Toast.show({ title: "Прогресс обновлён", text: "Подтянуты данные с другого устройства", icon: SVG.icon("repeat").replace("<svg", '<svg style="color:var(--teal)"') });
         }
       }
       const sent = d();
+      // Запоминаем, что именно ушло в облако: это основа для следующего объединения
+      const base = { gems: sent.gems, freezes: sent.freezes, xp: sent.xp };
       await Sync.upload(code, sent, Store.user() && Store.user().username);
       if (d() !== sent || !d().sync) return;
       d().sync.lastSync = Date.now();
+      d().sync.base = base;
+      d().sync.force = false;
       Store.save({ silent: true });
       lastSyncAt = Date.now();
       if (!silent) Toast.show({ title: "Синхронизировано", icon: SVG.icon("check").replace("<svg", '<svg style="color:var(--teal)"') });
@@ -2920,7 +2972,7 @@ const App = (() => {
       Store.save();
     });
     const testRemind = main.querySelector('[data-act="test-remind"]');
-    if (testRemind) testRemind.addEventListener("click", () => showReminder(true).catch(() => Toast.show({ title: "Не удалось показать уведомление", text: "Проверьте разрешения браузера", icon: SVG.mascot({ mood: "worried" }) })));
+    if (testRemind) testRemind.addEventListener("click", () => showReminder(true).catch((e) => Toast.show({ title: "Не удалось показать уведомление", text: esc(e.message || "Проверьте разрешения браузера"), icon: SVG.mascot({ mood: "worried" }) })));
 
     // Резервная копия: скачивание файла
     main.querySelector('[data-act="export"]').addEventListener("click", () => {
@@ -2974,6 +3026,7 @@ const App = (() => {
       });
       if (ok) {
         Store.deleteCurrent();
+        clearReminders();
         renderAuth();
         Toast.show({ title: "Профиль удалён", icon: SVG.icon("close") });
       }
@@ -2989,7 +3042,7 @@ const App = (() => {
       return;
     }
     // Карточки: пробел переворачивает, 1 - не помню, 2 - помню
-    if (cards && $modal.hidden) {
+    if (cards && $modal.hidden && document.getElementById("cardsRoot")) {
       if (e.target.tagName === "INPUT") return;
       if (e.key === " ") { e.preventDefault(); flipCard(); }
       else if (e.key === "1") answerCard(false);
@@ -3018,6 +3071,12 @@ const App = (() => {
     }
   });
 
+  // Прогресс изменился в другой вкладке: показываем свежие данные
+  Store.onExternal(() => {
+    loadCustomWords();
+    if (!lesson && !game && !cards) renderShell();
+  });
+
   // Сохраняем прогресс при закрытии вкладки
   window.addEventListener("beforeunload", () => Store.save());
   document.addEventListener("visibilitychange", () => { if (document.hidden) Store.save(); });
@@ -3039,6 +3098,7 @@ const App = (() => {
       streakToasts(s);
       syncNow();
       maybeWeekReport();
+      resumeReminders();
     } else {
       renderAuth();
     }

@@ -43,7 +43,7 @@ const GRAMMAR = {
     points: [
       "<b>he</b> говорим о мужчине или мальчике, <b>she</b> о женщине или девочке.",
       "<b>it</b> говорим о предмете, животном или явлении: «это», «оно».",
-      "Перед профессией или предметом в единственном числе ставим <b>a</b>: He is <b>a</b> boy."
+      "Перед профессией или предметом в единственном числе ставим <b>a</b>: He is <b>a</b> doctor."
     ],
     examples: [["She is a girl", "Она девочка"], ["It is a cat", "Это кошка"]]
   },
@@ -145,7 +145,7 @@ const GRAMMAR = {
     title: "He, she, it: окончание -s",
     points: [
       "С <b>he / she / it</b> к глаголу добавляем <b>-s</b>: she speak<b>s</b>.",
-      "После -sh, -ch, -o добавляем <b>-es</b>: watch → watches, go → goes.",
+      "После -s, -ss, -sh, -ch, -x, -o добавляем <b>-es</b>: watch → watches, go → goes. Согласная + y → <b>-ies</b>: study → studies.",
       "Это самая частая ошибка новичков, обращайте внимание!"
     ],
     table: { head: ["Кто", "Глагол"], rows: [["I / you / we / they", "live"], ["he / she / it", "lives"]] },
@@ -336,7 +336,7 @@ const GRAMMAR = {
       "Длинные: <b>the most</b> + слово: the most beautiful.",
       "Исключения: good → better → <b>the best</b>, bad → worse → <b>the worst</b>."
     ],
-    examples: [["This is the best day", "Это самый лучший день"]]
+    examples: [["This is the best day", "Это лучший день"]]
   },
   "mod-1": {
     title: "Must и mustn't",
@@ -493,7 +493,7 @@ const GRAMMAR = {
     title: "Фразовые глаголы: поиск",
     points: [
       "<b>look for</b> искать, <b>find out</b> выяснять, <b>look after</b> присматривать.",
-      "Предлог может уйти после предмета: pick me <b>up</b>, give it <b>back</b>."
+      "Частица может стоять после дополнения, а с местоимением только так: pick me <b>up</b>, give it <b>back</b>."
     ],
     examples: [["I am looking for my keys", "Я ищу ключи"]]
   },
