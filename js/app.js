@@ -289,6 +289,7 @@ const App = (() => {
     else Toast.show({ title: `С возвращением, ${esc(name)}!`, text: d().streak ? `Дней подряд: ${d().streak}` : "Начнём новую серию сегодня", icon: SVG.mascot({ mood: "hello" }) });
     streakToasts(s);
     syncNow();
+    maybeWeekReport();
   }
 
   function streakToasts(s) {
@@ -612,6 +613,7 @@ const App = (() => {
     main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
+    main.querySelectorAll("[data-cards]").forEach((b) => b.addEventListener("click", startCards));
     main.querySelectorAll("[data-placement]").forEach((b) => b.addEventListener("click", startPlacement));
     main.querySelectorAll("[data-placement-skip]").forEach((b) => b.addEventListener("click", () => { d().placementDone = true; Store.save(); renderPage(); }));
     main.querySelectorAll("[data-test]").forEach((b) => b.addEventListener("click", () => confirmTest(Number(b.dataset.test))));
@@ -643,7 +645,8 @@ const App = (() => {
       startedAt: Date.now(),
       ctrl: null,
       phase: "answer",
-      skipped: 0
+      skipped: 0,
+      errors: [] // ошибки сессии для "работы над ошибками" и итогов
     }, extra);
     Sound.unlock();
     renderLesson();
@@ -1003,7 +1006,10 @@ const App = (() => {
         <div class="card review-card reveal">
           <div class="widget__title">Повторение слов</div>
           <div><div class="review-card__count">${due}</div><div class="widget__body">${total ? (due ? "слов пора повторить" : "Всё повторено. Новые слова появятся завтра") : "Слова появятся после первого урока"}</div></div>
-          <button class="btn btn--sm" data-review ${total < 4 ? "disabled" : ""}>${SVG.icon("repeat")}Повторить</button>
+          <div class="review-card__btns">
+            <button class="btn btn--sm" data-review ${total < 4 ? "disabled" : ""}>${SVG.icon("repeat")}Повторить</button>
+            <button class="btn btn--sm btn--ghost" data-cards ${total < 3 ? "disabled" : ""}>${SVG.icon("words")}Карточки</button>
+          </div>
           <div class="review-card__fox">${SVG.mascot({ mood: "readlaugh", hat: d().hat })}</div>
         </div>
         ${yesterdayCard()}
@@ -1055,6 +1061,7 @@ const App = (() => {
 
   const HINTS = {
     teach: "Запомните слово и нажмите «Дальше»",
+    notice: "Посмотрите ответы и нажмите «Дальше»",
     grammar: "Прочитайте правило и нажмите «Дальше»",
     choose: "Выберите вариант или нажмите 1-4",
     picture: "Выберите подходящую картинку",
@@ -1079,7 +1086,7 @@ const App = (() => {
     L.phase = "answer";
     foot.className = "lesson__foot";
     btn.className = "btn";
-    btn.textContent = ex.type === "teach" || ex.type === "grammar" ? "Дальше" : "Проверить";
+    btn.textContent = ex.type === "teach" || ex.type === "grammar" || ex.type === "notice" ? "Дальше" : "Проверить";
     btn.disabled = true;
     // Для заданий на слух можно пропустить (нет наушников или звука)
     left.innerHTML = ex.type === "listen" || ex.type === "dictation"
@@ -1171,6 +1178,14 @@ const App = (() => {
       const isTest = L.mode === "test" || L.mode === "placement";
       if (L.mode === "placement") L.stageWrong[ex.stage] = (L.stageWrong[ex.stage] || 0) + 1;
       if (!isTest) {
+        // Запоминаем ошибку (без повторов) и перед первым возвратом показываем экран с правильными ответами
+        const item = Exercises.errorItem(ex, res);
+        if (!L.errors.some((e) => e.en === item.en && e.ru === item.ru)) L.errors.push(item);
+        if (!L.noticeAdded) {
+          L.queue.push({ type: "notice", errors: L.errors });
+          L.total++;
+          L.noticeAdded = true;
+        }
         L.queue.push(ex);
         L.total++;
       } else {
@@ -1298,6 +1313,7 @@ const App = (() => {
       xp, coins, perfect, title,
       subtitle: `${L.entry.unit.title}: ${L.entry.lesson.title}`,
       mood: unitFinished ? "party" : perfect ? "cheer" : "happy",
+      errors: L.errors,
       again: () => startLesson(L.entry.gi), againLabel: "Пройти ещё раз"
     }));
   }
@@ -1320,6 +1336,7 @@ const App = (() => {
         ? `Слов из занятия (${dayLabel(L.yesterday)}): ${L.reviewKeys.length}. Теперь можно идти дальше`
         : `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
       mood: L.yesterday ? "cheer" : "readlaugh",
+      errors: L.errors,
       again: L.yesterday ? startYesterday : startReview, againLabel: L.yesterday ? "Ещё раз" : "Повторить ещё"
     }));
   }
@@ -1390,6 +1407,11 @@ const App = (() => {
             ${r.perfect ? `<span class="tag">${small("star")} Без ошибок</span>` : ""}
             ${r.quests.map((q) => `<span class="tag">${small("quest")} ${esc(q.title)}: +${QUEST_REWARD}</span>`).join("")}
           </div>
+          ${r.errors && r.errors.length ? `
+          <details class="result__errors card">
+            <summary>Ваши ошибки: ${r.errors.length}. Посмотреть правильные ответы</summary>
+            ${Exercises.errorList(r.errors)}
+          </details>` : ""}
           <div class="result__actions">
             <button class="btn btn--block" data-act="continue">Продолжить</button>
             ${r.again ? `<button class="btn btn--ghost btn--block" data-act="again">${r.againLabel}</button>` : ""}
@@ -1404,6 +1426,8 @@ const App = (() => {
     $app.querySelector('[data-act="continue"]').addEventListener("click", () => { page = r.backPage || "learn"; renderShell(); });
     const again = $app.querySelector('[data-act="again"]');
     if (again) again.addEventListener("click", r.again);
+    const errBox = $app.querySelector(".result__errors");
+    if (errBox) Exercises.bindSpeak(errBox, { speak: say });
     $app.querySelector('[data-act="continue"]').focus({ preventScroll: true });
 
     // Новые достижения показываем по очереди
@@ -1813,7 +1837,8 @@ const App = (() => {
             <button class="filter-chip ${dictFilter === "all" ? "is-active" : ""}" data-filter="all">Все (${learned.length})</button>
             <button class="filter-chip ${dictFilter === "due" ? "is-active" : ""}" data-filter="due">К повторению (${due})</button>
             <button class="filter-chip ${dictFilter === "weak" ? "is-active" : ""}" data-filter="weak">Трудные (${weak})</button>
-            <button class="btn btn--sm" data-review style="margin-left:auto">${SVG.icon("repeat")}Повторить</button>
+            <button class="btn btn--sm btn--ghost" data-cards style="margin-left:auto">${SVG.icon("words")}Карточки</button>
+            <button class="btn btn--sm" data-review>${SVG.icon("repeat")}Повторить</button>
           </div>
         </div>
         <div id="dictList"></div>
@@ -1872,6 +1897,147 @@ const App = (() => {
     box.querySelectorAll("[data-remove-word]").forEach((b) => b.addEventListener("click", () => { removeCustomWord(b.dataset.removeWord); renderPage(); }));
   }
 
+  /* ======================================================================
+     Карточки слов: вижу слово, вспоминаю перевод, переворачиваю
+     ====================================================================== */
+  let cards = null;
+  let cardsDir = "en"; // какой стороной показывать: "en" - английский, "ru" - русский
+
+  function cardsDeck() {
+    const data = d();
+    const st = data.wordStats;
+    const learned = Object.keys(WORDS).filter((k) => data.words.includes(k) || st[k]);
+    // Сначала слова, которые пора повторить, потом трудные, потом случайные
+    const due = dueWords();
+    const weak = learned.filter((k) => !due.includes(k) && st[k] && st[k].wrong > 0).sort((a, b) => st[a].lvl - st[b].lvl);
+    const rest = Exercises.shuffle(learned.filter((k) => !due.includes(k) && !weak.includes(k)));
+    return [...new Set(due.concat(weak, rest))].slice(0, 15);
+  }
+
+  function startCards() {
+    const keys = cardsDeck();
+    if (keys.length < 3) {
+      Toast.show({ title: "Мало слов для карточек", text: "Пройдите пару уроков, и слова появятся здесь", icon: SVG.mascot({ mood: "idle" }) });
+      return;
+    }
+    Sound.unlock();
+    cards = { queue: keys.slice(), total: keys.length, done: 0, known: 0, forgot: 0, flipped: false, again: {}, errors: [], startedAt: Date.now() };
+    $app.innerHTML = `
+      <div class="lesson screen-enter">
+        <div class="lesson__top">
+          <button class="icon-btn" data-act="quit-cards" aria-label="Закрыть карточки">${SVG.icon("close")}</button>
+          <div class="progress"><div class="progress__fill" id="cardsBar"></div></div>
+          <span class="lesson__count" id="cardsInfo"></span>
+        </div>
+        <div class="lesson__body" id="cardsRoot"></div>
+      </div>`;
+    $app.querySelector('[data-act="quit-cards"]').addEventListener("click", () => {
+      cards = null;
+      Speech.stop();
+      Store.save();
+      page = "words";
+      renderShell();
+    });
+    showCard();
+  }
+
+  function showCard() {
+    const c = cards;
+    const k = c.queue[0];
+    const w = WORDS[k];
+    c.flipped = false;
+    document.getElementById("cardsBar").style.width = `${(c.done / c.total) * 100}%`;
+    document.getElementById("cardsInfo").textContent = `${c.done} / ${c.total}`;
+    const front = cardsDir === "en";
+    const pic = w.pic && SVG.hasPic(w.pic) ? SVG.pic(w.pic, "flash__pic") : "";
+    const enSide = `${pic}<div class="flash__word">${esc(w.en)}</div>${Speech.canSay(w.en) ? `<button class="speak-btn" type="button" data-say-word="${esc(w.en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : ""}`;
+    const ruSide = `<div class="flash__word">${esc(w.ru)}</div>`;
+    const root = document.getElementById("cardsRoot");
+    root.innerHTML = `
+      <div class="flash-head">
+        <h2 class="ex-title">${front ? "Вспомните перевод" : "Вспомните английское слово"}</h2>
+        <button class="filter-chip" type="button" data-dir>${front ? "EN → RU" : "RU → EN"}</button>
+      </div>
+      <div class="flash" tabindex="0" role="button" aria-label="Перевернуть карточку">
+        <div class="flash__inner">
+          <div class="flash__face flash__front">${front ? enSide : ruSide}<span class="flash__hint">Нажмите, чтобы перевернуть</span></div>
+          <div class="flash__face flash__back">${front ? ruSide : enSide}<div class="flash__sub">${esc(front ? w.en : w.ru)}</div></div>
+        </div>
+      </div>
+      <div class="flash-actions">
+        <button class="btn btn--rose" data-forgot disabled>Не помню</button>
+        <button class="btn btn--teal" data-known disabled>Помню</button>
+      </div>
+      <p class="foot-hint flash-keys">Пробел - перевернуть, 1 - не помню, 2 - помню</p>`;
+    const card = root.querySelector(".flash");
+    card.addEventListener("click", (e) => { if (!e.target.closest("[data-say-word]")) flipCard(); });
+    card.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); flipCard(); } });
+    root.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+    root.querySelector("[data-dir]").addEventListener("click", () => { cardsDir = front ? "ru" : "en"; showCard(); });
+    root.querySelector("[data-forgot]").addEventListener("click", () => answerCard(false));
+    root.querySelector("[data-known]").addEventListener("click", () => answerCard(true));
+    if (front) auto(w.en);
+  }
+
+  function flipCard() {
+    if (!cards) return;
+    const root = document.getElementById("cardsRoot");
+    const card = root.querySelector(".flash");
+    cards.flipped = !cards.flipped;
+    card.classList.toggle("is-flipped", cards.flipped);
+    Sound.play("tap");
+    root.querySelectorAll("[data-forgot], [data-known]").forEach((b) => (b.disabled = false));
+    // После переворота озвучиваем английское слово, если оно на обороте
+    if (cards.flipped && cardsDir === "ru") auto(WORDS[cards.queue[0]].en);
+  }
+
+  function answerCard(known) {
+    const c = cards;
+    if (!c || !c.flipped) return;
+    const k = c.queue.shift();
+    const st = d().wordStats;
+    const s = st[k] || (st[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 });
+    s.seen++;
+    if (known) {
+      s.lvl = Math.min(INTERVALS.length - 1, s.lvl + 1);
+      s.due = Date.now() + INTERVALS[s.lvl] * DAY;
+      c.known++;
+      c.done++;
+      Sound.play("correct");
+    } else {
+      s.lvl = 0;
+      s.wrong++;
+      s.due = Date.now();
+      c.forgot++;
+      if (!c.errors.some((e) => e.en === WORDS[k].en)) c.errors.push({ en: WORDS[k].en, ru: WORDS[k].ru });
+      // Забытое слово вернётся в конце (один раз), иначе засчитываем как пройденное
+      if (!c.again[k]) { c.again[k] = 1; c.queue.push(k); c.total++; }
+      c.done++;
+      Sound.play("wrong");
+    }
+    Store.save({ silent: true });
+    if (c.queue.length) showCard();
+    else finishCards();
+  }
+
+  function finishCards() {
+    const c = cards;
+    cards = null;
+    const xp = c.known + 3;
+    const coins = 3;
+    daily().reviews++;
+    const s = settle(xp, coins, { startedAt: c.startedAt, correctAnswers: c.known, mistakes: c.forgot });
+    renderResult(Object.assign(s, {
+      xp, coins, perfect: c.forgot === 0,
+      title: c.forgot === 0 ? "Всё помните!" : "Карточки пройдены",
+      subtitle: `Вспомнили: ${c.known}. Забытые слова попадут в повторение`,
+      mood: c.forgot === 0 ? "cool" : "readlaugh",
+      errors: c.errors,
+      backPage: "words",
+      again: startCards, againLabel: "Ещё карточки"
+    }));
+  }
+
   function bindWords(main) {
     const form = main.querySelector("#addWord");
     if (form) form.addEventListener("submit", (e) => {
@@ -1887,6 +2053,7 @@ const App = (() => {
     main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
+    main.querySelectorAll("[data-cards]").forEach((b) => b.addEventListener("click", startCards));
     main.querySelectorAll("[data-filter]").forEach((b) =>
       b.addEventListener("click", () => {
         dictFilter = b.dataset.filter;
@@ -2038,6 +2205,223 @@ const App = (() => {
   }
 
   /* ======================================================================
+     Напоминания о занятии
+     Состояние (включено, время, день последнего занятия) кладём в Cache Storage,
+     чтобы его видел service worker: он проверяет его при фоновой синхронизации
+     (работает в установленном приложении Chrome/Android). Пока приложение открыто,
+     хотя бы в фоне, проверяем раз в минуту сами.
+     ====================================================================== */
+  const REMIND_CACHE = "lq-remind";
+  const remindUrl = (name) => new URL("__remind/" + name, location.href).href;
+  const canNotify = () => "Notification" in window && "serviceWorker" in navigator && location.protocol.startsWith("http");
+  let remindJSON = "";
+
+  function lastActiveDay() {
+    const days = Object.keys(d().xpByDay).filter((k) => d().xpByDay[k] > 0).sort();
+    return days.length ? days[days.length - 1] : "";
+  }
+
+  // Записываем состояние для service worker (только если оно изменилось)
+  async function writeRemindState() {
+    if (!canNotify() || !d()) return;
+    const s = d().settings;
+    const state = { on: !!s.remind && Notification.permission === "granted", at: s.remindAt, active: lastActiveDay(), name: Store.user().username };
+    const json = JSON.stringify(state);
+    if (json === remindJSON) return;
+    remindJSON = json;
+    try {
+      const c = await caches.open(REMIND_CACHE);
+      await c.put(remindUrl("state"), new Response(json, { headers: { "Content-Type": "application/json" } }));
+    } catch (e) { /* хранилище недоступно - напоминания просто не придут */ }
+  }
+
+  async function registerPeriodic(on) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (!("periodicSync" in reg)) return;
+      if (!on) { await reg.periodicSync.unregister("lq-remind"); return; }
+      const p = await navigator.permissions.query({ name: "periodic-background-sync" });
+      if (p.state === "granted") await reg.periodicSync.register("lq-remind", { minInterval: 60 * 60 * 1000 });
+    } catch (e) { /* фоновая проверка не поддерживается */ }
+  }
+
+  async function showReminder(test) {
+    const reg = await navigator.serviceWorker.ready;
+    const streak = d().streak;
+    await reg.showNotification(test ? "Так будет выглядеть напоминание" : "Время английского", {
+      body: streak ? `Сохраните серию: дней подряд ${streak}. Хватит 5 минут` : "Лиса ждёт: один короткий урок, и цель дня ближе",
+      icon: "assets/mascot/icon-192.png",
+      badge: "assets/mascot/icon-192.png",
+      tag: "lq-remind"
+    });
+  }
+
+  // Проверка раз в минуту, пока приложение открыто
+  async function remindTick() {
+    if (!canNotify() || !d() || !d().settings.remind || Notification.permission !== "granted") return;
+    const now = new Date();
+    const today = Store.dayKey();
+    const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    if (hhmm < d().settings.remindAt || Store.todayXP() > 0 || !document.hidden) return;
+    try {
+      const c = await caches.open(REMIND_CACHE);
+      const r = await c.match(remindUrl("notified"));
+      if (r && (await r.text()) === today) return;
+      await c.put(remindUrl("notified"), new Response(today));
+      await showReminder(false);
+    } catch (e) { /* не получилось - попробуем через минуту */ }
+  }
+
+  function initReminders() {
+    if (!canNotify()) return;
+    Store.onSave(() => writeRemindState());
+    setInterval(remindTick, 60 * 1000);
+  }
+
+  async function setReminder(on) {
+    const s = d().settings;
+    if (on) {
+      let perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        s.remind = false;
+        Store.save();
+        Toast.show({ title: "Уведомления запрещены", text: "Разрешите уведомления для этого сайта в настройках браузера и включите снова", icon: SVG.mascot({ mood: "worried" }) });
+        return false;
+      }
+    }
+    s.remind = on;
+    Store.save();
+    await writeRemindState();
+    await registerPeriodic(on);
+    return true;
+  }
+
+  function remindRow() {
+    const s = d().settings;
+    const ok = canNotify();
+    const denied = ok && Notification.permission === "denied";
+    const hint = !ok ? "Этот браузер не умеет показывать уведомления. На iPhone сначала установите приложение на экран «Домой»"
+      : denied ? "Уведомления для этого сайта запрещены в настройках браузера"
+      : "Если к этому времени вы ещё не занимались сегодня, придёт уведомление. Надёжнее всего, когда приложение установлено на телефон";
+    return `
+          <div class="setting-row">
+            <div class="setting-row__label">Напоминание о занятии<small>${hint}</small></div>
+            <div class="remind-ctl">
+              <input class="input remind-time" type="time" id="remindAt" value="${esc(s.remindAt)}" aria-label="Время напоминания" ${!ok || denied ? "disabled" : ""}>
+              <label class="switch"><input type="checkbox" id="remindOn" ${s.remind && ok && !denied ? "checked" : ""} ${!ok || denied ? "disabled" : ""} aria-label="Напоминание о занятии"><span></span></label>
+            </div>
+          </div>
+          ${s.remind && ok && !denied ? `
+          <div class="setting-row">
+            <div class="setting-row__label">Проверить напоминание<small>Показать пример уведомления сейчас</small></div>
+            <button class="btn btn--sm btn--ghost" data-act="test-remind">${SVG.icon("bell")}Показать</button>
+          </div>` : ""}`;
+  }
+
+  /* ======================================================================
+     Неделя в цифрах: итоги недели и сравнение с предыдущей
+     ====================================================================== */
+  // Понедельник недели, в которую попадает дата
+  function mondayOf(date) {
+    const x = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+  }
+
+  // Статистика за 7 дней, начиная с понедельника start (будущие дни не считаются)
+  function weekStats(start) {
+    const data = d();
+    let xp = 0, days = 0, c = 0, t = 0;
+    const words = new Set(), lessonsSet = new Set();
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const k = Store.dayKey(day);
+      const v = data.xpByDay[k] || 0;
+      xp += v;
+      if (v > 0) days++;
+      const a = data.accByDay[k];
+      if (a) { c += a.c; t += a.t; }
+      const log = data.dayLog[k];
+      if (log) { log.w.forEach((w) => words.add(w)); log.l.forEach((l) => lessonsSet.add(l)); }
+    }
+    const st = data.wordStats;
+    const hard = [...words].filter((k) => WORDS[k] && st[k] && st[k].wrong > 0).sort((a, b) => st[b].wrong - st[a].wrong).slice(0, 5);
+    return { xp, days, words: words.size, lessons: lessonsSet.size, accuracy: t ? Math.round((c / t) * 100) : null, hard };
+  }
+
+  // Русское склонение: plural(5, "урок", "урока", "уроков") -> "уроков"
+  function plural(n, one, few, many) {
+    const a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b === 1) return one;
+    if (b >= 2 && b <= 4) return few;
+    return many;
+  }
+
+  // Строка сравнения с прошлой неделей: стрелка и разница
+  function deltaTag(now, before, unit = "") {
+    if (!before && !now) return "";
+    const diff = now - before;
+    if (diff === 0) return `<span class="delta">как на прошлой неделе</span>`;
+    return `<span class="delta ${diff > 0 ? "is-up" : "is-down"}">${diff > 0 ? "▲" : "▼"} ${Math.abs(diff)}${unit} к прошлой неделе</span>`;
+  }
+
+  function weekReportHTML(cur, prev, title) {
+    const rows = [
+      { icon: "bolt", value: cur.xp, label: "XP", delta: deltaTag(cur.xp, prev.xp) },
+      { icon: "streak", value: `${cur.days} из 7`, label: plural(cur.days, "день", "дня", "дней") + " с занятиями", delta: deltaTag(cur.days, prev.days) },
+      { icon: "book", value: cur.lessons, label: plural(cur.lessons, "урок", "урока", "уроков"), delta: deltaTag(cur.lessons, prev.lessons) },
+      { icon: "words", value: cur.words, label: plural(cur.words, "слово", "слова", "слов") + " в работе", delta: deltaTag(cur.words, prev.words) },
+      { icon: "target", value: cur.accuracy === null ? "-" : `${cur.accuracy}%`, label: "точность", delta: cur.accuracy !== null && prev.accuracy !== null ? deltaTag(cur.accuracy, prev.accuracy, "%") : "" }
+    ];
+    return `
+      <div class="widget__head"><span class="widget__title">${title}</span></div>
+      <div class="week-report">
+        ${rows.map((r) => `
+          <div class="week-report__item">
+            <span class="week-report__icon">${SVG.icon(r.icon)}</span>
+            <div><div class="week-report__value">${r.value} <small>${r.label}</small></div>${r.delta}</div>
+          </div>`).join("")}
+      </div>
+      ${cur.hard.length ? `<div class="week-report__hard"><span>Трудные слова недели:</span> ${cur.hard.map((k) => `<button class="say-chip" data-say-word="${esc(WORDS[k].en)}">${SVG.icon("speaker")}${esc(WORDS[k].en)} <small>${esc(WORDS[k].ru)}</small></button>`).join("")}</div>` : ""}`;
+  }
+
+  // Карточка "Эта неделя" в профиле
+  function weekCard() {
+    const mon = mondayOf(new Date());
+    const prevMon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7);
+    return `<div class="card reveal">${weekReportHTML(weekStats(mon), weekStats(prevMon), "Неделя в цифрах")}</div>`;
+  }
+
+  // В начале новой недели один раз показываем итоги прошлой
+  function maybeWeekReport() {
+    const data = d();
+    const mon = mondayOf(new Date());
+    const key = Store.dayKey(mon);
+    if (data.weekReport === key) return;
+    const lastMon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7);
+    const last = weekStats(lastMon);
+    data.weekReport = key;
+    Store.save({ silent: true });
+    if (!last.xp) return; // на прошлой неделе не занимались - нечего показывать
+    const before = weekStats(new Date(lastMon.getFullYear(), lastMon.getMonth(), lastMon.getDate() - 7));
+    const better = last.xp >= before.xp;
+    setTimeout(() => {
+      if (!$modal.hidden || lesson || game || cards) return;
+      openModal(`
+        <div class="modal__pic">${SVG.mascot({ mood: better ? "party" : "determined", hat: data.hat })}</div>
+        <h2>Итоги прошлой недели</h2>
+        <p class="modal__text">${better ? "Отличная неделя! Вы занимались больше, чем неделей раньше." : "Неделя была спокойнее предыдущей. Небольшой урок сегодня поможет вернуть темп."}</p>
+        <div class="modal__week">${weekReportHTML(last, before, "Прошлая неделя")}</div>
+        <button class="btn" data-close-btn>Вперёд</button>`, (card) => {
+        card.querySelector("[data-close-btn]").onclick = closeModal;
+        card.querySelectorAll("[data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
+      });
+    }, 900);
+  }
+
+  /* ======================================================================
      Профиль
      ====================================================================== */
   function profilePage() {
@@ -2087,6 +2471,8 @@ const App = (() => {
           </div>
         </div>
 
+        ${weekCard()}
+
         ${statsExtra()}
 
         <h2>Главы</h2>
@@ -2107,8 +2493,10 @@ const App = (() => {
   }
 
   function bindProfile(main) {
+    main.querySelectorAll(".week-report__hard [data-say-word]").forEach((b) => b.addEventListener("click", () => say(b.dataset.sayWord)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
+    main.querySelectorAll("[data-cards]").forEach((b) => b.addEventListener("click", startCards));
   }
 
   /* ======================================================================
@@ -2437,6 +2825,7 @@ const App = (() => {
             <div class="setting-row__label">Цель на день<small>Сколько XP набирать ежедневно</small></div>
             ${seg("goal", RULES.dailyGoals.map((g) => ({ v: g, label: String(g) })), data.dailyGoal)}
           </div>
+          ${remindRow()}
         </div>
 
         ${syncSection()}
@@ -2517,6 +2906,21 @@ const App = (() => {
       });
     }
     main.querySelector('[data-act="test-voice"]').addEventListener("click", () => say("Hello! Nice to meet you. How are you today?"));
+    // Напоминания
+    const remindOn = main.querySelector("#remindOn");
+    if (remindOn) remindOn.addEventListener("change", async () => {
+      const ok = await setReminder(remindOn.checked);
+      if (ok && remindOn.checked) Toast.show({ title: "Напоминание включено", text: `Каждый день в ${d().settings.remindAt}, если ещё не было занятий`, icon: SVG.icon("bell") });
+      rerender();
+    });
+    const remindAt = main.querySelector("#remindAt");
+    if (remindAt) remindAt.addEventListener("change", () => {
+      if (!/^\d\d:\d\d$/.test(remindAt.value)) return;
+      d().settings.remindAt = remindAt.value;
+      Store.save();
+    });
+    const testRemind = main.querySelector('[data-act="test-remind"]');
+    if (testRemind) testRemind.addEventListener("click", () => showReminder(true).catch(() => Toast.show({ title: "Не удалось показать уведомление", text: "Проверьте разрешения браузера", icon: SVG.mascot({ mood: "worried" }) })));
 
     // Резервная копия: скачивание файла
     main.querySelector('[data-act="export"]').addEventListener("click", () => {
@@ -2584,6 +2988,14 @@ const App = (() => {
       closeModal();
       return;
     }
+    // Карточки: пробел переворачивает, 1 - не помню, 2 - помню
+    if (cards && $modal.hidden) {
+      if (e.target.tagName === "INPUT") return;
+      if (e.key === " ") { e.preventDefault(); flipCard(); }
+      else if (e.key === "1") answerCard(false);
+      else if (e.key === "2") answerCard(true);
+      return;
+    }
     // Цифры 1-4 в играх "60 секунд" и "Звуки"
     if (game && $modal.hidden && /^[1-4]$/.test(e.key)) {
       const btns = document.querySelectorAll("#gameRoot .options .option");
@@ -2615,6 +3027,7 @@ const App = (() => {
      ====================================================================== */
   function init() {
     Background.init();
+    initReminders();
     // Офлайн-кэш и установка на телефон работают, только если сайт открыт по http(s)
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
       navigator.serviceWorker.register("sw.js").catch(() => {});
@@ -2625,6 +3038,7 @@ const App = (() => {
       renderShell();
       streakToasts(s);
       syncNow();
+      maybeWeekReport();
     } else {
       renderAuth();
     }

@@ -1249,3 +1249,88 @@ img, svg { display: block; }
   .yesterday-card { grid-template-columns: 1fr; padding-right: var(--s-4); }
   .yesterday-card .review-card__fox { width: 72px; }
 }
+
+/* Говорение: подсветка расслышанных слов */
+.speak-words { display: grid; gap: var(--s-2); justify-items: center; text-align: center; }
+.speak-words__line { font-size: 20px; font-weight: 700; line-height: 1.6; }
+.sw { padding: 1px 6px; border-radius: 8px; }
+.sw--ok { color: var(--teal); background: color-mix(in srgb, var(--teal) 14%, transparent); }
+.sw--miss { color: var(--rose); background: color-mix(in srgb, var(--rose) 16%, transparent); text-decoration: underline wavy color-mix(in srgb, var(--rose) 60%, transparent); text-underline-offset: 4px; }
+.speak-words__tip { color: var(--text-2); font-size: 14px; font-weight: 600; }
+.sw-say { font: inherit; font-weight: 800; color: var(--rose); background: none; border: 0; padding: 0 2px; cursor: pointer; text-decoration: underline; }
+
+/* Работа над ошибками */
+.mistakes-intro { display: grid; grid-template-columns: 110px 1fr; gap: var(--s-4); align-items: start; }
+.mistakes-intro__fox { width: 110px; }
+.mistakes-intro__text { margin: 0 0 var(--s-3); color: var(--text-2); font-weight: 600; }
+.mistake-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.mistake { display: flex; align-items: center; gap: var(--s-3); padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--rose) 9%, transparent); border: 1px solid color-mix(in srgb, var(--rose) 22%, transparent); }
+.mistake b { display: block; font-weight: 800; }
+.mistake small { display: block; color: var(--text-2); font-size: 13px; }
+.mistake .speak-btn { flex: none; }
+.result__errors { width: 100%; max-width: 520px; text-align: left; padding: var(--s-3) var(--s-4); }
+.result__errors summary { cursor: pointer; font-weight: 800; }
+.result__errors .mistake-list { margin-top: var(--s-3); }
+@media (max-width: 560px) {
+  .mistakes-intro { grid-template-columns: 1fr; }
+  .mistakes-intro__fox { width: 84px; }
+}
+
+/* Карточки слов */
+.flash-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+.flash-head .ex-title { margin: 0; }
+.flash { perspective: 1200px; cursor: pointer; outline: none; margin: var(--s-4) auto 0; width: 100%; max-width: 440px; height: 300px; }
+.flash:focus-visible .flash__face { box-shadow: 0 0 0 3px var(--accent); }
+.flash__inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); transform-style: preserve-3d; }
+.flash.is-flipped .flash__inner { transform: rotateY(180deg); }
+.flash__face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-3); padding: var(--s-5); border-radius: 24px; background: var(--surface); border: 1px solid var(--line); backface-visibility: hidden; -webkit-backface-visibility: hidden; text-align: center; box-shadow: 0 18px 40px -20px rgba(0,0,0,0.45); }
+.flash__back { transform: rotateY(180deg); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.flash__word { font-family: var(--font-display); font-size: clamp(26px, 7vw, 38px); font-weight: 700; line-height: 1.15; word-break: break-word; }
+.flash__sub { color: var(--text-2); font-weight: 600; }
+.flash__hint { position: absolute; bottom: 14px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.flash__pic { width: 96px; height: 96px; }
+.flash-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); max-width: 440px; margin: var(--s-4) auto 0; }
+.flash-keys { text-align: center; margin-top: var(--s-3); }
+.review-card__btns { display: flex; flex-wrap: wrap; gap: var(--s-2); position: relative; z-index: 1; }
+@media (hover: none) { .flash-keys { display: none; } }
+@media (prefers-reduced-motion: reduce) { .flash__inner { transition: none; } }
+
+/* Неделя в цифрах */
+.week-report { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--s-3); margin-top: var(--s-3); }
+.week-report__item { display: flex; gap: var(--s-3); align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.week-report__icon { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.week-report__icon svg { width: 20px; height: 20px; }
+.week-report__value { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.1; }
+.week-report__value small { font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.delta { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+.delta.is-up { color: var(--teal); }
+.delta.is-down { color: var(--rose); }
+.week-report__hard { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin-top: var(--s-3); font-weight: 700; color: var(--text-2); }
+.week-report__hard small { color: var(--muted); font-weight: 600; margin-left: 4px; }
+.modal__week { text-align: left; margin: var(--s-3) 0; }
+.modal__week .week-report { grid-template-columns: 1fr 1fr; }
+@media (max-width: 420px) { .modal__week .week-report { grid-template-columns: 1fr; } }
+
+/* Напоминание */
+.remind-ctl { display: flex; align-items: center; gap: var(--s-3); }
+.remind-time { width: 112px; min-height: 40px; padding: 0 10px; color-scheme: dark; }
+:root[data-theme="light"] .remind-time { color-scheme: light; }
+.week-report__item { min-width: 0; }
+.week-report__item > div { min-width: 0; }
+.modal__week .week-report { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.modal__week .week-report__hard .say-chip { max-width: 100%; }
+@media (max-width: 420px) { .modal__week .week-report { grid-template-columns: minmax(0, 1fr); } }
+.modal { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.modal__card > * { min-width: 0; max-width: 100%; }
+.modal__week { width: 100%; }
+
+/* Узкие экраны: ничего не должно распирать страницу вбок */
+.journey { grid-template-columns: minmax(0, 1fr); }
+.chapter, .chapter__card, .lesson-card, .home-row > *, .next-up__text { min-width: 0; }
+.lesson-card__title, .chapter__title, .next-up__title { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .home-row { grid-template-columns: minmax(0, 1fr); }
+  .chapter__lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chapter__head { flex-wrap: wrap; }
+  .chapter__test { margin-left: 0; }
+}

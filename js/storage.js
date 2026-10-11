@@ -116,6 +116,8 @@ const Store = (() => {
       wordStats: {},
       // Что изучалось в какой день: { "2026-10-10": { w: [слова], l: [id уроков] } }
       dayLog: {},
+      // Понедельник недели, за которую уже показан итог ("2026-10-05")
+      weekReport: "",
       // Счётчики для заданий дня (сбрасываются каждый день)
       daily: { day: null, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [] },
       reviewsTotal: 0,
@@ -131,7 +133,7 @@ const Store = (() => {
       correctAnswers: 0,
       minutes: 0,
       // voice - выбранный голос озвучки, rate - скорость, autoSpeak - озвучивать слова автоматически
-      settings: { theme: "dark", sound: true, speech: true, autoSpeak: true, voice: null, rate: 0.9 }
+      settings: { theme: "dark", sound: true, speech: true, autoSpeak: true, voice: null, rate: 0.9, remind: false, remindAt: "19:00" }
     };
   }
 
@@ -157,6 +159,7 @@ const Store = (() => {
     if (data.hat !== null && !["cap", "party", "crown"].includes(data.hat)) data.hat = null;
     if (data.sync && (typeof data.sync !== "object" || typeof data.sync.code !== "string")) data.sync = null;
     if (![10, 20, 30, 50].includes(data.dailyGoal)) data.dailyGoal = 20;
+    if (typeof data.weekReport !== "string") data.weekReport = "";
     // Вложенные числа: статистика слов, опыт и точность по дням, рекорды
     const num = (x) => Number(x) || 0;
     const clean = (obj, fn) => {
@@ -182,6 +185,8 @@ const Store = (() => {
     for (const k of ["lessons", "correct", "reviews", "perfect"]) data.daily[k] = Number(data.daily[k]) || 0;
     if (!Array.isArray(data.daily.claimed)) data.daily.claimed = [];
     if (!["dark", "light", "system"].includes(data.settings.theme)) data.settings.theme = "dark";
+    data.settings.remind = !!data.settings.remind;
+    if (typeof data.settings.remindAt !== "string" || !/^([01]\d|2[0-3]):[0-5]\d$/.test(data.settings.remindAt)) data.settings.remindAt = "19:00";
     return data;
   }
 

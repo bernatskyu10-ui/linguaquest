@@ -272,6 +272,25 @@ const Exercises = (() => {
   }
 
   // Карточка с вопросом: маленький лисёнок и текст задания
+  // Что именно было неправильно: пара "английский - перевод" для списка ошибок
+  function errorItem(ex, res) {
+    if (ex.word) return { en: ex.word.en, ru: ex.word.ru };
+    if (ex.sentence) return { en: ex.sentence.en, ru: ex.sentence.ru };
+    if (ex.line) return { en: ex.line.en, ru: ex.line.ru };
+    if (ex.target) return { en: ex.target, ru: ex.ru || "" };
+    if (ex.gap) return { en: res.solution, ru: ex.gap.ru || "" };
+    if (ex.question) return { en: "", ru: `${ex.question.q} ${ex.question.answer}` };
+    return { en: "", ru: res.solution || "" };
+  }
+
+  function errorList(items) {
+    return `<ul class="mistake-list">${items.map((it) => `
+      <li class="mistake">
+        ${it.en ? speakBtn(it.en) : ""}
+        <div><b>${esc(it.en || it.ru)}</b>${it.en && it.ru ? `<small>${esc(it.ru)}</small>` : ""}</div>
+      </li>`).join("")}</ul>`;
+  }
+
   function mascotBubble(inner, ctx) {
     return `<div class="prompt">
       <div class="prompt__mascot">${SVG.mascot({ mood: "think", hat: ctx.hat })}</div>
@@ -328,6 +347,22 @@ const Exercises = (() => {
     grammar(ex, root, ctx) {
       root.innerHTML = `<div class="ex-head"><span class="ex-kicker">Как это работает</span><h2 class="ex-title">${esc(ex.g.title)}</h2></div>
         <div class="rule-wrap">${grammarCard(ex.g)}<div class="rule__fox">${SVG.mascot({ mood: "readlaugh", hat: ctx.hat })}</div></div>`;
+      bindSpeak(root, ctx);
+      ctx.onReady(true);
+      return { check: () => ({ correct: true, silent: true }) };
+    },
+
+    // Перед повтором ошибок: напоминаем правильные ответы
+    notice(ex, root, ctx) {
+      const items = ex.errors.slice(0, 6);
+      root.innerHTML = `<div class="ex-head"><span class="ex-kicker">Работа над ошибками</span><h2 class="ex-title">Вернёмся к трудным заданиям</h2></div>
+        <div class="mistakes-intro">
+          <div class="mistakes-intro__fox">${SVG.mascot({ mood: "determined", hat: ctx.hat })}</div>
+          <div>
+            <p class="mistakes-intro__text">Ещё раз посмотрите на правильные ответы. Сейчас эти задания будут снова.</p>
+            ${errorList(items)}
+          </div>
+        </div>`;
       bindSpeak(root, ctx);
       ctx.onReady(true);
       return { check: () => ({ correct: true, silent: true }) };
@@ -619,15 +654,18 @@ const Exercises = (() => {
     },
 
     // Говорение: пользователь читает фразу вслух, браузер распознаёт речь
+    // После распознавания каждое слово фразы подсвечивается: зелёное расслышано, красное нет
     speak(ex, root, ctx) {
       root.innerHTML = `<h2 class="ex-title">Скажите вслух</h2>
         ${mascotBubble(`${speakBtn(ex.target)}<span>${esc(ex.target)}</span>`, ctx)}
         <p class="type-hint">${esc(ex.ru)}</p>
         <div class="listen-row"><button class="mic-btn" type="button" aria-label="Говорить">${SVG.icon("mic")}</button></div>
-        <p class="speak-status" aria-live="polite">Нажмите на микрофон и произнесите фразу</p>`;
+        <p class="speak-status" aria-live="polite">Нажмите на микрофон и произнесите фразу</p>
+        <div class="speak-words" hidden></div>`;
       bindSpeak(root, ctx);
       const btn = root.querySelector(".mic-btn");
       const status = root.querySelector(".speak-status");
+      const wordsBox = root.querySelector(".speak-words");
       let heard = [];
       btn.addEventListener("click", () => {
         if (btn.classList.contains("is-listening")) return;
@@ -636,7 +674,15 @@ const Exercises = (() => {
         SpeechRec.listen()
           .then((alts) => {
             heard = alts;
+            const diff = bestWordDiff(ex.target, alts);
+            const missed = diff.filter((w) => !w.ok);
             status.innerHTML = `Услышано: <b>${esc(alts[0] || "")}</b>`;
+            wordsBox.hidden = false;
+            wordsBox.innerHTML = `<div class="speak-words__line">${diff.map((w) => `<span class="sw ${w.ok ? "sw--ok" : "sw--miss"}">${esc(w.word)}</span>`).join(" ")}</div>
+              <div class="speak-words__tip">${missed.length
+                ? `Не расслышал: ${missed.map((w) => `<button type="button" class="sw-say" data-say="${esc(w.word.replace(/[^\p{L}\p{N}'’-]/gu, ""))}">${esc(w.word.replace(/[^\p{L}\p{N}'’-]/gu, ""))}</button>`).join(" ")}. Нажмите на слово, чтобы послушать, и попробуйте ещё раз`
+                : "Все слова расслышаны"}</div>`;
+            bindSpeak(wordsBox, ctx);
             ctx.onReady(alts.length > 0);
           })
           .catch((err) => { status.textContent = err.message; })
@@ -659,6 +705,25 @@ const Exercises = (() => {
     }
   };
 
+  /* ---------- Сравнение фразы с распознанной речью по словам ---------- */
+  function wordDiff(target, heardText) {
+    const heardTokens = norm(heardText).split(" ").filter(Boolean);
+    const found = (t) => heardTokens.some((h) => h === t || (t.length >= 5 && lev(h, t) <= 1));
+    return target.split(/\s+/).filter(Boolean).map((word) => {
+      const parts = norm(word).split(" ").filter(Boolean);
+      return { word, ok: !parts.length || parts.every(found) };
+    });
+  }
+  // Берём вариант распознавания, в котором расслышано больше всего слов
+  function bestWordDiff(target, alts) {
+    let best = wordDiff(target, "");
+    for (const a of alts) {
+      const d = wordDiff(target, a);
+      if (d.filter((w) => w.ok).length > best.filter((w) => w.ok).length) best = d;
+    }
+    return best;
+  }
+
   function render(ex, root, ctx) {
     root.classList.remove("ex-enter");
     void root.offsetWidth;
@@ -666,5 +731,5 @@ const Exercises = (() => {
     return renderers[ex.type](ex, root, ctx);
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList };
 })();
