@@ -119,7 +119,7 @@ const Store = (() => {
       // Понедельник недели, за которую уже показан итог ("2026-10-05")
       weekReport: "",
       // Счётчики для заданий дня (сбрасываются каждый день)
-      daily: { day: null, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [] },
+      daily: { day: null, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [], cards: 0, planReview: false, listenDone: false, planBonus: false },
       reviewsTotal: 0,
       // Синхронизация между устройствами: { code, lastSync }
       sync: null,
@@ -190,7 +190,8 @@ const Store = (() => {
     data.daily = Object.assign(base.daily, data.daily || {});
     data.records = Object.assign(base.records, data.records || {});
     for (const k of Object.keys(data.records)) data.records[k] = Number(data.records[k]) || 0;
-    for (const k of ["lessons", "correct", "reviews", "perfect"]) data.daily[k] = Number(data.daily[k]) || 0;
+    for (const k of ["lessons", "correct", "reviews", "perfect", "cards"]) data.daily[k] = Number(data.daily[k]) || 0;
+    for (const k of ["planReview", "listenDone", "planBonus"]) data.daily[k] = !!data.daily[k];
     if (!Array.isArray(data.daily.claimed)) data.daily.claimed = [];
     if (!["dark", "light", "system"].includes(data.settings.theme)) data.settings.theme = "dark";
     data.settings.remind = !!data.settings.remind;

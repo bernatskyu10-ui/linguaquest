@@ -111,7 +111,9 @@ const Sync = (() => {
     const da = a.daily || {}, db = b.daily || {};
     if (da.day && da.day === db.day) {
       m.daily = Object.assign({}, da);
-      for (const k of ["lessons", "correct", "reviews", "perfect"]) m.daily[k] = Math.max(Number(da[k]) || 0, Number(db[k]) || 0);
+      for (const k of ["lessons", "correct", "reviews", "perfect", "cards"]) m.daily[k] = Math.max(Number(da[k]) || 0, Number(db[k]) || 0);
+      for (const k of ["planReview", "listenDone", "planBonus"]) m.daily[k] = !!(da[k] || db[k]);
+      if ((db.yesterdayDone || "") > (da.yesterdayDone || "")) m.daily.yesterdayDone = db.yesterdayDone;
       m.daily.claimed = [...new Set([...(da.claimed || []), ...(db.claimed || [])])];
     } else {
       m.daily = JSON.parse(JSON.stringify((da.day || "") > (db.day || "") ? da : db));

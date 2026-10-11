@@ -54,7 +54,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "14";
+  const APP_VERSION = "15";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -749,6 +749,7 @@ const App = (() => {
     return `
       <div class="journey">
         ${nextUp}
+        ${planCard()}
         ${placementCard()}
         ${homeRow()}
         ${chapters}
@@ -761,6 +762,7 @@ const App = (() => {
   }
 
   function bindLearn(main) {
+    bindPlan(main);
     main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
     main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
@@ -1087,7 +1089,7 @@ const App = (() => {
   function daily() {
     const q = d().daily;
     const today = Store.dayKey();
-    if (q.day !== today) Object.assign(q, { day: today, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [] });
+    if (q.day !== today) Object.assign(q, { day: today, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [], cards: 0, planReview: false, listenDone: false, planBonus: false });
     return q;
   }
 
@@ -1117,6 +1119,121 @@ const App = (() => {
     }
     if (done.length) Store.save();
     return done;
+  }
+
+  /* ---------- План на сегодня ----------
+     Четыре шага: повторение, новый урок, карточки, послушать английский.
+     Шаги отмечаются сами по тому, что сделано за день; кнопка запускает следующий. */
+  const PLAN_BONUS = 10;
+  let planRun = false; // план запущен кнопкой: после шага предлагаем следующий
+
+  function planSteps() {
+    const q = daily();
+    const y = yesterdayStuff();
+    const yesterdayFirst = !!(y && y.keys.length >= 3 && q.yesterdayDone !== Store.dayKey());
+    const known = Object.keys(d().wordStats).filter((k) => WORDS[k]).length;
+    const cur = currentIndex();
+    const next = cur < TOTAL ? FLAT[cur] : null;
+    return [
+      {
+        id: "review", icon: "repeat", min: 5,
+        title: yesterdayFirst ? "Вспомнить вчерашнее" : "Повторить слова",
+        sub: yesterdayFirst ? "слова и правило прошлого занятия" : "то, что начинает забываться",
+        skip: !yesterdayFirst && known < 4, done: !!q.planReview,
+        run: () => (yesterdayFirst ? startYesterday() : startReview())
+      },
+      {
+        id: "lesson", icon: "book", min: 10,
+        title: "Новый урок", sub: next ? next.lesson.title : "все уроки пройдены",
+        skip: !next, done: q.lessons > 0,
+        run: () => startLesson(cur)
+      },
+      {
+        id: "cards", icon: "words", min: 5,
+        title: "Карточки слов", sub: "быстро прогнать слова",
+        skip: cardsDeck().length < 3, done: (q.cards || 0) > 0,
+        run: startCards
+      },
+      {
+        id: "listen", icon: "speaker", min: 5, manual: true,
+        title: "Послушать английский", sub: "мультфильм, песня или видео на английском",
+        done: !!q.listenDone
+      }
+    ];
+  }
+  const planNext = () => planSteps().find((s) => !s.done && !s.skip && !s.manual) || null;
+  const planComplete = () => planSteps().every((s) => s.done || s.skip);
+
+  // Весь план выполнен: один раз в день даём бонус
+  function planCheckBonus() {
+    const q = daily();
+    if (q.planBonus || !planComplete()) return false;
+    q.planBonus = true;
+    d().gems += PLAN_BONUS;
+    d().gemsEarned += PLAN_BONUS;
+    Store.save();
+    planRun = false;
+    setTimeout(() => {
+      Sound.play("achievement");
+      Confetti.burst({ x: 0.5, y: 0.4, count: 60, spread: 120, power: 11 });
+      Toast.show({ title: "План на сегодня выполнен!", text: `+${PLAN_BONUS} монет. До завтра!`, icon: SVG.mascot({ mood: "party", hat: d().hat }) });
+    }, 600);
+    return true;
+  }
+
+  function planStart() {
+    const step = planNext();
+    if (!step) return;
+    planRun = true;
+    Sound.unlock();
+    step.run();
+  }
+
+  function planCard() {
+    const steps = planSteps();
+    const active = steps.filter((s) => !s.skip);
+    const doneN = active.filter((s) => s.done).length;
+    const left = active.filter((s) => !s.done).reduce((a, s) => a + s.min, 0);
+    const next = planNext();
+    const all = doneN === active.length;
+    return `
+      <section class="card plan reveal ${all ? "is-complete" : ""}">
+        <div class="widget__head"><span class="widget__title">План на сегодня</span><span class="tag">${doneN} / ${active.length}</span></div>
+        <div class="progress"><div class="progress__fill" style="width:${(doneN / Math.max(1, active.length)) * 100}%"></div></div>
+        <ol class="plan__list">
+          ${active.map((s) => `
+            <li class="plan__step ${s.done ? "is-done" : ""}">
+              <span class="plan__icon">${SVG.icon(s.done ? "check" : s.icon)}</span>
+              <div class="plan__text"><div class="plan__title">${esc(s.title)}</div><div class="plan__sub">${s.done ? "сделано" : `${esc(s.sub)} · ~${s.min} мин`}</div></div>
+              ${s.done ? "" : s.manual
+                ? `<button class="btn btn--sm btn--ghost" data-plan-listen>Готово</button>`
+                : `<button class="icon-btn plan__go" data-plan-step="${s.id}" aria-label="Начать: ${esc(s.title)}">${SVG.icon("play")}</button>`}
+            </li>`).join("")}
+        </ol>
+        ${all
+          ? `<p class="plan__done">${SVG.icon("star")} План выполнен. Отличная работа, возвращайтесь завтра!</p>`
+          : next
+          ? `<button class="btn btn--block" data-plan-start>${doneN ? "Продолжить план" : "Начать план"} · около ${left} мин</button>`
+          : `<p class="plan__hint">Осталось послушать английский: включите мультфильм или песню на английском и отметьте «Готово». Бонус за весь план: +${PLAN_BONUS} монет</p>`}
+      </section>`;
+  }
+
+  function bindPlan(root) {
+    root.querySelectorAll("[data-plan-start]").forEach((b) => b.addEventListener("click", planStart));
+    root.querySelectorAll("[data-plan-step]").forEach((b) => b.addEventListener("click", () => {
+      const step = planSteps().find((s) => s.id === b.dataset.planStep);
+      if (!step) return;
+      planRun = true;
+      Sound.unlock();
+      step.run();
+    }));
+    root.querySelectorAll("[data-plan-listen]").forEach((b) => b.addEventListener("click", () => {
+      daily().listenDone = true;
+      Store.save();
+      Sound.play("correct");
+      if (!planCheckBonus()) Toast.show({ title: "Отмечено", text: "Слушать английский каждый день очень полезно", icon: SVG.icon("check") });
+      renderPage();
+    }));
   }
 
   // Карточка "Вспомнить вчерашнее" (если вчера или в прошлый раз что-то изучалось)
@@ -1491,6 +1608,7 @@ const App = (() => {
     const xp = L.correctAnswers * RULES.xpPerCorrect + 5;
     const coins = 5;
     daily().reviews++;
+    daily().planReview = true;
     if (L.yesterday) daily().yesterdayDone = Store.dayKey();
     data.reviewsTotal = (data.reviewsTotal || 0) + 1;
     const s = settle(xp, coins, L);
@@ -1552,6 +1670,9 @@ const App = (() => {
 
   function renderResult(r) {
     const data = d();
+    // План на сегодня: бонус за выполнение и кнопка следующего шага
+    const planFinished = !r.failed && planCheckBonus();
+    const planNow = !r.failed && !planFinished && planRun ? planNext() : null;
     const mm = Math.floor(r.secs / 60);
     const ss = String(r.secs % 60).padStart(2, "0");
     const small = (name) => SVG.icon(name).replace("<svg", '<svg style="width:18px;height:18px"');
@@ -1579,7 +1700,8 @@ const App = (() => {
             ${Exercises.errorList(r.errors)}
           </details>` : ""}
           <div class="result__actions">
-            <button class="btn btn--block" data-act="continue">Продолжить</button>
+            ${planNow ? `<button class="btn btn--block" data-act="plan-next">${SVG.icon("play")}Дальше по плану: ${esc(planNow.title)}</button>` : ""}
+            <button class="btn btn--block ${planNow ? "btn--ghost" : ""}" data-act="continue">${planNow ? "На главную" : "Продолжить"}</button>
             ${r.again ? `<button class="btn btn--ghost btn--block" data-act="again">${r.againLabel}</button>` : ""}
           </div>
         </div>
@@ -1589,12 +1711,19 @@ const App = (() => {
       Sound.play("complete");
       Confetti.celebrate();
     }
-    $app.querySelector('[data-act="continue"]').addEventListener("click", () => { page = r.backPage || "learn"; renderShell(); });
+    $app.querySelector('[data-act="continue"]').addEventListener("click", () => {
+      // Из плана всегда возвращаемся на главную, где карточка плана
+      page = planRun ? "learn" : r.backPage || "learn";
+      planRun = false;
+      renderShell();
+    });
+    const planBtn = $app.querySelector('[data-act="plan-next"]');
+    if (planBtn) planBtn.addEventListener("click", planStart);
     const again = $app.querySelector('[data-act="again"]');
     if (again) again.addEventListener("click", r.again);
     const errBox = $app.querySelector(".result__errors");
     if (errBox) Exercises.bindSpeak(errBox, { speak: say });
-    $app.querySelector('[data-act="continue"]').focus({ preventScroll: true });
+    ($app.querySelector('[data-act="plan-next"]') || $app.querySelector('[data-act="continue"]')).focus({ preventScroll: true });
 
     // Новые достижения показываем по очереди
     r.unlocked.forEach((a, i) => {
@@ -2199,6 +2328,7 @@ const App = (() => {
     const xp = c.known + 3;
     const coins = 3;
     daily().reviews++;
+    daily().cards = (daily().cards || 0) + 1;
     const s = settle(xp, coins, { startedAt: c.startedAt, correctAnswers: c.known, mistakes: c.forgot });
     renderResult(Object.assign(s, {
       xp, coins, perfect: c.forgot === 0,
