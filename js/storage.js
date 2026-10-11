@@ -225,15 +225,21 @@ const Store = (() => {
       .sort((a, b) => b.lastLogin - a.lastLogin);
   }
 
-  async function register(username, password) {
+  // Проверка имени и пароля до регистрации (бросает понятную ошибку)
+  function checkNew(username, password, minPass = 4) {
     const name = normalizeName(username);
     if (name.length < 2) throw new Error("Имя должно быть не короче 2 символов");
     if (name.length > 20) throw new Error("Имя должно быть не длиннее 20 символов");
     if (!/^[\p{L}\p{N}_ .-]+$/u.test(name)) throw new Error("Используйте буквы, цифры, пробел, точку, дефис или _");
-    if (String(password).length < 4) throw new Error("Пароль должен быть не короче 4 символов");
+    if (String(password).length < minPass) throw new Error(`Пароль должен быть не короче ${minPass} символов`);
+    if (allUsers()[userKey(name)]) throw new Error("Такой профиль уже есть на этом устройстве. Перейдите на вкладку «Вход»");
+    return name;
+  }
+
+  async function register(username, password) {
+    const name = checkNew(username, password);
     const users = allUsers();
     const key = userKey(name);
-    if (users[key]) throw new Error("Такой профиль уже есть на этом устройстве");
     const salt = randomSalt();
     const hash = await hashPassword(password, salt);
     const count = Object.keys(users).length;
@@ -264,6 +270,49 @@ const Store = (() => {
     saveAllUsers(users);
     startSession(key, user);
     return user;
+  }
+
+  // Вход, когда пароль уже проверен сервером (например, его сменили на другом устройстве):
+  // обновляем сохранённый хеш пароля на этом устройстве
+  async function loginVerified(username, password) {
+    const users = allUsers();
+    const key = userKey(username);
+    const user = users[key];
+    if (!user) throw new Error("Профиль не найден");
+    user.salt = randomSalt();
+    user.hash = await hashPassword(password, user.salt);
+    user.lastLogin = Date.now();
+    saveAllUsers(users);
+    startSession(key, user);
+    return user;
+  }
+
+  const hasLocal = (name) => !!allUsers()[userKey(name)];
+
+  async function checkPassword(password) {
+    const u = currentKey && allUsers()[currentKey];
+    return !!u && (await hashPassword(password, u.salt)) === u.hash;
+  }
+
+  async function setPassword(password) {
+    const users = allUsers();
+    const u = users[currentKey];
+    if (!u) return;
+    u.salt = randomSalt();
+    u.hash = await hashPassword(password, u.salt);
+    saveAllUsers(users);
+  }
+
+  // Сессия облачного аккаунта хранится рядом с профилем, но не внутри прогресса
+  function cloudSession() {
+    const u = currentKey && allUsers()[currentKey];
+    return u && u.cloud && typeof u.cloud === "object" ? u.cloud : null;
+  }
+  function setCloudSession(s) {
+    const users = allUsers();
+    if (!currentKey || !users[currentKey]) return;
+    users[currentKey].cloud = s || null;
+    saveAllUsers(users);
   }
 
   function startSession(key, user) {
@@ -423,6 +472,7 @@ const Store = (() => {
 
   return {
     listUsers, register, login, logout, restore, save, user, data, deleteCurrent,
+    checkNew, loginVerified, hasLocal, checkPassword, setPassword, cloudSession, setCloudSession,
     device, setDevice, checkStreak, markActive, exportData, importData, shiftDay, onSave, onExternal, setData,
     migrateData: migrate,
     addXP, todayXP, weekXP, dayKey

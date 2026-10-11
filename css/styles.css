@@ -1334,3 +1334,10 @@ img, svg { display: block; }
   .chapter__head { flex-wrap: wrap; }
   .chapter__test { margin-left: 0; }
 }
+
+/* Аккаунт */
+.link-btn { background: none; border: 0; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; justify-self: center; }
+.link-btn:hover { color: var(--text-2); }
+.modal__form { width: 100%; text-align: left; }
+.tag--ok { color: var(--teal); }
+.tag--ok svg { width: 14px; height: 14px; }

@@ -151,7 +151,7 @@ const App = (() => {
             </div>
             <div class="field">
               <label for="fPass">Пароль</label>
-              <input class="input" id="fPass" name="pass" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" placeholder="Не короче 4 символов" required>
+              <input class="input" id="fPass" name="pass" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" placeholder="${isLogin ? "Ваш пароль" : "Не короче 6 символов"}" required>
             </div>
             ${isLogin ? "" : `
             <div class="field">
@@ -160,8 +160,8 @@ const App = (() => {
             </div>`}
             <p class="field__error" id="authError" role="alert"></p>
             <button class="btn btn--block" type="submit" id="authSubmit">${isLogin ? "Войти" : "Создать профиль"}</button>
-            <button class="btn btn--ghost btn--block" type="button" data-mode="code">${SVG.icon("repeat")}Войти по коду синхронизации</button>
-            <p class="field__hint">Профили хранятся на этом устройстве. Уже занимались на другом? Войдите по коду синхронизации.</p>
+            <p class="field__hint">${isLogin ? "Входите с тем же именем и паролем на любом устройстве: прогресс подтянется сам." : "Имя уникальное: если его уже занял кто-то другой, выберите другое. Нужен интернет."}</p>
+            <button class="link-btn" type="button" data-mode="code">Вход по коду синхронизации (старый способ)</button>
           </form>`;
 
     $app.innerHTML = `
@@ -263,9 +263,8 @@ const App = (() => {
       btn.disabled = true;
       btn.textContent = "Секунду...";
       try {
-        if (isLogin) await Store.login(name, pass);
-        else await Store.register(name, pass);
-        afterLogin(!isLogin);
+        if (isLogin) await doLogin(name, pass);
+        else await doRegister(name, pass);
       } catch (ex) {
         err.textContent = ex.message;
         btn.disabled = false;
@@ -277,6 +276,143 @@ const App = (() => {
       const target = prefill ? $app.querySelector("#fPass") : $app.querySelector("#fName");
       target && target.focus({ preventScroll: true });
     }, 50);
+  }
+
+  /* ---------- Аккаунт: регистрация и вход по имени и паролю ---------- */
+  const cleanName = (n) => String(n || "").trim().replace(/\s+/g, " ");
+  const snapshot = (x) => ({ gems: Number(x.gems) || 0, freezes: Number(x.freezes) || 0, xp: Number(x.xp) || 0 });
+  const cloudLinked = () => { const s = Store.user() && Store.cloudSession(); return !!(s && s.refresh); };
+
+  // Регистрация: имя проверяется на сервере, занятое имя взять нельзя
+  async function doRegister(rawName, pass) {
+    const name = Store.checkNew(cleanName(rawName), pass, 6);
+    if (!navigator.onLine) throw new Error("Для регистрации нужен интернет: так мы проверяем, что имя свободно");
+    if (!(await Cloud.available(name))) throw new Error("Это имя уже занято, выберите другое");
+    const s = await Cloud.signUp(name, pass);
+    await Cloud.createProfile(s, name, {});
+    await Store.register(name, pass);
+    Store.setCloudSession(Object.assign(s, { base: snapshot(d()) }));
+    afterLogin(true);
+  }
+
+  // Вход: сначала профиль на этом устройстве, иначе аккаунт из облака
+  async function doLogin(rawName, pass) {
+    const name = cleanName(rawName);
+    if (Store.hasLocal(name)) {
+      try {
+        await Store.login(name, pass);
+      } catch (ex) {
+        // Пароль могли сменить на другом устройстве: проверяем в облаке
+        if (!navigator.onLine) throw ex;
+        let s;
+        try { s = await Cloud.signIn(name, pass); } catch (e2) { throw new Error("Неверное имя или пароль"); }
+        await Store.loginVerified(name, pass);
+        Store.setCloudSession(Object.assign({}, Store.cloudSession() || {}, s));
+        afterLogin(false);
+        return;
+      }
+      afterLogin(false);
+      linkCloud(name, pass);
+      return;
+    }
+    if (!navigator.onLine) throw new Error("Нет интернета. Чтобы войти в аккаунт на этом устройстве, подключитесь к сети");
+    const s = await Cloud.signIn(name, pass);
+    const remote = await Cloud.load(s);
+    await Store.register((remote && remote.username) || name, pass);
+    if (remote && remote.data && typeof remote.data === "object" && Object.keys(remote.data).length) {
+      const data = Store.migrateData(JSON.parse(JSON.stringify(remote.data)));
+      data.sync = null; // код синхронизации старого способа у каждого устройства свой
+      Store.setData(data);
+    }
+    Store.setCloudSession(Object.assign(s, { base: snapshot(d()) }));
+    afterLogin(false);
+  }
+
+  // Создать облачный аккаунт для уже существующего профиля и отправить в него прогресс
+  async function createCloudFor(name, pass) {
+    const s = await Cloud.signUp(name, pass);
+    await Cloud.createProfile(s, Store.user().username, d());
+    Store.setCloudSession(Object.assign(s, { base: snapshot(d()), lastSync: Date.now() }));
+    Toast.show({ title: "Аккаунт подключён", text: "Теперь можно входить с любого устройства по имени и паролю", icon: SVG.mascot({ mood: "love" }) });
+  }
+
+  // После входа по паролю тихо подключаем облачный аккаунт (или создаём его для старого профиля)
+  async function linkCloud(name, pass) {
+    if (!navigator.onLine) return;
+    const had = Store.cloudSession();
+    try {
+      const s = await Cloud.signIn(name, pass);
+      Store.setCloudSession(Object.assign({}, had || {}, s, { expired: false }));
+      syncNow();
+      return;
+    } catch (e) {
+      if (e.code !== "invalid_credentials") return;
+    }
+    try {
+      if (!(await Cloud.available(name))) {
+        if (!had || !had.conflict) {
+          Store.setCloudSession(Object.assign({}, had || {}, { conflict: true }));
+          Toast.show({ title: "Имя занято в облаке", text: `Имя «${esc(name)}» уже занято другим аккаунтом, поэтому прогресс хранится только на этом устройстве`, icon: SVG.mascot({ mood: "worried" }), duration: 6000 });
+        }
+        return;
+      }
+      if (pass.length < 6) { askNewPassword(); return; }
+      await createCloudFor(name, pass);
+    } catch (e) { /* попробуем при следующем входе */ }
+  }
+
+  // Подключение аккаунта из настроек или после входа со старым коротким паролем
+  function askNewPassword(needCurrent = false) {
+    const name = Store.user().username;
+    openModal(`
+      <div class="modal__pic">${SVG.mascot({ mood: "hello", hat: d().hat })}</div>
+      <h2>Вход с любого устройства</h2>
+      <p class="modal__text">Подключите аккаунт, и в профиль «${esc(name)}» можно будет войти на телефоне или другом компьютере по имени и паролю. Пароль должен быть не короче 6 символов.</p>
+      <form class="auth__form modal__form" id="cloudForm" novalidate>
+        ${needCurrent ? `<div class="field"><label for="cPass">Текущий пароль</label><input class="input" id="cPass" type="password" autocomplete="current-password"></div>` : ""}
+        <div class="field"><label for="cNew">${needCurrent ? "Пароль для входа (можно оставить текущий, если он от 6 символов)" : "Новый пароль, от 6 символов"}</label><input class="input" id="cNew" type="password" autocomplete="new-password" placeholder="Не короче 6 символов"></div>
+        <p class="field__error" id="cErr" role="alert"></p>
+        <button class="btn btn--block" type="submit" id="cBtn">Подключить</button>
+        <button class="btn btn--ghost btn--block" type="button" data-close-btn>Позже</button>
+      </form>`, (card) => {
+      const f = card.querySelector("#cloudForm");
+      const err = card.querySelector("#cErr");
+      const btn = card.querySelector("#cBtn");
+      card.querySelector("[data-close-btn]").onclick = closeModal;
+      f.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        err.textContent = "";
+        const cur = needCurrent ? card.querySelector("#cPass").value : null;
+        const pass = card.querySelector("#cNew").value || cur || "";
+        if (needCurrent && !(await Store.checkPassword(cur))) { err.textContent = "Неверный текущий пароль"; return; }
+        if (pass.length < 6) { err.textContent = "Пароль должен быть не короче 6 символов"; return; }
+        if (!navigator.onLine) { err.textContent = "Нужен интернет"; return; }
+        btn.disabled = true;
+        btn.textContent = "Подключаем...";
+        try {
+          // Может быть, аккаунт с этим паролем уже есть (создан на другом устройстве)
+          let linked = false;
+          try {
+            const s = await Cloud.signIn(name, pass);
+            Store.setCloudSession(Object.assign({}, Store.cloudSession() || {}, s, { conflict: false, expired: false }));
+            linked = true;
+          } catch (x) { if (x.code !== "invalid_credentials") throw x; }
+          if (!linked) {
+            if (!(await Cloud.available(name))) throw new Error("Это имя уже занято другим аккаунтом. Если это ваш аккаунт, введите пароль от него");
+            await createCloudFor(name, pass);
+          }
+          if (cur !== pass) await Store.setPassword(pass);
+          closeModal();
+          syncNow({ silent: false });
+          if (page === "settings") renderPage();
+        } catch (x) {
+          err.textContent = x.message;
+          btn.disabled = false;
+          btn.textContent = "Подключить";
+        }
+      });
+      setTimeout(() => { const i = card.querySelector("input"); i && i.focus(); }, 60);
+    });
   }
 
   function afterLogin(isNew) {
@@ -2561,7 +2697,56 @@ const App = (() => {
   }
 
   // Забрать данные другого устройства, объединить и отправить общий результат
+  // Синхронизация с облачным аккаунтом: забрать, объединить, отправить
+  async function cloudSyncNow({ silent = true } = {}) {
+    if (syncBusy) return;
+    syncBusy = true;
+    const local = d();
+    try {
+      const s = await Cloud.fresh(Store.cloudSession());
+      if (d() !== local) return;
+      Store.setCloudSession(Object.assign({}, Store.cloudSession(), s));
+      const remote = await Cloud.load(s);
+      if (d() !== local) return;
+      if (!remote) await Cloud.createProfile(s, Store.user().username, {});
+      const rd = remote && remote.data && typeof remote.data === "object" && Object.keys(remote.data).length ? Store.migrateData(JSON.parse(JSON.stringify(remote.data))) : null;
+      // После загрузки из файла отправляем его данные как есть
+      if (rd && !s.force) {
+        const changed = Sync.differs(local, rd);
+        const merged = keepLocal(Sync.merge(local, rd, s.base), local);
+        if (JSON.stringify(merged) !== JSON.stringify(local)) {
+          Store.setData(merged);
+          loadCustomWords();
+        }
+        if (changed) {
+          if (!lesson && !game && !cards) renderShell();
+          Toast.show({ title: "Прогресс обновлён", text: "Подтянуты данные с другого устройства", icon: SVG.icon("repeat").replace("<svg", '<svg style="color:var(--teal)"') });
+        }
+      }
+      const sent = d();
+      const base = snapshot(sent);
+      await Cloud.save(s, sent);
+      if (d() !== sent) return;
+      Store.setCloudSession(Object.assign({}, Store.cloudSession(), { base, force: false, lastSync: Date.now() }));
+      lastSyncAt = Date.now();
+      if (!silent) Toast.show({ title: "Синхронизировано", icon: SVG.icon("check").replace("<svg", '<svg style="color:var(--teal)"') });
+    } catch (e) {
+      if (e.code === "no_session") {
+        // Сессия устарела: при следующем входе по паролю подключится снова
+        Store.setCloudSession(Object.assign({}, Store.cloudSession(), { refresh: null, access: null, expired: true }));
+        if (!silent) Toast.show({ title: "Войдите заново", text: "Выйдите из профиля и войдите по имени и паролю", icon: SVG.icon("close") });
+      } else if (!silent) {
+        Toast.show({ title: "Не получилось синхронизировать", text: navigator.onLine ? esc(e.message) : "Нет интернета, попробуем позже", icon: SVG.icon("close") });
+      }
+    } finally {
+      syncBusy = false;
+      const st = document.getElementById("syncStatus");
+      if (st) st.textContent = syncStatusText();
+    }
+  }
+
   async function syncNow({ silent = true } = {}) {
+    if (cloudLinked()) return cloudSyncNow({ silent });
     const code = syncCode();
     if (!code || syncBusy) return;
     syncBusy = true;
@@ -2605,26 +2790,57 @@ const App = (() => {
   }
 
   function syncStatusText() {
-    const t = d() && d().sync && d().sync.lastSync;
+    const cs = cloudLinked() && Store.cloudSession();
+    const t = cs ? cs.lastSync : d() && d().sync && d().sync.lastSync;
     return t ? `Последняя синхронизация: ${new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}` : "Ещё не синхронизировалось";
   }
 
   // После каждого сохранения отправляем изменения (с задержкой, чтобы не спамить)
   Store.onSave(() => {
-    if (!syncCode()) return;
+    if (!syncCode() && !cloudLinked()) return;
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => syncNow(), 4000);
   });
   // Вернулись в приложение - забираем свежие данные с другого устройства
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && syncCode() && Date.now() - lastSyncAt > 30000) syncNow();
+    if (!document.hidden && (syncCode() || cloudLinked()) && Date.now() - lastSyncAt > 30000) syncNow();
   });
 
+  function accountSection() {
+    const name = esc(Store.user().username);
+    if (cloudLinked()) {
+      return `
+        <h2>Аккаунт</h2>
+        <div class="card settings-list reveal">
+          <div class="setting-row">
+            <div class="setting-row__label">Вы вошли как «${name}»<small>Прогресс сохраняется в облаке. На телефоне или другом компьютере просто войдите с тем же именем и паролем</small></div>
+            <span class="tag tag--ok">${SVG.icon("check")}Подключён</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-row__label">Обмен прогрессом<small id="syncStatus">${syncStatusText()}</small></div>
+            <button class="btn btn--sm btn--blue" data-act="sync-now">${SVG.icon("repeat")}Синхронизировать</button>
+          </div>
+        </div>`;
+    }
+    const cs = Store.cloudSession();
+    return `
+      <h2>Аккаунт</h2>
+      <div class="card settings-list reveal">
+        <div class="setting-row">
+          <div class="setting-row__label">Вход с любого устройства<small>${cs && cs.conflict ? `Имя «${name}» уже занято другим аккаунтом. Если это ваш аккаунт, подключите его с паролем от него` : cs && cs.expired ? "Сессия устарела. Подключите аккаунт снова" : "Подключите аккаунт, чтобы входить в этот профиль на телефоне и других устройствах по имени и паролю"}</small></div>
+          <button class="btn btn--sm" data-act="cloud-connect">Подключить</button>
+        </div>
+      </div>`;
+  }
+
   function syncSection() {
+    // С подключённым аккаунтом код синхронизации не нужен
+    if (cloudLinked()) return accountSection();
     const code = syncCode();
     if (code) {
       return `
-        <h2>Синхронизация</h2>
+        ${accountSection()}
+        <h2>Синхронизация по коду</h2>
         <div class="card settings-list reveal">
           <div class="setting-row">
             <div class="setting-row__label">Код синхронизации<small>Введите его на другом устройстве (телефон, планшет, второй компьютер). Никому его не показывайте</small></div>
@@ -2641,10 +2857,11 @@ const App = (() => {
         </div>`;
     }
     return `
-      <h2>Синхронизация</h2>
+      ${accountSection()}
+      <h2>Синхронизация по коду</h2>
       <div class="card settings-list reveal">
         <div class="setting-row">
-          <div class="setting-row__label">Общий прогресс на телефоне и ПК<small>Создайте код на этом устройстве и введите его на другом. Регистрация не нужна</small></div>
+          <div class="setting-row__label">Старый способ: код синхронизации<small>Создайте код на этом устройстве и введите его на другом</small></div>
           <button class="btn btn--sm" data-act="sync-create">Создать код</button>
         </div>
         <div class="setting-row">
@@ -2714,6 +2931,7 @@ const App = (() => {
       }
     });
     on('[data-act="sync-now"]', () => syncNow({ silent: false }));
+    on('[data-act="cloud-connect"]', () => askNewPassword(true));
     on('[data-act="sync-copy"]', async () => {
       const code = Sync.pretty(syncCode());
       try { await navigator.clipboard.writeText(code); Toast.show({ title: "Код скопирован", text: code, icon: SVG.icon("check") }); }
@@ -3009,6 +3227,7 @@ const App = (() => {
       if (!ok) return;
       try {
         Store.importData(obj);
+        if (cloudLinked()) Store.setCloudSession(Object.assign({}, Store.cloudSession(), { force: true }));
         applySettings();
         renderShell();
         Toast.show({ title: "Прогресс загружен", icon: SVG.icon("check") });
@@ -3020,7 +3239,9 @@ const App = (() => {
       const ok = await confirmModal({
         pic: `<div class="modal__pic">${SVG.mascot({ mood: "cry" })}</div>`,
         title: "Удалить профиль?",
-        text: `Профиль «${esc(Store.user().username)}» и весь его прогресс будут удалены с этого устройства. Это нельзя отменить.`,
+        text: cloudLinked()
+          ? `Профиль «${esc(Store.user().username)}» будет удалён с этого устройства. Аккаунт и прогресс в облаке сохранятся: войти снова можно по имени и паролю.`
+          : `Профиль «${esc(Store.user().username)}» и весь его прогресс будут удалены с этого устройства. Это нельзя отменить.`,
         ok: "Удалить навсегда",
         cancel: "Оставить"
       });
@@ -3099,6 +3320,11 @@ const App = (() => {
       syncNow();
       maybeWeekReport();
       resumeReminders();
+      // Старый профиль без аккаунта: один раз рассказываем про вход с любого устройства
+      if (!Store.cloudSession()) {
+        Store.setCloudSession({ hinted: true });
+        setTimeout(() => Toast.show({ title: "Новое: вход с любого устройства", text: "Подключите аккаунт в Настройках, раздел «Аккаунт»", icon: SVG.mascot({ mood: "hello" }), duration: 6000 }), 1500);
+      }
     } else {
       renderAuth();
     }
