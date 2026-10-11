@@ -411,7 +411,8 @@ const Exercises = (() => {
             const a = picked.en, c = picked.ru;
             if (a.dataset.key === c.dataset.key) {
               ctx.sfx("match");
-              [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched-flash"); });
+              // Сразу блокируем найденную пару, чтобы повторный клик не засчитал её дважды
+              [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched-flash"); x.disabled = true; });
               setTimeout(() => [a, c].forEach((x) => { x.classList.remove("is-matched-flash"); x.classList.add("is-matched"); x.disabled = true; }), 260);
               done++;
               if (done === ex.pairs.length) ctx.onReady(true);

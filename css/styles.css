@@ -1237,3 +1237,15 @@ img, svg { display: block; }
 .more-menu__item { display: flex; align-items: center; gap: var(--s-3); min-height: 54px; padding: 0 var(--s-4); border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-weight: 800; font-size: 16px; cursor: pointer; }
 .more-menu__item svg { width: 24px; height: 24px; color: var(--accent); }
 @media (max-width: 560px) { .ref-tabs button { padding: 0 6px; font-size: 13px; } .ref-why__fox { display: none; } .ref-why .ref-section:first-of-type { padding-right: 0; } }
+/* Вход по коду синхронизации */
+.auth__code-title { font-size: 20px; }
+.auth__code-hint { font-size: 14px; line-height: 1.5; padding: var(--s-3); border-radius: var(--r-sm); background: color-mix(in srgb, var(--blue) 10%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--blue) 30%, transparent); color: var(--text-2); }
+.auth__code { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+/* Карточка "Вспомнить вчерашнее" */
+.yesterday-card { grid-column: 1 / -1; grid-template-columns: 1fr auto; align-items: end; padding-right: 110px; }
+.yesterday-card .widget__title { grid-column: 1 / -1; }
+.yesterday-card__lessons { margin-top: 4px; font-size: 13px; color: var(--muted); }
+@media (max-width: 560px) {
+  .yesterday-card { grid-template-columns: 1fr; padding-right: var(--s-4); }
+  .yesterday-card .review-card__fox { width: 72px; }
+}

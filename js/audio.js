@@ -99,6 +99,7 @@ const Speech = (() => {
   let rate = 0.9;            // 0.75 медленно, 0.9 обычно, 1.05 быстро
   let enabled = true;
   let current = null;        // проигрываемый сейчас Audio
+  let finishCurrent = null;  // завершает ожидание текущей фразы при остановке
   const listeners = [];
 
   const keyOf = (t) => String(t || "").trim().toLowerCase();
@@ -130,11 +131,15 @@ const Speech = (() => {
 
   function stop() {
     if (current) { current.pause(); current = null; }
+    // Иначе тот, кто ждал окончания фразы (чтение текста), ждал бы вечно
+    if (finishCurrent) { const f = finishCurrent; finishCurrent = null; f(); }
     if (synthSupported) speechSynthesis.cancel();
   }
 
   function playFile(text, slow) {
-    return new Promise((resolve) => {
+    return new Promise((done) => {
+      const resolve = () => { if (finishCurrent === resolve) finishCurrent = null; done(); };
+      finishCurrent = resolve;
       const a = new Audio(AUDIO_DIR + files[keyOf(text)]);
       a.playbackRate = slow ? Math.max(0.5, rate * 0.72) : rate / 0.9;
       // Сохраняем высоту голоса при замедлении (иначе звучит "басом")

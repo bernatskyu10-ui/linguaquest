@@ -94,15 +94,16 @@ const App = (() => {
   $modal.addEventListener("click", (e) => { if (e.target.hasAttribute("data-close")) closeModal(); });
 
   function confirmModal({ pic = "", title, text, ok = "Да", cancel = "Отмена", okClass = "btn--rose" }) {
+    // Результат: true - кнопка OK, false - кнопка отмены, null - окно просто закрыли (Esc, клик мимо)
     return new Promise((resolve) => {
-      let result = false;
+      let result = null;
       openModal(
         `${pic}<h2>${title}</h2><p class="modal__text">${text}</p>
          <button class="btn ${okClass}" data-ok>${ok}</button>
          <button class="btn btn--ghost" data-cancel>${cancel}</button>`,
         (card) => {
           card.querySelector("[data-ok]").onclick = () => { result = true; closeModal(); };
-          card.querySelector("[data-cancel]").onclick = () => closeModal();
+          card.querySelector("[data-cancel]").onclick = () => { result = false; closeModal(); };
         },
         () => resolve(result)
       );
@@ -111,37 +112,38 @@ const App = (() => {
 
   /* ======================================================================
      Экран входа и регистрации
+     Режимы: "login" - вход, "register" - регистрация,
+     "code" - вход по коду синхронизации (перенос профиля с другого устройства)
      ====================================================================== */
-  function renderAuth(mode = "login", prefill = "") {
+  function renderAuth(mode = null, prefill = "") {
     applyTheme(Store.device().theme || "dark");
     const users = Store.listUsers();
-    if (!users.length && mode === "login" && !prefill) mode = "register";
+    // При первом открытии на новом устройстве сразу показываем регистрацию,
+    // но если человек сам выбрал вкладку "Вход", не перекидываем его
+    if (!mode) mode = users.length ? "login" : "register";
     const isLogin = mode === "login";
+    const isCode = mode === "code";
 
-    $app.innerHTML = `
-      <section class="auth screen-enter">
-        <div class="auth__hero">
-          <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
-          <h1 class="auth__title">Английский с нуля, <em>в своём темпе</em></h1>
-          <p class="auth__sub">Короткие уроки, озвучка слов и маршрут из ${COURSE.units.length} глав. Без жизней и штрафов: ошибайтесь и учитесь.</p>
-          <div class="auth__showcase">
-            <div class="auth__mascot">${SVG.mascot({ mood: "wave" })}</div>
-            <div class="auth__perks">
-              <span class="tag">${SVG.icon("book")} ${TOTAL} уроков от алфавита до будущего времени</span>
-              <span class="tag">${SVG.icon("words")} 9 типов упражнений</span>
-              <span class="tag">${SVG.icon("trophy")} ${ACHIEVEMENTS.length} наград за успехи</span>
+    const formHTML = isCode ? `
+          <form class="auth__form" id="codeForm" novalidate>
+            <p class="field__hint auth__code-hint">Профили хранятся отдельно на каждом устройстве. Чтобы перенести свой профиль сюда, откройте на другом устройстве Настройки, раздел «Синхронизация», и создайте код.</p>
+            <div class="field">
+              <label for="fCode">Код синхронизации</label>
+              <input class="input auth__code" id="fCode" name="code" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
             </div>
-          </div>
-        </div>
-
-        <div class="auth__panel">
-          <div class="tabs" data-active="${isLogin ? 0 : 1}" role="tablist">
-            <span class="tabs__pill"></span>
-            <button class="tabs__btn ${isLogin ? "is-active" : ""}" data-mode="login" role="tab" aria-selected="${isLogin}">Вход</button>
-            <button class="tabs__btn ${!isLogin ? "is-active" : ""}" data-mode="register" role="tab" aria-selected="${!isLogin}">Регистрация</button>
-          </div>
-
-          <form class="auth__form" novalidate>
+            <div class="field">
+              <label for="fName">Имя профиля на этом устройстве</label>
+              <input class="input" id="fName" name="name" autocomplete="username" maxlength="20" value="${esc(prefill)}" placeholder="Например, alex" required>
+            </div>
+            <div class="field">
+              <label for="fPass">Пароль для этого устройства</label>
+              <input class="input" id="fPass" name="pass" type="password" autocomplete="new-password" placeholder="Не короче 4 символов" required>
+            </div>
+            <p class="field__error" id="authError" role="alert"></p>
+            <button class="btn btn--block" type="submit" id="authSubmit">Перенести профиль</button>
+            <button class="btn btn--ghost btn--block" type="button" data-mode="login">Назад ко входу</button>
+          </form>` : `
+          <form class="auth__form" id="authForm" novalidate>
             <div class="field">
               <label for="fName">Имя пользователя</label>
               <input class="input" id="fName" name="name" autocomplete="username" maxlength="20" value="${esc(prefill)}" placeholder="Например, alex" required>
@@ -157,23 +159,52 @@ const App = (() => {
             </div>`}
             <p class="field__error" id="authError" role="alert"></p>
             <button class="btn btn--block" type="submit" id="authSubmit">${isLogin ? "Войти" : "Создать профиль"}</button>
-            <p class="field__hint">Профили хранятся только на этом устройстве. Сервер и интернет не нужны.</p>
-          </form>
+            <button class="btn btn--ghost btn--block" type="button" data-mode="code">${SVG.icon("repeat")}Войти по коду синхронизации</button>
+            <p class="field__hint">Профили хранятся на этом устройстве. Уже занимались на другом? Войдите по коду синхронизации.</p>
+          </form>`;
 
-          ${users.length ? `
+    $app.innerHTML = `
+      <section class="auth screen-enter">
+        <div class="auth__hero">
+          <div class="brand">${SVG.logo()}<span>LinguaQuest</span></div>
+          <h1 class="auth__title">Английский с нуля, <em>в своём темпе</em></h1>
+          <p class="auth__sub">Короткие уроки, озвучка слов и маршрут из ${COURSE.units.length} глав. Без жизней и штрафов: ошибайтесь и учитесь.</p>
+          <div class="auth__showcase">
+            <div class="auth__mascot">${SVG.mascot({ mood: "wave" })}</div>
+            <div class="auth__perks">
+              <span class="tag">${SVG.icon("book")} ${TOTAL} уроков от алфавита до уровня C2</span>
+              <span class="tag">${SVG.icon("words")} 13 типов заданий и справочник</span>
+              <span class="tag">${SVG.icon("trophy")} ${ACHIEVEMENTS.length} наград за успехи</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth__panel">
+          ${isCode ? `<h2 class="auth__code-title">Вход по коду синхронизации</h2>` : `
+          <div class="tabs" data-active="${isLogin ? 0 : 1}" role="tablist">
+            <span class="tabs__pill"></span>
+            <button class="tabs__btn ${isLogin ? "is-active" : ""}" data-mode="login" role="tab" aria-selected="${isLogin}">Вход</button>
+            <button class="tabs__btn ${!isLogin ? "is-active" : ""}" data-mode="register" role="tab" aria-selected="${!isLogin}">Регистрация</button>
+          </div>`}
+          ${formHTML}
+
+          ${users.length && !isCode ? `
           <div class="auth__profiles">
             <div class="auth__profiles-title">Профили на этом устройстве</div>
             ${users.slice(0, 5).map((u) => `
               <button class="profile-pick" type="button" data-user="${esc(u.username)}">
-                <span class="avatar" style="background:${u.color}">${esc(u.username[0].toUpperCase())}</span>
-                <span>${esc(u.username)}<small>${u.xp} XP, дней подряд: ${u.streak}</small></span>
+                <span class="avatar" style="background:${esc(u.color)}">${esc(u.username[0].toUpperCase())}</span>
+                <span>${esc(u.username)}<small>${Number(u.xp) || 0} XP, дней подряд: ${Number(u.streak) || 0}</small></span>
               </button>`).join("")}
           </div>` : ""}
         </div>
       </section>`;
 
-    $app.querySelectorAll(".tabs__btn").forEach((b) =>
-      b.addEventListener("click", () => renderAuth(b.dataset.mode, $app.querySelector("#fName").value))
+    $app.querySelectorAll("[data-mode]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const nameInput = $app.querySelector("#fName");
+        renderAuth(b.dataset.mode, nameInput ? nameInput.value : "");
+      })
     );
     $app.querySelectorAll(".profile-pick").forEach((b) =>
       b.addEventListener("click", () => {
@@ -182,8 +213,42 @@ const App = (() => {
       })
     );
 
-    const form = $app.querySelector("form");
     const err = $app.querySelector("#authError");
+    const btn = $app.querySelector("#authSubmit");
+
+    if (isCode) {
+      const form = $app.querySelector("#codeForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        Sound.unlock();
+        err.textContent = "";
+        const code = Sync.clean(form.code.value);
+        if (!Sync.isValid(code)) { err.textContent = "Код состоит из 16 букв и цифр, например ABCD-EFGH-JKLM-NPQR"; return; }
+        btn.disabled = true;
+        btn.textContent = "Ищем профиль...";
+        try {
+          const remote = await Sync.download(code);
+          if (!remote) throw new Error("По этому коду ничего не найдено. Проверьте код");
+          // Создаём профиль на этом устройстве и кладём в него данные из облака
+          await Store.register(form.name.value || remote.username || "", form.pass.value);
+          const local = d();
+          const merged = keepLocal(Sync.merge(local, remote.data), local);
+          merged.sync = { code, lastSync: Date.now() };
+          Store.setData(merged);
+          lastSyncAt = Date.now();
+          afterLogin(false);
+          Toast.show({ title: "Профиль перенесён", text: "Прогресс теперь общий с другим устройством", icon: SVG.mascot({ mood: "love" }) });
+        } catch (ex) {
+          err.textContent = navigator.onLine ? ex.message : "Нужен интернет, чтобы найти профиль по коду";
+          btn.disabled = false;
+          btn.textContent = "Перенести профиль";
+        }
+      });
+      setTimeout(() => { const c = $app.querySelector("#fCode"); c && c.focus({ preventScroll: true }); }, 50);
+      return;
+    }
+
+    const form = $app.querySelector("#authForm");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       Sound.unlock();
@@ -194,7 +259,6 @@ const App = (() => {
         err.textContent = "Пароли не совпадают";
         return;
       }
-      const btn = $app.querySelector("#authSubmit");
       btn.disabled = true;
       btn.textContent = "Секунду...";
       try {
@@ -410,7 +474,7 @@ const App = (() => {
   function switchProfile() {
     Store.save();
     Store.logout();
-    renderAuth("login");
+    renderAuth();
   }
 
   /* Окна по клику на чипы статистики */
@@ -547,6 +611,7 @@ const App = (() => {
   function bindLearn(main) {
     main.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => startLesson(Number(b.dataset.start))));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
     main.querySelectorAll("[data-placement]").forEach((b) => b.addEventListener("click", startPlacement));
     main.querySelectorAll("[data-placement-skip]").forEach((b) => b.addEventListener("click", () => { d().placementDone = true; Store.save(); renderPage(); }));
     main.querySelectorAll("[data-test]").forEach((b) => b.addEventListener("click", () => confirmTest(Number(b.dataset.test))));
@@ -596,7 +661,7 @@ const App = (() => {
 
   /* ---------- Интервальное повторение слов ---------- */
   // Все слова курса по ключу (en в нижнем регистре)
-  const WORDS = {};
+  const WORDS = Object.create(null);
   FLAT.forEach((x) => x.lesson.words.forEach((w) => { if (w.en.length > 1 && !WORDS[w.en.toLowerCase()]) WORDS[w.en.toLowerCase()] = Object.assign({ ui: x.ui }, w); }));
   // Через сколько дней снова показать слово на каждом уровне знания
   const INTERVALS = [0, 1, 2, 4, 7, 15, 30];
@@ -607,7 +672,68 @@ const App = (() => {
     words.forEach((w) => {
       const k = w.en.toLowerCase();
       if (w.en.length > 1 && !st[k]) st[k] = { lvl: 1, due: Date.now() + DAY, wrong: 0, seen: 1 };
+      if (w.en.length > 1 && WORDS[k]) logDay("w", k);
     });
+  }
+
+  /* ---------- Журнал дня: что изучалось сегодня ---------- */
+  function logDay(kind, value) {
+    const data = d();
+    const day = Store.dayKey();
+    const rec = data.dayLog[day] || (data.dayLog[day] = { w: [], l: [] });
+    if (!rec[kind].includes(value) && rec[kind].length < 200) rec[kind].push(value);
+  }
+
+  // Последний день занятий до сегодняшнего (обычно вчера, но если был перерыв, то раньше)
+  function prevStudyDay() {
+    const today = Store.dayKey();
+    const log = d().dayLog;
+    const days = Object.keys(log).filter((k) => k < today && (log[k].w.length || log[k].l.length)).sort();
+    return days.length ? days[days.length - 1] : null;
+  }
+
+  function dayLabel(day) {
+    const diff = Math.round((new Date(Store.dayKey() + "T00:00:00") - new Date(day + "T00:00:00")) / DAY);
+    if (diff === 1) return "вчера";
+    if (diff === 2) return "позавчера";
+    return new Date(day + "T00:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  }
+
+  // Слова и уроки последнего дня занятий
+  function yesterdayStuff() {
+    const day = prevStudyDay();
+    if (!day) return null;
+    const rec = d().dayLog[day];
+    const lessons = rec.l.map((id) => FLAT.find((x) => x.lesson.id === id)).filter(Boolean);
+    const fromLessons = lessons.flatMap((x) => x.lesson.words.map((w) => w.en.toLowerCase()));
+    const keys = [...new Set(rec.w.concat(fromLessons))].filter((k) => WORDS[k]);
+    return { day, keys, lessons };
+  }
+
+  // Повторение вчерашнего: правило урока, затем задания по тем же словам и фразам
+  function startYesterday() {
+    const y = yesterdayStuff();
+    if (!y || y.keys.length < 3) {
+      Toast.show({ title: "Вчера ничего не изучалось", text: "Пройдите урок сегодня, и завтра здесь можно будет его вспомнить", icon: SVG.mascot({ mood: "think" }) });
+      return;
+    }
+    const keys = Exercises.shuffle(y.keys).slice(0, 10);
+    const words = keys.map((k) => WORDS[k]);
+    const ls = y.lessons.map((x) => x.lesson);
+    const fakeLesson = {
+      id: "yesterday", title: "Вчерашнее", words,
+      sentences: ls.flatMap((l) => l.sentences || []),
+      gaps: ls.flatMap((l) => l.gaps || [])
+    };
+    // Отвлекающие варианты берём из тех же глав
+    const units = [...new Set(y.lessons.map((x) => x.unit))];
+    const fakeUnit = { lessons: [fakeLesson].concat(units.flatMap((u) => u.lessons)) };
+    let queue = Exercises.build(fakeUnit, fakeLesson, { isReplay: true, speaking: speakingOn() }).filter((e) => e.type !== "teach");
+    // Напоминание правила последнего вчерашнего урока с грамматикой
+    const withRule = y.lessons.slice().reverse().find((x) => typeof GRAMMAR === "object" && GRAMMAR[x.lesson.id]);
+    if (withRule) queue = [{ type: "grammar", g: GRAMMAR[withRule.lesson.id] }].concat(queue);
+    const last = y.lessons[y.lessons.length - 1];
+    beginSession("review", queue, { colors: last ? last.unit.colors : ["#7c5cff", "#3ec7ff"], reviewKeys: keys, yesterday: y.day });
   }
 
   // Слово, которое проверяло упражнение (для статистики)
@@ -624,6 +750,7 @@ const App = (() => {
     if (!st[k] && lesson && lesson.mode === "test") return;
     const s = st[k] || (st[k] = { lvl: 0, due: Date.now(), wrong: 0, seen: 0 });
     s.seen++;
+    if (lesson && lesson.mode === "lesson") logDay("w", k);
     if (correct) {
       s.lvl = Math.min(INTERVALS.length - 1, s.lvl + 1);
       s.due = Date.now() + INTERVALS[s.lvl] * DAY;
@@ -836,6 +963,22 @@ const App = (() => {
     return done;
   }
 
+  // Карточка "Вспомнить вчерашнее" (если вчера или в прошлый раз что-то изучалось)
+  function yesterdayCard() {
+    const y = yesterdayStuff();
+    if (!y || y.keys.length < 3) return "";
+    const label = dayLabel(y.day);
+    const doneToday = daily().yesterdayDone === Store.dayKey();
+    const titles = y.lessons.slice(-2).map((x) => esc(x.lesson.title)).join(", ");
+    return `
+        <div class="card review-card yesterday-card reveal">
+          <div class="widget__title">${label === "вчера" ? "Вспомнить вчерашнее" : "Вспомнить прошлое занятие"}</div>
+          <div><div class="review-card__count">${y.keys.length}</div><div class="widget__body">${doneToday ? "Уже вспомнили сегодня. Можно ещё раз" : `слов, которые вы учили ${label}`}</div>${titles ? `<div class="yesterday-card__lessons">${titles}</div>` : ""}</div>
+          <button class="btn btn--sm ${doneToday ? "btn--ghost" : ""}" data-yesterday>${SVG.icon("repeat")}Вспомнить</button>
+          <div class="review-card__fox">${SVG.mascot({ mood: "think", hat: d().hat })}</div>
+        </div>`;
+  }
+
   function homeRow() {
     const q = daily();
     const quests = todayQuests();
@@ -863,6 +1006,7 @@ const App = (() => {
           <button class="btn btn--sm" data-review ${total < 4 ? "disabled" : ""}>${SVG.icon("repeat")}Повторить</button>
           <div class="review-card__fox">${SVG.mascot({ mood: "readlaugh", hat: d().hat })}</div>
         </div>
+        ${yesterdayCard()}
       </div>`;
   }
 
@@ -1038,7 +1182,7 @@ const App = (() => {
           <div class="feedback__fox">${SVG.mascot({ mood: "worried", hat: d().hat })}</div>
           <div>
             <div class="feedback__title">Не совсем</div>
-            <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${L.mode === "placement" ? "" : isTest ? ` Ошибок: ${L.mistakes} из ${TEST_MAX_MISTAKES + 1} допустимых.` : " Задание вернётся в конце."}</div>
+            <div class="feedback__text">Правильно: <b>${esc(res.solution)}</b>.${L.mode === "placement" ? "" : isTest ? ` Ошибок: ${L.mistakes}. Допускается не больше ${TEST_MAX_MISTAKES}.` : " Задание вернётся в конце."}</div>
           </div>
         </div>`;
       btn.className = "btn btn--rose";
@@ -1089,7 +1233,7 @@ const App = (() => {
       okClass: "",
       cancel: "Выйти"
     });
-    if (!keep) exitLesson();
+    if (keep === false) exitLesson();
   }
 
   function exitLesson() {
@@ -1130,13 +1274,14 @@ const App = (() => {
     const data = d();
     const id = L.entry.lesson.id;
     const firstTime = !isDone(id);
-    const perfect = L.mistakes === 0 && L.skipped === 0;
+    const perfect = L.mistakes === 0; // пропуск задания на слух или говорение не считается ошибкой
     const factor = firstTime ? 1 : RULES.xpReplayFactor;
     const xp = Math.max(1, Math.round((L.correctAnswers * RULES.xpPerCorrect + RULES.xpLessonBonus + (perfect ? RULES.xpPerfectBonus : 0)) * factor));
     const coins = Math.round((RULES.gemsPerLesson + (perfect ? RULES.gemsPerfectBonus : 0)) * factor);
 
     const prev = data.completed[id] || { times: 0, perfect: false };
     data.completed[id] = { times: prev.times + 1, perfect: prev.perfect || perfect, at: Date.now() };
+    logDay("l", id);
     if (perfect) { data.perfectCount++; daily().perfect++; }
     daily().lessons++;
     // Выученные слова (буквы алфавита не считаем) попадают в повторение
@@ -1160,19 +1305,22 @@ const App = (() => {
   function finishReview() {
     const L = lesson;
     const data = d();
-    const perfect = L.mistakes === 0 && L.skipped === 0;
+    const perfect = L.mistakes === 0; // пропуск задания на слух или говорение не считается ошибкой
     const xp = L.correctAnswers * RULES.xpPerCorrect + 5;
     const coins = 5;
     daily().reviews++;
+    if (L.yesterday) daily().yesterdayDone = Store.dayKey();
     data.reviewsTotal = (data.reviewsTotal || 0) + 1;
     const s = settle(xp, coins, L);
     lesson = null;
     renderResult(Object.assign(s, {
       xp, coins, perfect,
-      title: "Слова повторены!",
-      subtitle: `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
-      mood: "readlaugh",
-      again: startReview, againLabel: "Повторить ещё"
+      title: L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
+      subtitle: L.yesterday
+        ? `Слов из занятия (${dayLabel(L.yesterday)}): ${L.reviewKeys.length}. Теперь можно идти дальше`
+        : `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
+      mood: L.yesterday ? "cheer" : "readlaugh",
+      again: L.yesterday ? startYesterday : startReview, againLabel: L.yesterday ? "Ещё раз" : "Повторить ещё"
     }));
   }
 
@@ -1399,13 +1547,13 @@ const App = (() => {
         g.score++;
         b.classList.add("is-correct");
         Sound.play("match");
-        setTimeout(() => game && nextSpeed(), 220);
+        setTimeout(() => game === g && nextSpeed(), 220);
       } else {
         g.mistakes++;
         b.classList.add("is-wrong");
         root.querySelectorAll(".option")[opts.indexOf(w)].classList.add("is-correct");
         Sound.play("wrong");
-        setTimeout(() => game && nextSpeed(), 700);
+        setTimeout(() => game === g && nextSpeed(), 700);
       }
     }));
   }
@@ -1449,7 +1597,7 @@ const App = (() => {
         Sound.play("match");
         [a, c].forEach((x) => { x.classList.remove("is-selected"); x.classList.add("is-matched"); });
         g.score++;
-        if (++done === pairs.length) setTimeout(() => game && nextPairsRound(), 300);
+        if (++done === pairs.length) setTimeout(() => game === g && nextPairsRound(), 300);
       } else {
         Sound.play("wrong");
         g.mistakes++;
@@ -1497,7 +1645,7 @@ const App = (() => {
       b.classList.add(ok ? "is-correct" : "is-wrong");
       if (!ok) root.querySelector(`[data-k="${targetIdx}"]`).classList.add("is-correct");
       if (ok) { g.score++; Sound.play("correct"); } else { g.mistakes++; Sound.play("wrong"); }
-      setTimeout(() => game && nextSound(), ok ? 650 : 1300);
+      setTimeout(() => game === g && nextSound(), ok ? 650 : 1300);
     }));
   }
 
@@ -1738,6 +1886,7 @@ const App = (() => {
     });
     main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
     main.querySelectorAll("[data-filter]").forEach((b) =>
       b.addEventListener("click", () => {
         dictFilter = b.dataset.filter;
@@ -1959,6 +2108,7 @@ const App = (() => {
 
   function bindProfile(main) {
     main.querySelectorAll("[data-review]").forEach((b) => b.addEventListener("click", startReview));
+    main.querySelectorAll("[data-yesterday]").forEach((b) => b.addEventListener("click", startYesterday));
   }
 
   /* ======================================================================
@@ -1984,22 +2134,29 @@ const App = (() => {
     try {
       const local = d();
       const remote = await Sync.download(code);
+      // Пока шла загрузка, пользователь мог сменить профиль или отключить синхронизацию
+      if (d() !== local || syncCode() !== code) return;
       if (remote) {
         const changed = Sync.differs(local, remote.data);
         const merged = keepLocal(Sync.merge(local, remote.data), local);
-        Store.setData(merged);
+        if (JSON.stringify(merged) !== JSON.stringify(local)) {
+          Store.setData(merged);
+          loadCustomWords();
+        }
         if (changed) {
           if (!lesson && !game) renderShell();
           Toast.show({ title: "Прогресс обновлён", text: "Подтянуты данные с другого устройства", icon: SVG.icon("repeat").replace("<svg", '<svg style="color:var(--teal)"') });
         }
       }
-      await Sync.upload(code, d());
+      const sent = d();
+      await Sync.upload(code, sent, Store.user() && Store.user().username);
+      if (d() !== sent || !d().sync) return;
       d().sync.lastSync = Date.now();
       Store.save({ silent: true });
       lastSyncAt = Date.now();
       if (!silent) Toast.show({ title: "Синхронизировано", icon: SVG.icon("check").replace("<svg", '<svg style="color:var(--teal)"') });
     } catch (e) {
-      if (!silent) Toast.show({ title: "Не получилось синхронизировать", text: navigator.onLine ? e.message : "Нет интернета, попробуем позже", icon: SVG.icon("close") });
+      if (!silent) Toast.show({ title: "Не получилось синхронизировать", text: navigator.onLine ? esc(e.message) : "Нет интернета, попробуем позже", icon: SVG.icon("close") });
     } finally {
       syncBusy = false;
       const st = document.getElementById("syncStatus");
@@ -2069,14 +2226,14 @@ const App = (() => {
       btn.disabled = true;
       const code = Sync.makeCode();
       try {
-        await Sync.upload(code, d());
+        await Sync.upload(code, d(), Store.user().username);
         d().sync = { code, lastSync: Date.now() };
         Store.save({ silent: true });
         Toast.show({ title: "Код создан", text: "Введите его на другом устройстве в Настройках", icon: SVG.icon("check") });
         rerender();
       } catch (err) {
         btn.disabled = false;
-        Toast.show({ title: "Не получилось создать код", text: navigator.onLine ? err.message : "Нужен интернет", icon: SVG.icon("close") });
+        Toast.show({ title: "Не получилось создать код", text: navigator.onLine ? esc(err.message) : "Нужен интернет", icon: SVG.icon("close") });
       }
     });
     on('[data-act="sync-join"]', async (e) => {
@@ -2095,7 +2252,7 @@ const App = (() => {
         const ok = await confirmModal({
           pic: `<div class="modal__pic">${SVG.mascot({ mood: "love" })}</div>`,
           title: "Объединить прогресс?",
-          text: `На другом устройстве: ${r.xp || 0} XP, уроков ${Object.keys(r.completed || {}).length}. Здесь: ${d().xp} XP, уроков ${lessonsDone()}. Всё будет объединено, ничего не потеряется.`,
+          text: `На другом устройстве: ${Number(r.xp) || 0} XP, уроков ${Object.keys(r.completed || {}).length}. Здесь: ${Number(d().xp) || 0} XP, уроков ${lessonsDone()}. Пройденные уроки, слова и награды объединятся.`,
           ok: "Объединить",
           okClass: "",
           cancel: "Отмена"
@@ -2105,14 +2262,15 @@ const App = (() => {
         const merged = keepLocal(Sync.merge(local, r), local);
         merged.sync = { code, lastSync: Date.now() };
         Store.setData(merged);
-        await Sync.upload(code, d());
+        loadCustomWords();
+        await Sync.upload(code, d(), Store.user().username);
         lastSyncAt = Date.now();
         Toast.show({ title: "Устройства связаны", text: "Прогресс теперь общий", icon: SVG.icon("check") });
         renderShell();
         go("settings");
       } catch (err) {
         btn.disabled = false;
-        Toast.show({ title: "Не получилось подключиться", text: navigator.onLine ? err.message : "Нужен интернет", icon: SVG.icon("close") });
+        Toast.show({ title: "Не получилось подключиться", text: navigator.onLine ? esc(err.message) : "Нужен интернет", icon: SVG.icon("close") });
       }
     });
     on('[data-act="sync-now"]', () => syncNow({ silent: false }));
@@ -2311,12 +2469,11 @@ const App = (() => {
   }
 
   function bindSettings(main) {
-    const data = d();
     bindSync(main);
     const rerender = () => { const y = scrollY; renderPage(); window.scrollTo({ top: y }); };
     main.querySelectorAll("[data-theme]").forEach((b) =>
       b.addEventListener("click", () => {
-        data.settings.theme = b.dataset.theme;
+        d().settings.theme = b.dataset.theme;
         Store.setDevice({ theme: b.dataset.theme });
         Store.save();
         applyTheme(b.dataset.theme);
@@ -2325,7 +2482,7 @@ const App = (() => {
     );
     main.querySelectorAll("[data-goal]").forEach((b) =>
       b.addEventListener("click", () => {
-        data.dailyGoal = Number(b.dataset.goal);
+        d().dailyGoal = Number(b.dataset.goal);
         Store.save();
         const rail = document.getElementById("rail");
         rail.innerHTML = railHTML();
@@ -2336,8 +2493,8 @@ const App = (() => {
     );
     main.querySelectorAll("[data-rate]").forEach((b) =>
       b.addEventListener("click", () => {
-        data.settings.rate = Number(b.dataset.rate);
-        Speech.setRate(data.settings.rate);
+        d().settings.rate = Number(b.dataset.rate);
+        Speech.setRate(d().settings.rate);
         Store.save();
         rerender();
         say("This is how fast I speak.");
@@ -2345,7 +2502,7 @@ const App = (() => {
     );
     main.querySelectorAll("[data-set]").forEach((inp) =>
       inp.addEventListener("change", () => {
-        data.settings[inp.dataset.set] = inp.checked;
+        d().settings[inp.dataset.set] = inp.checked;
         Store.save();
         applySettings();
         if (inp.dataset.set === "sound" && inp.checked) Sound.play("correct");
@@ -2354,8 +2511,8 @@ const App = (() => {
     const sel = main.querySelector("#voiceSelect");
     if (sel) {
       sel.addEventListener("change", () => {
-        data.settings.voice = sel.value || null;
-        Speech.setVoice(data.settings.voice);
+        d().settings.voice = sel.value || null;
+        Speech.setVoice(d().settings.voice);
         Store.save();
       });
     }
@@ -2388,7 +2545,7 @@ const App = (() => {
       const ok = await confirmModal({
         pic: `<div class="modal__pic">${SVG.mascot({ mood: "determined" })}</div>`,
         title: "Загрузить копию?",
-        text: `Прогресс из файла (${esc(obj.username || "без имени")}, ${obj.data && obj.data.xp ? obj.data.xp : 0} XP) заменит текущий прогресс профиля.`,
+        text: `Прогресс из файла (${esc(String(obj.username || "без имени"))}, ${Number(obj.data && obj.data.xp) || 0} XP) заменит текущий прогресс профиля.`,
         ok: "Загрузить",
         okClass: "",
         cancel: "Отмена"
@@ -2400,7 +2557,7 @@ const App = (() => {
         renderShell();
         Toast.show({ title: "Прогресс загружен", icon: SVG.icon("check") });
       } catch (e) {
-        Toast.show({ title: "Ошибка загрузки", text: e.message, icon: SVG.icon("close") });
+        Toast.show({ title: "Ошибка загрузки", text: esc(e.message), icon: SVG.icon("close") });
       }
     });
     main.querySelector('[data-act="delete"]').addEventListener("click", async () => {
@@ -2413,7 +2570,7 @@ const App = (() => {
       });
       if (ok) {
         Store.deleteCurrent();
-        renderAuth("login");
+        renderAuth();
         Toast.show({ title: "Профиль удалён", icon: SVG.icon("close") });
       }
     });
@@ -2469,7 +2626,7 @@ const App = (() => {
       streakToasts(s);
       syncNow();
     } else {
-      renderAuth("login");
+      renderAuth();
     }
   }
 

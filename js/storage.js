@@ -114,6 +114,8 @@ const Store = (() => {
       flags: { night: 0, morning: 0 },
       // Интервальное повторение: { "apple": { lvl, due, wrong, seen } }
       wordStats: {},
+      // Что изучалось в какой день: { "2026-10-10": { w: [слова], l: [id уроков] } }
+      dayLog: {},
       // Счётчики для заданий дня (сбрасываются каждый день)
       daily: { day: null, lessons: 0, correct: 0, reviews: 0, perfect: 0, claimed: [] },
       reviewsTotal: 0,
@@ -134,15 +136,52 @@ const Store = (() => {
   }
 
   // Дополняет старые сохранения новыми полями (если структура расширялась)
+  // Приводит данные к правильной форме: дополняет новые поля и исправляет типы.
+  // Нужно для старых сохранений, файлов копий и данных синхронизации.
   function migrate(data) {
     const base = freshData();
+    if (!data || typeof data !== "object") data = {};
     for (const k of Object.keys(base)) {
-      if (data[k] === undefined) data[k] = base[k];
+      const b = base[k];
+      const v = data[k];
+      if (v === undefined || v === null && b !== null) { data[k] = b; continue; }
+      // Числа: всё, что не число, превращаем в число (защита от подмены данных)
+      if (typeof b === "number") { data[k] = Number(v) || 0; continue; }
+      if (typeof b === "boolean") { data[k] = !!v; continue; }
+      if (Array.isArray(b) && !Array.isArray(v)) { data[k] = b; continue; }
+      if (b && typeof b === "object" && !Array.isArray(b) && (typeof v !== "object" || Array.isArray(v))) { data[k] = b; continue; }
     }
+    data.words = data.words.filter((w) => typeof w === "string");
+    data.owned = data.owned.filter((w) => typeof w === "string");
+    data.customWords = data.customWords.filter((w) => w && typeof w.en === "string" && typeof w.ru === "string" && /^[a-zA-Z' .-]+$/.test(w.en));
+    if (data.hat !== null && !["cap", "party", "crown"].includes(data.hat)) data.hat = null;
+    if (data.sync && (typeof data.sync !== "object" || typeof data.sync.code !== "string")) data.sync = null;
+    if (![10, 20, 30, 50].includes(data.dailyGoal)) data.dailyGoal = 20;
+    // Вложенные числа: статистика слов, опыт и точность по дням, рекорды
+    const num = (x) => Number(x) || 0;
+    const clean = (obj, fn) => {
+      const out = {};
+      for (const [k, v] of Object.entries(obj)) { const r = fn(v); if (r !== undefined) out[k] = r; }
+      return out;
+    };
+    data.wordStats = clean(data.wordStats, (s) => (s && typeof s === "object" ? { lvl: Math.min(6, Math.max(0, num(s.lvl))), due: num(s.due), wrong: num(s.wrong), seen: num(s.seen) } : undefined));
+    data.xpByDay = clean(data.xpByDay, num);
+    // Журнал по дням: только строки, не больше 14 последних дней
+    const strs = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === "string").slice(0, 200) : []);
+    data.dayLog = clean(data.dayLog, (v) => (v && typeof v === "object" ? { w: strs(v.w), l: strs(v.l) } : undefined));
+    const logDays = Object.keys(data.dayLog).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().slice(-14);
+    for (const k of Object.keys(data.dayLog)) if (!logDays.includes(k)) delete data.dayLog[k];
+    data.accByDay = clean(data.accByDay, (a) => (a && typeof a === "object" ? { c: num(a.c), t: num(a.t) } : undefined));
+    data.completed = clean(data.completed, (c) => (c && typeof c === "object" ? c : undefined));
+    data.achievements = clean(data.achievements, num);
     data.settings = Object.assign(base.settings, data.settings || {});
     data.flags = Object.assign(base.flags, data.flags || {});
     data.daily = Object.assign(base.daily, data.daily || {});
     data.records = Object.assign(base.records, data.records || {});
+    for (const k of Object.keys(data.records)) data.records[k] = Number(data.records[k]) || 0;
+    for (const k of ["lessons", "correct", "reviews", "perfect"]) data.daily[k] = Number(data.daily[k]) || 0;
+    if (!Array.isArray(data.daily.claimed)) data.daily.claimed = [];
+    if (!["dark", "light", "system"].includes(data.settings.theme)) data.settings.theme = "dark";
     return data;
   }
 
@@ -155,14 +194,21 @@ const Store = (() => {
   // Опыт за последние 7 дней по таблице xpByDay
   function sumWeek(byDay) {
     let sum = 0;
-    for (let i = 0; i < 7; i++) sum += (byDay || {})[shiftDay(dayKey(), -i)] || 0;
+    for (let i = 0; i < 7; i++) sum += Number((byDay || {})[shiftDay(dayKey(), -i)]) || 0;
     return sum;
   }
 
   function listUsers() {
     const users = allUsers();
     return Object.values(users)
-      .map((u) => ({ username: u.username, color: u.color, xp: u.data.xp, streak: u.data.streak, lastLogin: u.lastLogin || 0, weekXP: sumWeek(u.data.xpByDay) }))
+      .map((u) => ({
+        username: String(u.username),
+        color: /^#[0-9a-f]{6}$/i.test(u.color) ? u.color : "#5b8cff",
+        xp: Number(u.data && u.data.xp) || 0,
+        streak: Number(u.data && u.data.streak) || 0,
+        lastLogin: Number(u.lastLogin) || 0,
+        weekXP: sumWeek(u.data && u.data.xpByDay)
+      }))
       .sort((a, b) => b.lastLogin - a.lastLogin);
   }
 
@@ -198,7 +244,7 @@ const Store = (() => {
     const users = allUsers();
     const key = userKey(username);
     const user = users[key];
-    if (!user) throw new Error("Профиль не найден. Зарегистрируйтесь");
+    if (!user) throw new Error("На этом устройстве нет такого профиля. Профили хранятся отдельно на каждом устройстве: зарегистрируйтесь или войдите по коду синхронизации");
     const hash = await hashPassword(password, user.salt);
     if (hash !== user.hash) throw new Error("Неверный пароль");
     user.lastLogin = Date.now();
@@ -271,14 +317,21 @@ const Store = (() => {
   // Экспорт прогресса текущего профиля (без пароля)
   function exportData() {
     const u = user();
-    return { app: "LinguaQuest", version: 1, exportedAt: new Date().toISOString(), username: u ? u.username : "", data: current };
+    // Код синхронизации секретный, в файл копии его не кладём
+    const copy = JSON.parse(JSON.stringify(current));
+    delete copy.sync;
+    return { app: "LinguaQuest", version: 1, exportedAt: new Date().toISOString(), username: u ? u.username : "", data: copy };
   }
   // Импорт: заменяет прогресс текущего профиля данными из файла
   function importData(obj) {
     if (!obj || obj.app !== "LinguaQuest" || typeof obj.data !== "object" || obj.data === null) {
       throw new Error("Это не файл резервной копии LinguaQuest");
     }
+    // Код синхронизации и настройки этого устройства сохраняем свои
+    const keep = { sync: current.sync, settings: current.settings };
     current = migrate(JSON.parse(JSON.stringify(obj.data)));
+    current.sync = keep.sync;
+    current.settings = keep.settings;
     save();
   }
 
@@ -347,6 +400,7 @@ const Store = (() => {
   return {
     listUsers, register, login, logout, restore, save, user, data, deleteCurrent,
     device, setDevice, checkStreak, markActive, exportData, importData, shiftDay, onSave, setData,
+    migrateData: migrate,
     addXP, todayXP, weekXP, dayKey
   };
 })();

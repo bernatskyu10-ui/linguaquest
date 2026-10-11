@@ -44,8 +44,8 @@ const Sync = (() => {
   const urlOf = (code) => BASE + "lq-" + clean(code).toLowerCase();
 
   /* ---------- Сеть ---------- */
-  async function upload(code, data) {
-    const payload = { app: "LinguaQuest", v: 1, savedAt: data.savedAt || Date.now(), data };
+  async function upload(code, data, username) {
+    const payload = { app: "LinguaQuest", v: 1, savedAt: data.savedAt || Date.now(), username: username || "", data };
     const res = await fetch(urlOf(code), {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -59,8 +59,12 @@ const Sync = (() => {
     if (!res.ok) throw new Error("Сервер синхронизации ответил ошибкой " + res.status);
     const text = (await res.text()).trim();
     if (!text) return null;
-    const obj = JSON.parse(fromB64(text));
-    if (!obj || obj.app !== "LinguaQuest" || !obj.data) throw new Error("По этому коду хранятся чужие данные");
+    let obj;
+    try { obj = JSON.parse(fromB64(text)); } catch (e) { throw new Error("Данные по этому коду повреждены"); }
+    if (!obj || obj.app !== "LinguaQuest" || !obj.data || typeof obj.data !== "object") throw new Error("По этому коду хранятся чужие данные");
+    // Приводим данные к правильной форме до объединения
+    obj.data = Store.migrateData(obj.data);
+    obj.username = typeof obj.username === "string" ? obj.username : "";
     return obj;
   }
 
@@ -87,12 +91,20 @@ const Sync = (() => {
     }
     m.xpByDay = Object.assign({}, m.xpByDay || {});
     for (const [k, v] of Object.entries(o.xpByDay || {})) m.xpByDay[k] = Math.max(m.xpByDay[k] || 0, v);
+    m.dayLog = Object.assign({}, m.dayLog || {});
+    for (const [k, v] of Object.entries(o.dayLog || {})) {
+      const cur = m.dayLog[k] || { w: [], l: [] };
+      m.dayLog[k] = { w: [...new Set([...cur.w, ...(v.w || [])])], l: [...new Set([...cur.l, ...(v.l || [])])] };
+    }
     m.accByDay = Object.assign({}, m.accByDay || {});
     for (const [k, v] of Object.entries(o.accByDay || {})) if (!m.accByDay[k] || v.t > m.accByDay[k].t) m.accByDay[k] = v;
     m.xp = Math.max(m.xp || 0, o.xp || 0);
     m.bestStreak = Math.max(m.bestStreak || 0, o.bestStreak || 0);
     m.perfectCount = Math.max(m.perfectCount || 0, o.perfectCount || 0);
     m.gemsEarned = Math.max(m.gemsEarned || 0, o.gemsEarned || 0);
+    // Монеты и заморозки берём по максимуму, чтобы заработанное на другом устройстве не пропало
+    m.gems = Math.max(Number(m.gems) || 0, Number(o.gems) || 0);
+    m.freezes = Math.max(Number(m.freezes) || 0, Number(o.freezes) || 0);
     const r1 = m.records || {}, r2 = o.records || {};
     m.records = {
       speed: Math.max(r1.speed || 0, r2.speed || 0),

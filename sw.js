@@ -5,7 +5,7 @@
    открыт по адресу http(s), при открытии файла с диска не используется.
    Стратегия "сначала сеть": обновления видны сразу, кэш нужен для офлайна.
    ========================================================================== */
-const VERSION = "lq-v4";
+const VERSION = "lq-v6";
 
 importScripts("js/audio-manifest.js");
 
@@ -50,7 +50,8 @@ self.addEventListener("fetch", (event) => {
   event.respondWith((async () => {
     try {
       const res = await fetch(req);
-      if (res.ok) (await caches.open(VERSION)).put(req, res.clone());
+      // Частичные ответы (206, перемотка аудио) кэшировать нельзя
+      if (res.status === 200) caches.open(VERSION).then((c) => c.put(req, res.clone())).catch(() => {});
       return res;
     } catch (e) {
       const cached = await caches.match(req, { ignoreSearch: true });
