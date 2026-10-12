@@ -557,7 +557,7 @@ const Exercises = (() => {
         <div class="teach">
           ${picSvg || `<div style="width:130px">${SVG.mascot({ mood: "surprised", hat: ctx.hat })}</div>`}
           <div class="teach__word">${esc(w.en)} ${speakBtn(w.en)}</div>
-          ${ex.letters ? "" : ipaOf(w.en) ? `<div class="ipa teach__ipa" title="Транскрипция">${esc(ipaOf(w.en))}</div>` : ""}
+          ${ex.letters ? "" : (() => { const ip = w.ipa ? `/${w.ipa}/` : ipaOf(w.en); return ip ? `<div class="ipa teach__ipa" title="Транскрипция">[${esc(ruPhon(ip))}] ${esc(ip)}</div>` : ""; })()}
           <div class="teach__tr">${esc(w.ru)}</div>
           ${w.tip ? `<div class="teach__tip">${esc(w.tip)}</div>` : ""}
           ${ex.example ? `<div class="teach__example">${speakBtn(ex.example.en)}<div><b>${esc(ex.example.en)}</b><small>${esc(ex.example.ru)}</small></div></div>` : ""}
@@ -943,6 +943,41 @@ const Exercises = (() => {
     return best;
   }
 
+  // Произношение русскими буквами с ударением: həˈloʊ -> хэло́у (приблизительно, для начинающих)
+  function ruPhon(ipa) {
+    if (!ipa) return "";
+    const s = String(ipa).replace(/[ˌ.\/]/g, "");
+    const MULTI = [["tʃ", "ч"], ["dʒ", "дж"], ["eɪ", "эй"], ["aɪ", "ай"], ["oʊ", "оу"], ["aʊ", "ау"], ["ɔɪ", "ой"], ["ɝ", "ёр"], ["ɚ", "эр"]];
+    const ONE = { b: "б", d: "д", f: "ф", g: "г", h: "х", k: "к", l: "л", m: "м", n: "н", p: "п", r: "р", s: "с", t: "т", v: "в", z: "з", θ: "с", ð: "з", ʃ: "ш", ʒ: "ж", w: "у", æ: "э", ɑ: "а", ʌ: "а", ə: "э", ɛ: "э", ɪ: "и", i: "и", ʊ: "у", u: "у", ɔ: "о", " ": " " };
+    const VOW = "æɑʌəɛɪiʊuɔ";
+    const out = [];
+    let stress = false;
+    for (let i = 0; i < s.length;) {
+      const c = s[i];
+      if (c === "ˈ") { stress = true; i++; continue; }
+      if (c === "j") {
+        const n = s[i + 1], start = i === 0 || s[i - 1] === " " || s[i - 1] === "ˈ";
+        const pair = start
+          ? { u: "ю", ʊ: "ю", ɛ: "йе", ə: "йе", æ: "йэ", ɑ: "йа", ɔ: "йо", ɪ: "йи", i: "йи" }[n]
+          : { æ: "я", ɑ: "я", u: "ю", ʊ: "ю", ɔ: "ё", ɛ: "е", ə: "е", ɪ: "и", i: "и" }[n];
+        if (pair) { out.push({ t: pair, v: true, st: stress }); stress = false; i += 2; continue; }
+        out.push({ t: "й" }); i++; continue;
+      }
+      if (c === "ŋ") { out.push({ t: s[i + 1] === "k" || s[i + 1] === "g" ? "н" : "нг" }); i++; continue; }
+      const m = MULTI.find(([k]) => s.startsWith(k, i));
+      if (m) { const v = m[0] !== "tʃ" && m[0] !== "dʒ"; out.push({ t: m[1], v, st: v && stress }); if (v) stress = false; i += m[0].length; continue; }
+      if (ONE[c] !== undefined) { const v = VOW.includes(c); out.push({ t: ONE[c], v, st: v && stress }); if (v) stress = false; i++; continue; }
+      i++;
+    }
+    const many = out.filter((x) => x.v).length > 1;
+    // Ударение ставим на первую гласную букву слога (в «йе» - на «е»)
+    return out.map((x) => {
+      if (!(x.st && many)) return x.t;
+      const k = x.t.search(/[аэиоуыеёюя]/);
+      return k < 0 ? x.t : x.t.slice(0, k + 1) + "\u0301" + x.t.slice(k + 1);
+    }).join("");
+  }
+
   // Транскрипция слова: /ˈæpəl/ (если есть в словаре)
   const ipaOf = (en) => (typeof IPA === "object" && en && IPA[String(en).toLowerCase()] ? `/${IPA[String(en).toLowerCase()]}/` : "");
 
@@ -1093,5 +1128,5 @@ const Exercises = (() => {
     return ctrl;
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor, ipaOf };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor, ipaOf, ruPhon };
 })();

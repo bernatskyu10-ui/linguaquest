@@ -55,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "20";
+  const APP_VERSION = "21";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -1772,6 +1772,8 @@ const App = (() => {
   function finishReview() {
     const L = lesson;
     const data = d();
+    // Новые слова уровня после тренировки добавляем в словарь
+    if (L.levelWords) L.levelWords.forEach((w) => { if (!lvKnown(w.en)) addCustomWord(w.en, w.ru.slice(0, 60)); });
     const perfect = L.mistakes === 0; // пропуск задания на слух или говорение не считается ошибкой
     const xp = L.correctAnswers * RULES.xpPerCorrect + 5;
     const coins = 5;
@@ -1783,16 +1785,19 @@ const App = (() => {
     lesson = null;
     renderResult(Object.assign(s, {
       xp, coins, perfect,
-      title: L.topic ? "Тема разобрана!" : L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
-      subtitle: L.topic
+      title: L.levelLabel ? (L.levelWords ? "Новые слова изучены!" : "Слова уровня повторены!") : L.topic ? "Тема разобрана!" : L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
+      subtitle: L.levelLabel
+        ? `Уровень ${L.levelLabel}: ${L.reviewKeys.length} слов${L.levelWords ? " теперь в словаре и в повторении" : ""}`
+        : L.topic
         ? `«${TOPICS[L.topic].title}»: верных ответов ${L.correctAnswers} из ${L.correctAnswers + L.mistakes}`
         : L.yesterday
         ? `Слов из занятия (${dayLabel(L.yesterday)}): ${L.reviewKeys.length}. Теперь можно идти дальше`
         : `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
       mood: L.yesterday ? "cheer" : "readlaugh",
       errors: L.errors,
-      again: L.topic ? () => startTopic(L.topic) : L.yesterday ? startYesterday : startReview,
-      againLabel: L.topic ? "Ещё раз эту тему" : L.yesterday ? "Ещё раз" : "Повторить ещё"
+      again: L.levelLabel ? () => { lvLevel = L.levelLabel; startLevelTraining(L.levelKind); } : L.topic ? () => startTopic(L.topic) : L.yesterday ? startYesterday : startReview,
+      againLabel: L.levelLabel ? (L.levelWords ? "Ещё 10 новых" : "Повторить ещё") : L.topic ? "Ещё раз эту тему" : L.yesterday ? "Ещё раз" : "Повторить ещё",
+      backPage: L.levelLabel ? "levels" : undefined
     }));
   }
 
@@ -2195,15 +2200,16 @@ const App = (() => {
   const sayChip = (w) => `<button class="say-chip" data-say-word="${esc(w)}">${SVG.icon("speaker")}${esc(w)}</button>`;
 
   /* ======================================================================
-     Уровни: вся грамматика и самые нужные слова для A1-C2
-     Данные (js/levels-data.js, около 0,5 МБ) загружаем только при открытии вкладки.
+     Уровни: слова, грамматика и тренировка для A1-C2
+     Данные (js/levels-data.js) загружаем только при открытии вкладки.
      ====================================================================== */
   const LV_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
   const LV_NAMES = { A1: "Начальный", A2: "Элементарный", B1: "Средний", B2: "Выше среднего", C1: "Продвинутый", C2: "Профессиональный" };
+  const LV_COLORS = { A1: "#2ec4a6", A2: "#ffb547", B1: "#ff8f6b", B2: "#5b8cff", C1: "#8f7bff", C2: "#ff6b81" };
   const POS_RU = { n: "сущ.", v: "глаг.", adj: "прил.", adv: "нареч.", prep: "предл.", pron: "мест.", conj: "союз", det: "опред.", num: "числ.", int: "межд.", modal: "модал." };
   const LV_PAGE = 60;
   const LV_TOP = 100; // «главные слова»: самые частые слова уровня
-  let lvLevel = null, lvTab = "top", lvQuery = "", lvShown = LV_PAGE, lvLoading = null;
+  let lvLevel = null, lvTab = "words", lvMode = "top", lvQuery = "", lvShown = LV_PAGE, lvLoading = null;
 
   function loadLevels() {
     if (typeof LEVEL_DATA === "object") return Promise.resolve();
@@ -2232,44 +2238,136 @@ const App = (() => {
     const data = d();
     return data.words.includes(k) || !!data.wordStats[k] || data.customWords.some((w) => w.en.toLowerCase() === k);
   }
-
-  function lvBase() {
-    const all = LEVEL_DATA.words[lvLevel] || [];
-    return lvTab === "top" ? all.slice(0, LV_TOP) : all;
-  }
-
+  const lvAll = () => (LEVEL_DATA.words[lvLevel] || []);
+  const lvBase = () => (lvMode === "top" ? lvAll().slice(0, LV_TOP) : lvAll());
   function lvWords() {
-    const list = lvBase();
     const q = lvQuery.trim().toLowerCase();
-    return q ? list.filter((w) => w[0].includes(q) || w[1].toLowerCase().includes(q)) : list;
+    return q ? lvBase().filter((w) => w[0].toLowerCase().includes(q) || w[1].toLowerCase().includes(q)) : lvBase();
   }
+  // Короткий перевод для заданий: первые два значения
+  const shortRu = (ru) => ru.split(",").slice(0, 2).join(",").trim();
 
   function levelsPage() {
     if (!lvLevel) lvLevel = courseLevel();
-    if (typeof LEVEL_DATA !== "object") {
+    const ready = typeof LEVEL_DATA === "object";
+    if (!ready) {
       loadLevels().then(() => { if (page === "levels") renderPage(); }).catch(() => {
         const b = document.getElementById("lvBody");
         if (b) b.innerHTML = `<div class="card empty"><p>Не удалось загрузить данные. Проверьте интернет и откройте вкладку ещё раз.</p></div>`;
       });
     }
-    const ready = typeof LEVEL_DATA === "object";
-    const gCount = ready ? LEVEL_DATA.grammar.filter((t) => t.level === lvLevel).length : 0;
-    const wCount = ready ? (LEVEL_DATA.words[lvLevel] || []).length : 0;
+    const color = LV_COLORS[lvLevel];
+    const tab = (id, icon, label) => `<button class="lv-tab ${lvTab === id ? "is-active" : ""}" data-lv-tab="${id}" role="tab" aria-selected="${lvTab === id}">${SVG.icon(icon)}<span>${label}</span></button>`;
     return `
-      <div class="page">
-        <div class="page__head"><h1>Уровни английского</h1><p>Вся грамматика и самые нужные слова для каждого уровня, от A1 до C2.</p></div>
-        <div class="lv-levels" role="tablist" aria-label="Уровень">
-          ${LV_ORDER.map((l) => `<button class="lv-level ${l === lvLevel ? "is-active" : ""}" role="tab" aria-selected="${l === lvLevel}" data-lv="${l}"><b>${l}</b><span>${LV_NAMES[l]}</span></button>`).join("")}
+      <div class="page lv-page" style="--lc:${color}">
+        <section class="card lv-hero">
+          <div class="lv-hero__text">
+            <div class="lv-hero__hi">Привет!</div>
+            <p>Учи английский каждый день</p>
+            <span class="lv-chip">${lvLevel} · ${LV_NAMES[lvLevel]}</span>
+          </div>
+          <div class="lv-hero__fox">${SVG.mascot({ mood: "hello", hat: d().hat })}</div>
+        </section>
+        <div class="lv-tiles" role="tablist" aria-label="Уровень">
+          ${LV_ORDER.map((l) => `<button class="lv-tile ${l === lvLevel ? "is-active" : ""}" style="--lc:${LV_COLORS[l]}" role="tab" aria-selected="${l === lvLevel}" data-lv="${l}"><b>${l}</b><span>${ready ? (LEVEL_DATA.words[l] || []).length + " слов" : LV_NAMES[l]}</span></button>`).join("")}
         </div>
-        <div class="segmented lv-tabs" role="tablist">
-          <button class="${lvTab === "top" ? "is-active" : ""}" data-lv-tab="top" role="tab" aria-selected="${lvTab === "top"}">${SVG.icon("star")}Главные${ready ? ` · ${Math.min(LV_TOP, wCount)}` : ""}</button>
-          <button class="${lvTab === "words" ? "is-active" : ""}" data-lv-tab="words" role="tab" aria-selected="${lvTab === "words"}">${SVG.icon("words")}Все слова${ready ? ` · ${wCount}` : ""}</button>
-          <button class="${lvTab === "grammar" ? "is-active" : ""}" data-lv-tab="grammar" role="tab" aria-selected="${lvTab === "grammar"}">${SVG.icon("book")}Грамматика${ready ? ` · ${gCount}` : ""}</button>
+        <div class="lv-tabs" role="tablist">
+          ${tab("words", "words", "Слова")}${tab("grammar", "book", "Грамматика")}${tab("train", "target", "Тренировка")}
         </div>
-        <div id="lvBody">${ready ? (lvTab === "grammar" ? lvGrammarHTML() : lvWordsHTML()) : `<div class="card empty"><div class="empty__fox">${SVG.mascot({ mood: "readlaugh" })}</div><p>Загружаем темы и слова...</p></div>`}</div>
+        <div id="lvBody">${!ready ? `<div class="card empty"><div class="empty__fox">${SVG.mascot({ mood: "readlaugh" })}</div><p>Загружаем слова и темы...</p></div>`
+          : lvTab === "grammar" ? lvGrammarHTML() : lvTab === "train" ? lvTrainHTML() : lvWordsHTML()}</div>
       </div>`;
   }
 
+  /* ---------- Слова ---------- */
+  function lvWordsHTML() {
+    const base = lvBase();
+    const known = base.filter((w) => lvKnown(w[0])).length;
+    return `
+      <div class="lv-filter">
+        <button class="lv-mode ${lvMode === "top" ? "is-active" : ""}" data-lv-mode="top">${SVG.icon("star")}Главные ${Math.min(LV_TOP, lvAll().length)}</button>
+        <button class="lv-mode ${lvMode === "all" ? "is-active" : ""}" data-lv-mode="all">Все ${lvAll().length}</button>
+      </div>
+      <div class="search lv-search">${SVG.icon("search")}<input class="input" id="lvSearch" type="search" placeholder="Найти слово по-английски или по-русски" value="${esc(lvQuery)}" aria-label="Поиск слова"></div>
+      <div class="lv-progress">
+        <div class="lv-progress__text">${lvMode === "top" ? `Самые частые слова уровня ${lvLevel}: начните с них. ` : ""}В словаре <b>${known} из ${base.length}</b></div>
+        <div class="progress"><div class="progress__fill" style="width:${base.length ? (known / base.length) * 100 : 0}%"></div></div>
+        ${known < base.length ? `<div class="lv-progress__btns"><button class="btn btn--sm" data-lv-add10>${SVG.icon("plus")}10 новых в повторение</button>${lvMode === "top" ? `<button class="btn btn--sm btn--ghost" data-lv-addall>Добавить все</button>` : ""}</div>` : ""}
+      </div>
+      <div id="lvList"></div>`;
+  }
+
+  function lvRow(w) {
+    const [en, ru, pos, ipa] = w;
+    const kn = lvKnown(en);
+    const phon = ipa ? Exercises.ruPhon(ipa) : "";
+    return `<div class="lv-row ${kn ? "is-known" : ""}">
+      <div class="lv-row__word">
+        <b>${esc(en)}</b>
+        ${phon ? `<span class="lv-row__ph" title="${ipa ? "/" + esc(ipa) + "/" : ""}">[${esc(phon)}]</span>` : ""}
+        ${ipa ? `<span class="ipa lv-row__ipa">/${esc(ipa)}/${POS_RU[pos] ? " · " + POS_RU[pos] : ""}</span>` : ""}
+      </div>
+      <div class="lv-row__ru" lang="ru">${esc(ru)}</div>
+      ${Speech.canSay(en) ? `<button class="lv-row__say" type="button" data-say-word="${esc(en)}" aria-label="Прослушать ${esc(en)}">${SVG.icon("speaker")}</button>` : ""}
+      <button class="lv-star ${kn ? "is-on" : ""}" type="button" data-lv-star="${esc(en)}" aria-pressed="${kn}" aria-label="${kn ? "В словаре" : "Добавить в мои слова"}" title="${kn ? "В словаре" : "В мои слова"}">${SVG.icon("star")}</button>
+    </div>`;
+  }
+
+  function renderLvList() {
+    const box = document.getElementById("lvList");
+    if (!box) return;
+    const list = lvWords();
+    const part = list.slice(0, lvShown);
+    box.innerHTML = list.length
+      ? `<div class="card lv-list">${part.map(lvRow).join("")}</div>
+        ${list.length > part.length ? `<button class="btn btn--ghost btn--block" data-lv-more>Показать ещё (осталось ${list.length - part.length})</button>` : ""}`
+      : `<div class="card empty"><p>Ничего не найдено</p></div>`;
+    bindSayWords(box);
+    box.querySelectorAll("[data-lv-star]").forEach((b) => b.addEventListener("click", () => lvToggle(b.dataset.lvStar)));
+    const more = box.querySelector("[data-lv-more]");
+    if (more) more.addEventListener("click", () => { lvShown += LV_PAGE; renderLvList(); });
+  }
+
+  // Звёздочка: добавить в свои слова или убрать своё слово
+  function lvToggle(en) {
+    const k = en.toLowerCase();
+    if (lvKnown(en)) {
+      if (d().customWords.some((w) => w.en.toLowerCase() === k)) {
+        removeCustomWord(k);
+        Toast.show({ title: "Убрано из словаря", text: esc(en), icon: SVG.icon("close") });
+      } else {
+        Toast.show({ title: "Это слово из уроков", text: "Оно уже в вашем словаре и в повторении", icon: SVG.icon("check") });
+        return;
+      }
+    } else {
+      lvAdd([en], true);
+      return;
+    }
+    lvRefresh();
+  }
+
+  // Добавить слова уровня в свой словарь (и в повторение)
+  function lvAdd(list, quiet) {
+    let added = 0;
+    for (const en of list) {
+      const w = lvAll().find((x) => x[0] === en);
+      if (!w || lvKnown(w[0])) continue;
+      if (!addCustomWord(w[0], shortRu(w[1]).slice(0, 60))) added++;
+    }
+    if (added) {
+      Sound.play("match");
+      Toast.show({ title: added === 1 ? "Слово в словаре" : `Добавлено слов: ${added}`, text: quiet ? "Оно будет в повторении" : "Они в «Словаре» и в повторении", icon: SVG.icon("star") });
+    }
+    lvRefresh();
+  }
+
+  function lvRefresh() {
+    const y = scrollY;
+    renderPage();
+    window.scrollTo({ top: y });
+  }
+
+  /* ---------- Грамматика ---------- */
   function lvGrammarHTML() {
     const list = LEVEL_DATA.grammar.filter((t) => t.level === lvLevel);
     const sayBtn = (en) => (Speech.canSay(en) ? `<button class="speak-btn" type="button" data-say-word="${esc(en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : "");
@@ -2289,71 +2387,53 @@ const App = (() => {
       </div>`;
   }
 
-  function lvWordsHTML() {
-    const all = lvBase();
-    const known = all.filter((w) => lvKnown(w[0])).length;
-    const top = lvTab === "top";
+  /* ---------- Тренировка ---------- */
+  function lvTrainHTML() {
+    const all = lvAll();
+    const fresh = all.filter((w) => !lvKnown(w[0])).length;
+    const known = all.length - fresh;
+    const topics = LEVEL_DATA.grammar.filter((t) => t.level === lvLevel && t.topic && TOPICS[t.topic]);
+    const seen = new Set();
+    const uniq = topics.filter((t) => (seen.has(t.topic) ? false : seen.add(t.topic)));
     return `
-      <div class="card lv-wstats">
-        ${top ? `<div class="lv-top-lead">${SVG.icon("star")}<span>${all.length} самых важных слов уровня ${lvLevel}: они встречаются чаще всего, начните с них</span></div>` : ""}
-        <div><b>${known} из ${all.length}</b> ${top ? "главных слов" : `слов уровня ${lvLevel}`} уже в вашем словаре</div>
-        <div class="progress"><div class="progress__fill" style="width:${all.length ? (known / all.length) * 100 : 0}%"></div></div>
-        <div class="lv-wstats__btns">
-          <button class="btn btn--sm" data-lv-add10>${SVG.icon("plus")}Добавить 10 новых в повторение</button>
-          ${top && known < all.length ? `<button class="btn btn--sm btn--ghost" data-lv-addall>Добавить все ${all.length - known}</button>` : ""}
+      <div class="lv-train">
+        <div class="card lv-train__card">
+          <span class="lv-train__ico">${SVG.icon("plus")}</span>
+          <div class="lv-train__text"><b>Новые слова</b><span>10 самых частых слов уровня ${lvLevel}, которых нет в вашем словаре: знакомство с каждым, потом задания. После тренировки слова попадут в словарь.</span></div>
+          <button class="btn btn--sm" data-lv-train="new" ${fresh < 4 ? "disabled" : ""}>Начать</button>
         </div>
-        <p class="lv-note">Слова отобраны по частоте в современном английском: сначала самые употребительные. Добавленные слова попадают в «Словарь» и в повторение.</p>
-      </div>
-      <div class="search">${SVG.icon("search")}<input class="input" id="lvSearch" type="search" placeholder="Поиск по-английски или по-русски" value="${esc(lvQuery)}" aria-label="Поиск слова"></div>
-      <div id="lvList"></div>`;
+        <div class="card lv-train__card">
+          <span class="lv-train__ico">${SVG.icon("repeat")}</span>
+          <div class="lv-train__text"><b>Повторить слова уровня</b><span>Слова уровня ${lvLevel} из вашего словаря: ${known}. Задания на перевод, сборку и написание.</span></div>
+          <button class="btn btn--sm" data-lv-train="known" ${known < 4 ? "disabled" : ""}>Повторить</button>
+        </div>
+        ${uniq.length ? `<div class="card lv-train__grammar"><b>Грамматика уровня</b><span>Правило и задания по теме</span>
+          <div class="lv-train__topics">${uniq.map((t) => `<button class="btn btn--sm btn--ghost" data-topic="${esc(t.topic)}">${esc(TOPICS[t.topic].title)}</button>`).join("")}</div></div>` : ""}
+      </div>`;
   }
 
-  function renderLvList() {
-    const box = document.getElementById("lvList");
-    if (!box) return;
-    const list = lvWords();
-    const part = list.slice(0, lvShown);
-    box.innerHTML = list.length ? `
-      <div class="lv-words">${part.map((w) => {
-        const [en, ru, pos, ipa] = w;
-        const kn = lvKnown(en);
-        return `<div class="lv-word ${kn ? "is-known" : ""}">
-          <div class="lv-word__main"><div><b>${esc(en)}</b>${ipa ? ` <span class="ipa">/${esc(ipa)}/</span>` : ""}${POS_RU[pos] ? ` <span class="lv-pos">${POS_RU[pos]}</span>` : ""}</div><div class="lv-word__ru">${esc(ru)}</div></div>
-          ${Speech.canSay(en) ? `<button class="speak-btn" type="button" data-say-word="${esc(en)}" aria-label="Прослушать ${esc(en)}">${SVG.icon("speaker")}</button>` : ""}
-          ${kn ? `<span class="lv-word__ok" title="Уже в словаре">${SVG.icon("check")}</span>` : `<button class="icon-btn" type="button" data-lv-add="${esc(en)}" aria-label="Добавить ${esc(en)} в мои слова" title="В мои слова">${SVG.icon("plus")}</button>`}
-        </div>`;
-      }).join("")}</div>
-      ${list.length > part.length ? `<button class="btn btn--ghost btn--block" data-lv-more>Показать ещё (осталось ${list.length - part.length})</button>` : ""}`
-      : `<div class="card empty"><p>Ничего не найдено</p></div>`;
-    bindSayWords(box);
-    box.querySelectorAll("[data-lv-add]").forEach((b) => b.addEventListener("click", () => lvAdd([b.dataset.lvAdd])));
-    const more = box.querySelector("[data-lv-more]");
-    if (more) more.addEventListener("click", () => { lvShown += LV_PAGE; renderLvList(); });
-  }
-
-  // Добавить слова уровня в свой словарь (и в повторение)
-  function lvAdd(list) {
-    const words = LEVEL_DATA.words[lvLevel] || [];
-    let added = 0; // слова ищем во всём уровне
-    for (const en of list) {
-      const w = words.find((x) => x[0] === en);
-      if (!w || lvKnown(w[0])) continue;
-      const ru = w[1].length > 60 ? w[1].slice(0, 60) : w[1];
-      if (!addCustomWord(w[0], ru)) added++;
+  // Тренировка слов уровня: новые (знакомство + задания) или уже добавленные
+  function startLevelTraining(kind) {
+    const all = lvAll();
+    const pick = kind === "new" ? all.filter((w) => !lvKnown(w[0])).slice(0, 10) : Exercises.shuffle(all.filter((w) => lvKnown(w[0]))).slice(0, 10);
+    if (pick.length < 4) {
+      Toast.show({ title: "Мало слов для тренировки", text: kind === "new" ? "Почти все слова уровня уже в словаре" : "Добавьте хотя бы 4 слова этого уровня", icon: SVG.mascot({ mood: "think" }) });
+      return;
     }
-    if (added) {
-      Sound.play("match");
-      Toast.show({ title: added === 1 ? "Слово добавлено" : `Добавлено слов: ${added}`, text: "Они в «Словаре» и в повторении", icon: SVG.icon("check") });
-    }
-    const y = scrollY;
-    renderPage();
-    window.scrollTo({ top: y });
+    const words = pick.map((w) => ({ en: w[0], ru: shortRu(w[1]), ipa: w[3] }));
+    // Задания на слух только для слов, которые можно озвучить на этом устройстве
+    // Задания строим по двум половинам, чтобы каждое слово встретилось в упражнениях
+    const tasks = Exercises.buildReview(words.slice(0, 5)).concat(Exercises.buildReview(words.slice(5))).filter((e) => !((e.type === "listen" || e.type === "dictation") && !Speech.canSay(e.target)));
+    const queue = (kind === "new" ? words.map((w) => ({ type: "teach", word: w })) : []).concat(tasks);
+    beginSession("review", queue, { levelWords: kind === "new" ? words : null, levelLabel: lvLevel, levelKind: kind, reviewKeys: words.map((w) => w.en), colors: [LV_COLORS[lvLevel], "#7c5cff"] });
   }
 
   function bindLevels(main) {
     main.querySelectorAll("[data-lv]").forEach((b) => b.addEventListener("click", () => { lvLevel = b.dataset.lv; lvQuery = ""; lvShown = LV_PAGE; renderPage(); }));
     main.querySelectorAll("[data-lv-tab]").forEach((b) => b.addEventListener("click", () => { lvTab = b.dataset.lvTab; renderPage(); }));
+    main.querySelectorAll("[data-lv-mode]").forEach((b) => b.addEventListener("click", () => { lvMode = b.dataset.lvMode; lvShown = LV_PAGE; renderPage(); }));
     main.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => startTopic(b.dataset.topic)));
+    main.querySelectorAll("[data-lv-train]").forEach((b) => b.addEventListener("click", () => startLevelTraining(b.dataset.lvTrain)));
     main.querySelectorAll("[data-lv-lesson]").forEach((b) => b.addEventListener("click", () => {
       const e = FLAT.find((x) => x.lesson.id === b.dataset.lvLesson);
       if (!e) return;
@@ -2363,7 +2443,7 @@ const App = (() => {
       Toast.show({ title: "Урок откроется позже", text: `Глава «${esc(e.unit.title)}». Правило можно прочитать уже сейчас`, icon: SVG.icon("lock") });
     }));
     bindSayWords(main);
-    if (typeof LEVEL_DATA === "object" && (lvTab === "words" || lvTab === "top")) {
+    if (typeof LEVEL_DATA === "object" && lvTab === "words") {
       const add10 = main.querySelector("[data-lv-add10]");
       if (add10) add10.addEventListener("click", () => lvAdd(lvBase().filter((w) => !lvKnown(w[0])).slice(0, 10).map((w) => w[0])));
       const addAll = main.querySelector("[data-lv-addall]");
