@@ -55,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "18";
+  const APP_VERSION = "19";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -2357,7 +2357,7 @@ const App = (() => {
           return `
             <div class="card word-row">
               <div class="word-row__pic">${w.pic && SVG.hasPic(w.pic) ? SVG.pic(w.pic) : `<span>${esc(w.en[0].toUpperCase())}</span>`}</div>
-              <div><div class="word-row__en">${esc(w.en)}</div><div class="word-row__ru">${esc(w.ru)}</div></div>
+              <div><div class="word-row__en">${esc(w.en)}${Exercises.ipaOf(w.en) ? ` <span class="ipa">${esc(Exercises.ipaOf(w.en))}</span>` : ""}</div><div class="word-row__ru">${esc(w.ru)}</div></div>
               <div class="strength ${weakW ? "is-weak" : ""}" title="Насколько хорошо слово запомнено">${bars}</div>
               ${w.custom ? `<button class="icon-btn" data-remove-word="${esc(k)}" aria-label="Удалить слово ${esc(w.en)}" title="Удалить">${SVG.icon("close")}</button>` : Speech.canSay(w.en) ? `<button class="speak-btn" data-say-word="${esc(w.en)}" aria-label="Прослушать ${esc(w.en)}">${SVG.icon("speaker")}</button>` : "<span></span>"}
             </div>`;
@@ -2421,7 +2421,7 @@ const App = (() => {
     document.getElementById("cardsInfo").textContent = `${c.done} / ${c.total}`;
     const front = cardsDir === "en";
     const pic = w.pic && SVG.hasPic(w.pic) ? SVG.pic(w.pic, "flash__pic") : "";
-    const enSide = `${pic}<div class="flash__word">${esc(w.en)}</div>${Speech.canSay(w.en) ? `<button class="speak-btn" type="button" data-say-word="${esc(w.en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : ""}`;
+    const enSide = `${pic}<div class="flash__word">${esc(w.en)}</div>${Exercises.ipaOf(w.en) ? `<div class="ipa">${esc(Exercises.ipaOf(w.en))}</div>` : ""}${Speech.canSay(w.en) ? `<button class="speak-btn" type="button" data-say-word="${esc(w.en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : ""}`;
     const ruSide = `<div class="flash__word">${esc(w.ru)}</div>`;
     const root = document.getElementById("cardsRoot");
     root.innerHTML = `

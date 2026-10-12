@@ -339,6 +339,16 @@ const Exercises = (() => {
     mixed = mixed.slice(0, RULES.exercisesPerLesson + 2);
 
     // Диалоги-сценки: выбрать подходящую реплику в разговоре
+    // Ролевой диалог: собеседник говорит реплику, вы отвечаете вслух
+    if (speaking && SpeechRec.supported && (lesson.dialogs || []).length) {
+      const dg = lesson.dialogs[(Math.random() * lesson.dialogs.length) | 0];
+      const turns = dg.lines.map((ln, i) => (ln.me && i > 0 ? i : -1)).filter((i) => i > 0);
+      if (turns.length) {
+        const i = turns[(Math.random() * turns.length) | 0];
+        const partner = dg.lines[i - 1];
+        mixed.push({ type: "speak", target: dg.lines[i].en, ru: dg.lines[i].ru, alt: [], role: { title: dg.title, who: partner.who || "Собеседник", en: partner.en, ru: partner.ru } });
+      }
+    }
     (lesson.dialogs || []).forEach((dg) => {
       const mine = dg.lines.map((ln, i) => (ln.me ? i : -1)).filter((i) => i >= 0);
       sample(mine, Math.min(2, mine.length)).sort((a, b) => a - b).forEach((i) => {
@@ -547,6 +557,7 @@ const Exercises = (() => {
         <div class="teach">
           ${picSvg || `<div style="width:130px">${SVG.mascot({ mood: "surprised", hat: ctx.hat })}</div>`}
           <div class="teach__word">${esc(w.en)} ${speakBtn(w.en)}</div>
+          ${ex.letters ? "" : ipaOf(w.en) ? `<div class="ipa teach__ipa" title="Транскрипция">${esc(ipaOf(w.en))}</div>` : ""}
           <div class="teach__tr">${esc(w.ru)}</div>
           ${w.tip ? `<div class="teach__tip">${esc(w.tip)}</div>` : ""}
           ${ex.example ? `<div class="teach__example">${speakBtn(ex.example.en)}<div><b>${esc(ex.example.en)}</b><small>${esc(ex.example.ru)}</small></div></div>` : ""}
@@ -833,13 +844,19 @@ const Exercises = (() => {
     // Говорение: пользователь читает фразу вслух, браузер распознаёт речь
     // После распознавания каждое слово фразы подсвечивается: зелёное расслышано, красное нет
     speak(ex, root, ctx) {
-      root.innerHTML = `<h2 class="ex-title">Скажите вслух</h2>
+      const role = ex.role;
+      root.innerHTML = `<h2 class="ex-title">${role ? "Ответьте собеседнику вслух" : "Скажите вслух"}</h2>
+        ${role ? `<div class="role-line"><span class="ex-kicker">${esc(role.title)}</span>
+          <div class="chat__msg"><div class="chat__bubble">${speakBtn(role.en)}<div><div class="chat__who">${esc(role.who)}</div><div class="chat__en">${esc(role.en)}</div><div class="chat__ru">${esc(role.ru)}</div></div></div></div>
+          <p class="type-hint">Ваш ответ:</p></div>` : ""}
         ${mascotBubble(`${speakBtn(ex.target)}<span>${esc(ex.target)}</span>`, ctx)}
         <p class="type-hint">${esc(ex.ru)}</p>
         <div class="listen-row"><button class="mic-btn" type="button" aria-label="Говорить">${SVG.icon("mic")}</button></div>
         <p class="speak-status" aria-live="polite">Нажмите на микрофон и произнесите фразу</p>
         <div class="speak-words" hidden></div>`;
       bindSpeak(root, ctx);
+      // В ролевом диалоге сначала звучит реплика собеседника
+      if (role) setTimeout(() => { if (root.isConnected) ctx.speak(role.en); }, 300);
       const btn = root.querySelector(".mic-btn");
       const status = root.querySelector(".speak-status");
       const wordsBox = root.querySelector(".speak-words");
@@ -925,6 +942,9 @@ const Exercises = (() => {
     }
     return best;
   }
+
+  // Транскрипция слова: /ˈæpəl/ (если есть в словаре)
+  const ipaOf = (en) => (typeof IPA === "object" && en && IPA[String(en).toLowerCase()] ? `/${IPA[String(en).toLowerCase()]}/` : "");
 
   const topicOf = (ex) => (ex && ex.gap && typeof GAP_WHY === "object" && GAP_WHY[ex.gap.text] ? GAP_WHY[ex.gap.text][0] : null);
 
@@ -1073,5 +1093,5 @@ const Exercises = (() => {
     return ctrl;
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor, ipaOf };
 })();

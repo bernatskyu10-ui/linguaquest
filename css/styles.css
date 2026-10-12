@@ -1417,3 +1417,12 @@ img, svg { display: block; }
 .weak__sub { font-size: 13px; color: var(--text-2); font-weight: 600; }
 .progress--bad .progress__fill { background: var(--rose); }
 .weak .tag svg { width: 14px; height: 14px; }
+
+/* Транскрипция и ролевой диалог */
+.ipa { font-family: "Segoe UI", "Noto Sans", "Arial Unicode MS", "Lucida Sans Unicode", system-ui, sans-serif; font-weight: 500; color: var(--muted); letter-spacing: 0.01em; }
+.teach__ipa { font-size: 18px; margin-top: -4px; }
+.word-row__en .ipa { font-size: 13px; }
+.flash .ipa { font-size: 16px; }
+.role-line { display: grid; gap: var(--s-2); }
+.role-line .chat__msg { justify-self: start; max-width: 100%; }
+.chat__who { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }

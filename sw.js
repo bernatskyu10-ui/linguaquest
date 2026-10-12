@@ -5,7 +5,7 @@
    открыт по адресу http(s), при открытии файла с диска не используется.
    Стратегия "сначала сеть": обновления видны сразу, кэш нужен для офлайна.
    ========================================================================== */
-const VERSION = "lq-v18";
+const VERSION = "lq-v19";
 // Озвучка лежит в отдельном кэше: при обновлении приложения её не нужно качать заново
 const AUDIO_CACHE = "lq-audio-v1";
 
@@ -14,7 +14,7 @@ importScripts("js/audio-manifest.js");
 const CORE = [
   "./", "index.html", "russian.html", "manifest.webmanifest",
   "css/styles.css", "css/fonts.css",
-  "js/data.js", "js/stories.js", "js/grammar.js", "js/explain.js", "js/reference.js", "js/svg.js", "js/storage.js", "js/sync.js", "js/cloud.js", "js/audio-manifest.js", "js/audio.js",
+  "js/data.js", "js/stories.js", "js/grammar.js", "js/explain.js", "js/ipa.js", "js/reference.js", "js/svg.js", "js/storage.js", "js/sync.js", "js/cloud.js", "js/audio-manifest.js", "js/audio.js",
   "js/effects.js", "js/exercises.js", "js/app.js",
   "assets/mascot/fox-main.webp", "assets/mascot/fox-wink.webp", "assets/mascot/fox-read.webp",
   "assets/mascot/fox-laugh.webp", "assets/mascot/fox-determined.webp", "assets/mascot/fox-back.webp",
