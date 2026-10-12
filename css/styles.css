@@ -1426,3 +1426,44 @@ img, svg { display: block; }
 .role-line { display: grid; gap: var(--s-2); }
 .role-line .chat__msg { justify-self: start; max-width: 100%; }
 .chat__who { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Вкладка «Уровни» */
+.lv-levels { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--s-2); margin-bottom: var(--s-4); }
+.lv-level { display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-2); cursor: pointer; }
+.lv-level b { font-family: var(--font-display); font-size: 18px; color: var(--text); }
+.lv-level span { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.2; }
+.lv-level.is-active { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.lv-level.is-active b { color: var(--accent-ink); }
+.lv-tabs { margin-bottom: var(--s-4); }
+.lv-tabs button svg { width: 16px; height: 16px; }
+.lv-topics { display: grid; gap: var(--s-2); }
+.lv-topic { padding: 0; }
+.lv-topic summary { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4); cursor: pointer; list-style: none; font-weight: 800; }
+.lv-topic summary::-webkit-details-marker { display: none; }
+.lv-topic__num { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 9px; background: var(--surface-3); font-size: 13px; color: var(--text-2); }
+.lv-topic__title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lv-topic[open] summary { border-bottom: 1px solid var(--line); }
+.lv-topic .rule__points, .lv-topic .rule__examples, .lv-topic__actions { margin: var(--s-3) var(--s-4); }
+.lv-topic__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-4); }
+.lv-topic__actions .btn svg { width: 16px; height: 16px; }
+.lv-wstats { display: grid; gap: var(--s-3); margin-bottom: var(--s-3); }
+.lv-wstats__btns { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.lv-note { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+.lv-words { display: grid; gap: 6px; margin: var(--s-3) 0; }
+.lv-word { display: flex; align-items: center; gap: var(--s-3); padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.lv-word__main { flex: 1; min-width: 0; }
+.lv-word__main b { font-weight: 800; }
+.lv-word__ru { color: var(--text-2); font-size: 14px; overflow-wrap: anywhere; }
+.lv-pos { font-size: 11px; font-weight: 700; color: var(--muted); }
+.lv-word .ipa { font-size: 13px; }
+.lv-word__ok { width: 36px; height: 36px; display: grid; place-items: center; color: var(--teal); flex: none; }
+.lv-word__ok svg { width: 20px; height: 20px; }
+.lv-word.is-known { opacity: 0.75; }
+@media (max-width: 560px) {
+  .lv-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.lv-top-lead { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text); }
+.lv-top-lead svg { width: 20px; height: 20px; flex: none; color: var(--amber); }
+.lv-tabs { display: flex; flex-wrap: wrap; }
+.lv-tabs button { flex: 1 1 auto; }
