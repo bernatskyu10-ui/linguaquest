@@ -55,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "21";
+  const APP_VERSION = "22";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -964,6 +964,10 @@ const App = (() => {
   }
 
   function trackAnswer(ex, correct) {
+    if (lesson && lesson.impRes) {
+      const en = ((ex.word && ex.word.en) || ex.target || "").toLowerCase();
+      if (en in lesson.impRes) lesson.impRes[en] = correct && lesson.impRes[en] !== "bad" ? "ok" : "bad";
+    }
     const k = exerciseWord(ex);
     if (!k) return;
     const st = d().wordStats;
@@ -1774,6 +1778,17 @@ const App = (() => {
     const data = d();
     // Новые слова уровня после тренировки добавляем в словарь
     if (L.levelWords) L.levelWords.forEach((w) => { if (!lvKnown(w.en)) addCustomWord(w.en, w.ru.slice(0, 60)); });
+    // Важные слова: за тренировку без ошибок +1, с ошибкой -1 (выучено при 3)
+    let impNew = 0;
+    if (L.impRes) {
+      const m = data.lvMaster;
+      for (const [k, r] of Object.entries(L.impRes)) {
+        if (!r) continue;
+        const was = m[k] || 0;
+        m[k] = Math.max(0, Math.min(3, was + (r === "ok" ? 1 : -1)));
+        if (was < 3 && m[k] === 3) impNew++;
+      }
+    }
     const perfect = L.mistakes === 0; // пропуск задания на слух или говорение не считается ошибкой
     const xp = L.correctAnswers * RULES.xpPerCorrect + 5;
     const coins = 5;
@@ -1785,8 +1800,10 @@ const App = (() => {
     lesson = null;
     renderResult(Object.assign(s, {
       xp, coins, perfect,
-      title: L.levelLabel ? (L.levelWords ? "Новые слова изучены!" : "Слова уровня повторены!") : L.topic ? "Тема разобрана!" : L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
-      subtitle: L.levelLabel
+      title: L.impRes ? (impNew ? `Выучено новых слов: ${impNew}!` : "Важные слова потренированы!") : L.levelLabel ? (L.levelWords ? "Новые слова изучены!" : "Слова уровня повторены!") : L.topic ? "Тема разобрана!" : L.yesterday ? "Вчерашнее вспомнили!" : "Слова повторены!",
+      subtitle: L.impRes
+        ? `Самые важные слова ${L.levelLabel}: выучено ${lvImpStats(L.levelLabel).done} из ${lvImpStats(L.levelLabel).total}`
+        : L.levelLabel
         ? `Уровень ${L.levelLabel}: ${L.reviewKeys.length} слов${L.levelWords ? " теперь в словаре и в повторении" : ""}`
         : L.topic
         ? `«${TOPICS[L.topic].title}»: верных ответов ${L.correctAnswers} из ${L.correctAnswers + L.mistakes}`
@@ -1795,8 +1812,8 @@ const App = (() => {
         : `Повторено слов: ${L.reviewKeys.length}. Осталось к повторению: ${dueWords().length}`,
       mood: L.yesterday ? "cheer" : "readlaugh",
       errors: L.errors,
-      again: L.levelLabel ? () => { lvLevel = L.levelLabel; startLevelTraining(L.levelKind); } : L.topic ? () => startTopic(L.topic) : L.yesterday ? startYesterday : startReview,
-      againLabel: L.levelLabel ? (L.levelWords ? "Ещё 10 новых" : "Повторить ещё") : L.topic ? "Ещё раз эту тему" : L.yesterday ? "Ещё раз" : "Повторить ещё",
+      again: L.impRes ? () => { lvLevel = L.levelLabel; startImportant(L.levelKind); } : L.levelLabel ? () => { lvLevel = L.levelLabel; startLevelTraining(L.levelKind); } : L.topic ? () => startTopic(L.topic) : L.yesterday ? startYesterday : startReview,
+      againLabel: L.impRes ? (L.levelKind === "new" ? "Ещё новые" : "Ещё раз") : L.levelLabel ? (L.levelWords ? "Ещё 10 новых" : "Повторить ещё") : L.topic ? "Ещё раз эту тему" : L.yesterday ? "Ещё раз" : "Повторить ещё",
       backPage: L.levelLabel ? "levels" : undefined
     }));
   }
@@ -2208,8 +2225,7 @@ const App = (() => {
   const LV_COLORS = { A1: "#2ec4a6", A2: "#ffb547", B1: "#ff8f6b", B2: "#5b8cff", C1: "#8f7bff", C2: "#ff6b81" };
   const POS_RU = { n: "сущ.", v: "глаг.", adj: "прил.", adv: "нареч.", prep: "предл.", pron: "мест.", conj: "союз", det: "опред.", num: "числ.", int: "межд.", modal: "модал." };
   const LV_PAGE = 60;
-  const LV_TOP = 100; // «главные слова»: самые частые слова уровня
-  let lvLevel = null, lvTab = "words", lvMode = "top", lvQuery = "", lvShown = LV_PAGE, lvLoading = null;
+  let lvLevel = null, lvTab = "top", lvQuery = "", lvShown = LV_PAGE, lvLoading = null;
 
   function loadLevels() {
     if (typeof LEVEL_DATA === "object") return Promise.resolve();
@@ -2239,13 +2255,24 @@ const App = (() => {
     return data.words.includes(k) || !!data.wordStats[k] || data.customWords.some((w) => w.en.toLowerCase() === k);
   }
   const lvAll = () => (LEVEL_DATA.words[lvLevel] || []);
-  const lvBase = () => (lvMode === "top" ? lvAll().slice(0, LV_TOP) : lvAll());
+  const lvBase = lvAll;
   function lvWords() {
     const q = lvQuery.trim().toLowerCase();
     return q ? lvBase().filter((w) => w[0].toLowerCase().includes(q) || w[1].toLowerCase().includes(q)) : lvBase();
   }
   // Короткий перевод для заданий: первые два значения
-  const shortRu = (ru) => ru.split(",").slice(0, 2).join(",").trim();
+  // (запятые внутри скобок не делят перевод: «есть (с he, she, it)»)
+  function shortRu(ru) {
+    const parts = [];
+    let depth = 0, cur = "";
+    for (const ch of ru) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth = Math.max(0, depth - 1);
+      if (ch === "," && !depth) { parts.push(cur); cur = ""; } else cur += ch;
+    }
+    parts.push(cur);
+    return parts.slice(0, 2).join(",").trim();
+  }
 
   function levelsPage() {
     if (!lvLevel) lvLevel = courseLevel();
@@ -2272,11 +2299,78 @@ const App = (() => {
           ${LV_ORDER.map((l) => `<button class="lv-tile ${l === lvLevel ? "is-active" : ""}" style="--lc:${LV_COLORS[l]}" role="tab" aria-selected="${l === lvLevel}" data-lv="${l}"><b>${l}</b><span>${ready ? (LEVEL_DATA.words[l] || []).length + " слов" : LV_NAMES[l]}</span></button>`).join("")}
         </div>
         <div class="lv-tabs" role="tablist">
-          ${tab("words", "words", "Слова")}${tab("grammar", "book", "Грамматика")}${tab("train", "target", "Тренировка")}
+          ${tab("top", "star", "Важные")}${tab("words", "words", "Слова")}${tab("grammar", "book", "Грамматика")}${tab("train", "target", "Тренировка")}
         </div>
         <div id="lvBody">${!ready ? `<div class="card empty"><div class="empty__fox">${SVG.mascot({ mood: "readlaugh" })}</div><p>Загружаем слова и темы...</p></div>`
-          : lvTab === "grammar" ? lvGrammarHTML() : lvTab === "train" ? lvTrainHTML() : lvWordsHTML()}</div>
+          : lvTab === "top" ? lvImpHTML() : lvTab === "grammar" ? lvGrammarHTML() : lvTab === "train" ? lvTrainHTML() : lvWordsHTML()}</div>
       </div>`;
+  }
+
+  /* ---------- Самые важные слова ---------- */
+  // Служебные слова (артикли, вспомогательные глаголы) показываем, но не тренируем:
+  // у них нет перевода, который можно выбрать в задании
+  const lvTrainable = (w) => !/^\(|вспомогательн/i.test(w[1]);
+  // Список важных слов уровня: [слово уровня, частота], от самых частых
+  function lvImp(level = lvLevel) {
+    const all = LEVEL_DATA.words[level] || [];
+    const by = new Map(all.map((w) => [w[0], w]));
+    return ((LEVEL_DATA.top && LEVEL_DATA.top[level]) || []).map(([en, z]) => [by.get(en), z]).filter((x) => x[0]);
+  }
+  const lvMastery = (en) => d().lvMaster[en.toLowerCase()];
+  function lvImpStats(level) {
+    const list = lvImp(level).filter(([w]) => lvTrainable(w));
+    const done = list.filter(([w]) => lvMastery(w[0]) >= 3).length;
+    const started = list.filter(([w]) => lvMastery(w[0]) !== undefined && lvMastery(w[0]) < 3).length;
+    return { total: list.length, done, started, fresh: list.length - done - started };
+  }
+  // Частота полосками: 5 - одно из самых частых слов языка
+  const lvFreq = (z) => (z >= 6.5 ? 5 : z >= 6 ? 4 : z >= 5.3 ? 3 : z >= 4.6 ? 2 : 1);
+  const FREQ_RU = ["", "встречается довольно часто", "встречается часто", "встречается очень часто", "одно из самых частых слов", "одно из самых частых слов языка"];
+
+  function lvImpHTML() {
+    const list = lvImp();
+    const st = lvImpStats(lvLevel);
+    return `
+      <div class="card lv-imp">
+        <div class="lv-imp__head">
+          <span class="lv-imp__ico">${SVG.icon("star")}</span>
+          <div><b>Самые важные слова ${lvLevel}: ${list.length}</b>
+          <span>Они встречаются в речи и текстах заметно чаще остальных слов уровня, поэтому на каждом уровне их разное число. Учите их первыми и как следует. Полоски слева показывают, насколько часто слово встречается.</span></div>
+        </div>
+        <div class="lv-imp__stat"><span>Выучено <b>${st.done} из ${st.total}</b></span>${st.started ? `<span>учу сейчас: ${st.started}</span>` : ""}</div>
+        <div class="progress"><div class="progress__fill" style="width:${st.total ? (st.done / st.total) * 100 : 0}%"></div></div>
+        <div class="lv-imp__btns">
+          <button class="btn btn--sm" data-lv-imp="new" ${st.fresh < 4 ? "disabled" : ""}>${SVG.icon("plus")}Учить новые</button>
+          <button class="btn btn--sm btn--ghost" data-lv-imp="fix" ${st.started + st.done < 4 ? "disabled" : ""}>${SVG.icon("repeat")}Закрепить</button>
+        </div>
+        <p class="lv-imp__note">Слово выучено, когда вы без ошибок ответите на него в трёх разных тренировках (три точки справа). Ошибка отнимает одну точку.</p>
+      </div>
+      <div class="card lv-list">${list.map(([w, z], i) => lvRow(w, { rank: i + 1, z })).join("")}</div>`;
+  }
+
+  // Тренировка важных слов: новые (знакомство + задания) или закрепление начатых
+  function startImportant(kind) {
+    const list = lvImp().map(([w]) => w).filter(lvTrainable);
+    let pick;
+    if (kind === "new") pick = list.filter((w) => lvMastery(w[0]) === undefined).slice(0, 10);
+    else {
+      // Сначала самые слабые из начатых, потом выученные для проверки
+      const started = list.filter((w) => lvMastery(w[0]) !== undefined && lvMastery(w[0]) < 3).sort((a, b) => lvMastery(a[0]) - lvMastery(b[0]));
+      const done = Exercises.shuffle(list.filter((w) => lvMastery(w[0]) >= 3));
+      pick = started.concat(done).slice(0, 10);
+    }
+    if (pick.length < 4) {
+      Toast.show({ title: "Мало слов для тренировки", text: kind === "new" ? "Почти все важные слова уже начаты: нажмите «Закрепить»" : "Сначала нажмите «Учить новые»", icon: SVG.mascot({ mood: "think" }) });
+      return;
+    }
+    const words = pick.map((w) => ({ en: w[0], ru: shortRu(w[1]), ipa: w[3] }));
+    const tasks = Exercises.buildReview(words.slice(0, 5)).concat(Exercises.buildReview(words.slice(5))).filter((e) => !((e.type === "listen" || e.type === "dictation") && !Speech.canSay(e.target)));
+    const queue = (kind === "new" ? words.map((w) => ({ type: "teach", word: w })) : []).concat(tasks);
+    // Новое слово сразу считается начатым (0 точек), даже если тренировку бросить
+    if (kind === "new") words.forEach((w) => { const k = w.en.toLowerCase(); if (d().lvMaster[k] === undefined) d().lvMaster[k] = 0; });
+    const impRes = {};
+    words.forEach((w) => (impRes[w.en.toLowerCase()] = null));
+    beginSession("review", queue, { levelWords: words, levelLabel: lvLevel, levelKind: kind, impRes, reviewKeys: words.map((w) => w.en), colors: [LV_COLORS[lvLevel], "#ffb547"] });
   }
 
   /* ---------- Слова ---------- */
@@ -2284,24 +2378,27 @@ const App = (() => {
     const base = lvBase();
     const known = base.filter((w) => lvKnown(w[0])).length;
     return `
-      <div class="lv-filter">
-        <button class="lv-mode ${lvMode === "top" ? "is-active" : ""}" data-lv-mode="top">${SVG.icon("star")}Главные ${Math.min(LV_TOP, lvAll().length)}</button>
-        <button class="lv-mode ${lvMode === "all" ? "is-active" : ""}" data-lv-mode="all">Все ${lvAll().length}</button>
-      </div>
       <div class="search lv-search">${SVG.icon("search")}<input class="input" id="lvSearch" type="search" placeholder="Найти слово по-английски или по-русски" value="${esc(lvQuery)}" aria-label="Поиск слова"></div>
       <div class="lv-progress">
-        <div class="lv-progress__text">${lvMode === "top" ? `Самые частые слова уровня ${lvLevel}: начните с них. ` : ""}В словаре <b>${known} из ${base.length}</b></div>
+        <div class="lv-progress__text">Все слова уровня ${lvLevel}, от частых к редким. В словаре <b>${known} из ${base.length}</b></div>
         <div class="progress"><div class="progress__fill" style="width:${base.length ? (known / base.length) * 100 : 0}%"></div></div>
-        ${known < base.length ? `<div class="lv-progress__btns"><button class="btn btn--sm" data-lv-add10>${SVG.icon("plus")}10 новых в повторение</button>${lvMode === "top" ? `<button class="btn btn--sm btn--ghost" data-lv-addall>Добавить все</button>` : ""}</div>` : ""}
+        ${known < base.length ? `<div class="lv-progress__btns"><button class="btn btn--sm" data-lv-add10>${SVG.icon("plus")}10 новых в повторение</button></div>` : ""}
       </div>
       <div id="lvList"></div>`;
   }
 
-  function lvRow(w) {
+  function lvRow(w, imp) {
     const [en, ru, pos, ipa] = w;
     const kn = lvKnown(en);
     const phon = ipa ? Exercises.ruPhon(ipa) : "";
-    return `<div class="lv-row ${kn ? "is-known" : ""}">
+    const f = imp ? lvFreq(imp.z) : 0;
+    const m = imp ? lvMastery(en) || 0 : 0;
+    const right = !imp ? "" : !lvTrainable(w)
+      ? `<span class="lv-mastery lv-mastery--gram" title="Служебное слово: его учат в грамматике">грам.</span>`
+      : m >= 3 ? `<span class="lv-mastery is-done" title="Выучено" aria-label="Выучено">${SVG.icon("check")}</span>`
+      : `<span class="lv-mastery" title="Верно в тренировках: ${m} из 3" aria-label="Верно в тренировках: ${m} из 3">${[0, 1, 2].map((i) => `<i class="${i < m ? "on" : ""}"></i>`).join("")}</span>`;
+    return `<div class="lv-row ${kn ? "is-known" : ""} ${imp ? "lv-row--imp" : ""}">
+      ${imp ? `<span class="lv-rank" title="${FREQ_RU[f]}"><b>${imp.rank}</b><span class="lv-freq" aria-label="${FREQ_RU[f]}">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= f ? "on" : ""}"></i>`).join("")}</span></span>` : ""}
       <div class="lv-row__word">
         <b>${esc(en)}</b>
         ${phon ? `<span class="lv-row__ph" title="${ipa ? "/" + esc(ipa) + "/" : ""}">[${esc(phon)}]</span>` : ""}
@@ -2309,7 +2406,7 @@ const App = (() => {
       </div>
       <div class="lv-row__ru" lang="ru">${esc(ru)}</div>
       ${Speech.canSay(en) ? `<button class="lv-row__say" type="button" data-say-word="${esc(en)}" aria-label="Прослушать ${esc(en)}">${SVG.icon("speaker")}</button>` : ""}
-      <button class="lv-star ${kn ? "is-on" : ""}" type="button" data-lv-star="${esc(en)}" aria-pressed="${kn}" aria-label="${kn ? "В словаре" : "Добавить в мои слова"}" title="${kn ? "В словаре" : "В мои слова"}">${SVG.icon("star")}</button>
+      ${imp ? right : `<button class="lv-star ${kn ? "is-on" : ""}" type="button" data-lv-star="${esc(en)}" aria-pressed="${kn}" aria-label="${kn ? "В словаре" : "Добавить в мои слова"}" title="${kn ? "В словаре" : "В мои слова"}">${SVG.icon("star")}</button>`}
     </div>`;
   }
 
@@ -2431,7 +2528,7 @@ const App = (() => {
   function bindLevels(main) {
     main.querySelectorAll("[data-lv]").forEach((b) => b.addEventListener("click", () => { lvLevel = b.dataset.lv; lvQuery = ""; lvShown = LV_PAGE; renderPage(); }));
     main.querySelectorAll("[data-lv-tab]").forEach((b) => b.addEventListener("click", () => { lvTab = b.dataset.lvTab; renderPage(); }));
-    main.querySelectorAll("[data-lv-mode]").forEach((b) => b.addEventListener("click", () => { lvMode = b.dataset.lvMode; lvShown = LV_PAGE; renderPage(); }));
+    main.querySelectorAll("[data-lv-imp]").forEach((b) => b.addEventListener("click", () => startImportant(b.dataset.lvImp)));
     main.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => startTopic(b.dataset.topic)));
     main.querySelectorAll("[data-lv-train]").forEach((b) => b.addEventListener("click", () => startLevelTraining(b.dataset.lvTrain)));
     main.querySelectorAll("[data-lv-lesson]").forEach((b) => b.addEventListener("click", () => {
@@ -2446,8 +2543,6 @@ const App = (() => {
     if (typeof LEVEL_DATA === "object" && lvTab === "words") {
       const add10 = main.querySelector("[data-lv-add10]");
       if (add10) add10.addEventListener("click", () => lvAdd(lvBase().filter((w) => !lvKnown(w[0])).slice(0, 10).map((w) => w[0])));
-      const addAll = main.querySelector("[data-lv-addall]");
-      if (addAll) addAll.addEventListener("click", () => lvAdd(lvBase().filter((w) => !lvKnown(w[0])).map((w) => w[0])));
       const inp = main.querySelector("#lvSearch");
       if (inp) inp.addEventListener("input", () => { lvQuery = inp.value; lvShown = LV_PAGE; renderLvList(); });
       renderLvList();

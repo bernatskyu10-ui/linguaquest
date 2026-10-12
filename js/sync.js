@@ -106,6 +106,8 @@ const Sync = (() => {
       const c = m.weak[k] || { w: 0, t: 0, at: 0 };
       m.weak[k] = { w: Math.max(c.w || 0, v.w || 0), t: Math.max(c.t || 0, v.t || 0), at: Math.max(c.at || 0, v.at || 0) };
     }
+    m.lvMaster = Object.assign({}, m.lvMaster || {});
+    for (const [k, v] of Object.entries(o.lvMaster || {})) m.lvMaster[k] = Math.max(m.lvMaster[k] || 0, v || 0);
     m.accByDay = Object.assign({}, m.accByDay || {});
     for (const [k, v] of Object.entries(o.accByDay || {})) if (!m.accByDay[k] || v.t > m.accByDay[k].t) m.accByDay[k] = v;
     // Серия: берём с того устройства, где занимались позже (а не где позже сохранились)

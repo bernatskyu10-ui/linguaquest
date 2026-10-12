@@ -1525,3 +1525,36 @@ img, svg { display: block; }
 }
 .lv-row__word { flex: 1 1 42%; }
 .lv-row__ru { flex: 1 1 48%; overflow-wrap: normal; word-break: normal; hyphens: auto; -webkit-hyphens: auto; font-size: 15px; }
+
+/* Самые важные слова уровня */
+.lv-imp { display: grid; gap: 10px; margin-bottom: var(--s-3); }
+.lv-imp__head { display: flex; gap: var(--s-3); align-items: flex-start; }
+.lv-imp__head > div { display: grid; gap: 4px; min-width: 0; }
+.lv-imp__head b { font-size: 17px; }
+.lv-imp__head span { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.lv-imp__ico { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 14px; background: color-mix(in srgb, var(--amber) 22%, transparent); color: var(--amber); }
+.lv-imp__ico svg { width: 22px; height: 22px; }
+.lv-imp__ico svg path { fill: currentColor; }
+.lv-imp__stat { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 14px; color: var(--text-2); font-weight: 600; }
+.lv-imp__stat b { color: var(--text); }
+.lv-imp .progress__fill { background: var(--lc); }
+.lv-imp__btns { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.lv-imp__note { margin: 0; font-size: 12px; color: var(--muted); font-weight: 600; }
+.lv-rank { width: 30px; flex: none; display: grid; justify-items: center; gap: 4px; }
+.lv-rank b { font-size: 13px; color: var(--muted); font-weight: 800; }
+.lv-freq { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+.lv-freq i { width: 3px; border-radius: 2px; background: var(--line); }
+.lv-freq i:nth-child(1) { height: 4px; } .lv-freq i:nth-child(2) { height: 6px; } .lv-freq i:nth-child(3) { height: 8px; } .lv-freq i:nth-child(4) { height: 10px; } .lv-freq i:nth-child(5) { height: 12px; }
+.lv-freq i.on { background: var(--lc); }
+.lv-mastery { width: 36px; flex: none; display: flex; justify-content: center; gap: 3px; }
+.lv-mastery i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.lv-mastery i.on { background: var(--amber); }
+.lv-mastery.is-done { color: var(--teal, #2ec4a6); }
+.lv-mastery.is-done svg { width: 20px; height: 20px; }
+.lv-mastery--gram { font-size: 11px; font-weight: 700; color: var(--muted); }
+.lv-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) {
+  .lv-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lv-row--imp { gap: 6px; }
+  .lv-row--imp .lv-row__say { width: 30px; }
+}
