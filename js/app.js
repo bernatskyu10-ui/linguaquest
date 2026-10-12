@@ -37,6 +37,7 @@ const App = (() => {
 
   function applySettings() {
     loadCustomWords();
+    applySharedPrefs();
     const s = d().settings;
     applyTheme(s.theme);
     Sound.setEnabled(s.sound);
@@ -54,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "17";
+  const APP_VERSION = "18";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -292,6 +293,43 @@ const App = (() => {
       const s = await Cloud.signIn(name, pass);
       localStorage.setItem(GRAMOTEY_SESSION, JSON.stringify(Object.assign(s, { name })));
     } catch (e) { /* войти в русский можно будет и там, тем же ником и паролем */ }
+  }
+
+  // Прогресс по русскому на этом устройстве (хранится «Грамотеем»)
+  const RU_DAILY = 10; // заданий ЕГЭ в плане на день
+  function gramoteyState() {
+    try { const s = JSON.parse(localStorage.getItem("gramotey-ege-v1") || "null"); return s && typeof s === "object" ? s : null; } catch (e) { return null; }
+  }
+  // Сколько заданий по русскому решено сегодня
+  function gramoteyToday() {
+    const s = gramoteyState();
+    return s && s.daily && s.daily.date === Store.dayKey() ? Number(s.daily.count) || 0 : 0;
+  }
+  // Занимается ли человек русским (были занятия за последнюю неделю)
+  function gramoteyActive() {
+    const s = gramoteyState();
+    if (!s || !s.lastDay) return false;
+    return Math.round((new Date(Store.dayKey() + "T00:00:00") - new Date(s.lastDay + "T00:00:00")) / DAY) <= 7;
+  }
+
+  /* ---------- Общие тема и звук с русским ---------- */
+  const SHARED_PREFS = "subject-shared-prefs";
+  function readSharedPrefs() { try { return JSON.parse(localStorage.getItem(SHARED_PREFS) || "null"); } catch (e) { return null; } }
+  // При входе: если в русском меняли тему или звук позже, берём оттуда
+  function applySharedPrefs() {
+    const sp = readSharedPrefs();
+    const s = d() && d().settings;
+    if (!s || !sp || !(sp.at > (s.prefsAt || 0))) return;
+    if (["dark", "light", "system"].includes(sp.theme)) { s.theme = sp.theme; Store.setDevice({ theme: sp.theme }); }
+    if (typeof sp.sound === "boolean") s.sound = sp.sound;
+    s.prefsAt = sp.at;
+    Store.save({ silent: true });
+  }
+  // Изменили тему или звук здесь - сообщаем русскому
+  function shareSettings() {
+    const s = d().settings;
+    s.prefsAt = Date.now();
+    try { localStorage.setItem(SHARED_PREFS, JSON.stringify({ theme: s.theme, sound: !!s.sound, at: s.prefsAt })); } catch (e) { /* не критично */ }
   }
 
   // Переключатель предметов
@@ -1180,6 +1218,13 @@ const App = (() => {
         skip: cardsDeck().length < 3, done: (q.cards || 0) > 0,
         run: startCards
       },
+      // Русский (ЕГЭ): в плане, если человек занимается им последнюю неделю
+      ...(gramoteyActive() ? [{
+        id: "russian", icon: "book", min: 10,
+        title: `Русский: ${RU_DAILY} заданий ЕГЭ`, sub: `сегодня решено ${Math.min(gramoteyToday(), RU_DAILY)} из ${RU_DAILY}`,
+        done: gramoteyToday() >= RU_DAILY,
+        run: () => { location.href = "russian.html"; }
+      }] : []),
       {
         id: "listen", icon: "speaker", min: 5, manual: true,
         title: "Послушать английский", sub: "мультфильм, песня или видео на английском",
@@ -2646,7 +2691,9 @@ const App = (() => {
 
   function lastActiveDay() {
     const days = Object.keys(d().xpByDay).filter((k) => d().xpByDay[k] > 0).sort();
-    return days.length ? days[days.length - 1] : "";
+    const en = days.length ? days[days.length - 1] : "";
+    const ru = gramoteyToday() > 0 ? Store.dayKey() : "";
+    return ru > en ? ru : en;
   }
 
   // Записываем состояние для service worker (только если оно изменилось)
@@ -2695,7 +2742,7 @@ const App = (() => {
     const now = new Date();
     const today = Store.dayKey();
     const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    if (hhmm < d().settings.remindAt || Store.todayXP() > 0 || !document.hidden) return;
+    if (hhmm < d().settings.remindAt || Store.todayXP() > 0 || gramoteyToday() > 0 || !document.hidden) return;
     try {
       const c = await caches.open(REMIND_CACHE);
       const r = await c.match(remindUrl("notified"));
@@ -3405,6 +3452,7 @@ const App = (() => {
       b.addEventListener("click", () => {
         d().settings.theme = b.dataset.theme;
         Store.setDevice({ theme: b.dataset.theme });
+        shareSettings();
         Store.save();
         applyTheme(b.dataset.theme);
         rerender();
@@ -3433,6 +3481,7 @@ const App = (() => {
     main.querySelectorAll("[data-set]").forEach((inp) =>
       inp.addEventListener("change", () => {
         d().settings[inp.dataset.set] = inp.checked;
+        if (inp.dataset.set === "sound") shareSettings();
         Store.save();
         applySettings();
         if (inp.dataset.set === "sound" && inp.checked) Sound.play("correct");
