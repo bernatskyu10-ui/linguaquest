@@ -108,6 +108,134 @@ const Exercises = (() => {
   // Слова для плиток: убираем знаки препинания по краям
   const tokenize = (s) => s.split(/\s+/).map((w) => w.replace(/^[^\p{L}\p{N}']+|[^\p{L}\p{N}']+$/gu, "")).filter(Boolean);
 
+  /* ---------- Похожие варианты ответа ----------
+     Неправильные варианты подбираем так, чтобы ответ нельзя было угадать:
+     половина похожа по написанию и звучанию (green: grey, great), половина по смыслу
+     (тот же раздел, та же часть речи, похожий перевод: красный - красивый). */
+  // Отдельные значения перевода: "есть (с he, she), быть" -> ["есть", "быть"]
+  const ruParts = (ru) => String(ru || "").toLowerCase().replace(/\([^)]*\)/g, "").split(/[,;]/).map((x) => x.trim()).filter(Boolean);
+  const ruFirst = (ru) => ruParts(ru)[0] || String(ru || "").toLowerCase();
+  // Часть речи по русскому переводу: прилагательное, глагол, фраза или остальное
+  function ruKind(ru) {
+    const f = ruFirst(ru);
+    const last = f.split(" ").pop();
+    if (/(ый|ий|ой|ая|яя|ое|ее)$/.test(last)) return "adj";
+    if (/(ть|ться|ти|чь|тись)$/.test(last)) return "verb";
+    return f.includes(" ") ? "phrase" : "other";
+  }
+  // Насколько слова похожи по написанию: 0 - совсем разные, больше 1 - очень похожи
+  function likeness(a, b) {
+    a = String(a).toLowerCase();
+    b = String(b).toLowerCase();
+    if (a === b) return -1;
+    const d = lev(a, b);
+    let s = d === 99 ? 0 : 1 - d / Math.max(a.length, b.length);
+    let p = 0;
+    while (p < a.length && p < b.length && a[p] === b[p]) p++;
+    s += Math.min(p, 3) * 0.12;
+    if (a.length > 2 && a.slice(-2) === b.slice(-2)) s += 0.08;
+    return s;
+  }
+  // Слова уровней A1-B1 (если данные уже загружены): больше похожих слов для вариантов
+  let lvPool = null;
+  function levelPool() {
+    if (lvPool) return lvPool;
+    if (typeof LEVEL_DATA !== "object") return [];
+    lvPool = ["A1", "A2", "B1"].flatMap((l) => LEVEL_DATA.words[l] || [])
+      .filter((w) => !/^\(|^вспомогательн/.test(w[1]) && w[0].split(" ").length <= 2)
+      .map((w) => ({ en: w[0], ru: ruParts(w[1]).slice(0, 2).join(", ") || w[1] }));
+    return lvPool;
+  }
+
+  /**
+   * n неправильных вариантов к слову word.
+   * pool - слова, из которых выбираем; near - набор en слов той же темы (раздела).
+   */
+  function similar(word, n, pool, near) {
+    const wParts = new Set(ruParts(word.ru));
+    const kind = ruKind(word.ru);
+    const wf = ruFirst(word.ru);
+    const letter = word.en.length === 1;
+    const usedEn = new Set([word.en.toLowerCase()]);
+    const usedRu = new Set(wParts);
+    // Не берём синонимы: если хоть одно значение перевода совпадает, вариант был бы тоже верным
+    // и однокоренные переводы (привет - приветы)
+    const sameRoot = (p) => [...wParts].some((q) => q.length > 3 && p.length > 3 && (p.startsWith(q) || q.startsWith(p)));
+    const okWord = (w) => w && w.ru && (w.en.length === 1) === letter && !usedEn.has(w.en.toLowerCase()) && !ruParts(w.ru).some((p) => usedRu.has(p) || sameRoot(p));
+    const cands = uniqBy(pool.concat(letter ? [] : levelPool()), (w) => w.en.toLowerCase()).filter(okWord);
+    const scored = cands.map((w) => {
+      const sameKind = ruKind(w.ru) === kind ? 0.35 : 0;
+      const topic = near && near.has(w.en) ? 0.5 : 0;
+      return {
+        w,
+        spell: likeness(word.en, w.en) + sameKind * 0.5 + Math.random() * 0.1,
+        mean: topic + sameKind + likeness(wf, ruFirst(w.ru)) * 0.6 + Math.random() * 0.2
+      };
+    });
+    const out = [];
+    const take = (key, k) => {
+      const top = scored.filter((x) => !out.includes(x.w)).sort((a, b) => b[key] - a[key]).slice(0, k + 3);
+      for (const x of shuffle(top)) {
+        if (k <= 0) break;
+        if (!okWord(x.w)) continue;
+        usedEn.add(x.w.en.toLowerCase());
+        ruParts(x.w.ru).forEach((p) => usedRu.add(p));
+        out.push(x.w);
+        k--;
+      }
+    };
+    take("spell", Math.ceil(n / 2));
+    take("mean", n - out.length);
+    if (out.length < n) take("spell", n - out.length);
+    return out;
+  }
+
+  // Похожие предложения: с теми же словами и того же строения
+  function similarSentences(s, n, pool) {
+    const toks = tokenize(s.en.toLowerCase());
+    const set = new Set(toks);
+    const ruSet = new Set(s.ru.toLowerCase().split(/\s+/));
+    const scored = uniqBy(pool.filter((x) => x.en !== s.en && x.ru !== s.ru), (x) => x.ru).map((x) => {
+      const t = tokenize(x.en.toLowerCase());
+      const shared = t.filter((w) => set.has(w)).length;
+      const ruShared = x.ru.toLowerCase().split(/\s+/).filter((w) => ruSet.has(w)).length;
+      return { x, score: shared + ruShared * 0.7 + (t[0] === toks[0] ? 0.8 : 0) - Math.abs(t.length - toks.length) * 0.25 + Math.random() * 0.6 };
+    });
+    return shuffle(scored.sort((a, b) => b.score - a.score).slice(0, n + 2)).slice(0, n).map((y) => y.x);
+  }
+
+  // Лишние плитки в сборке предложения: слова, которые легко перепутать с нужными
+  const CONFUSE = {
+    is: ["are", "am", "it's"], are: ["is", "am"], am: ["is", "are"], do: ["does", "did"], does: ["do", "is"], did: ["do", "does"],
+    a: ["an", "the"], an: ["a", "the"], the: ["a", "an"], he: ["she", "his", "him"], she: ["he", "her"], his: ["he", "her"],
+    her: ["she", "his"], i: ["me", "my"], me: ["i", "my"], my: ["me", "i"], in: ["on", "at"], on: ["in", "at"], at: ["in", "on"],
+    this: ["these", "that"], that: ["this", "those"], these: ["this", "those"], have: ["has", "had"], has: ["have", "is"],
+    was: ["were", "is"], were: ["was", "are"], to: ["too", "for"], you: ["your", "yours"], your: ["you", "you're"],
+    they: ["their", "them"], their: ["there", "they"], we: ["our", "us"], it: ["its", "is"], can: ["can't", "could"],
+    "don't": ["doesn't", "not"], "doesn't": ["don't", "isn't"], "isn't": ["aren't", "doesn't"], "aren't": ["isn't", "don't"],
+    there: ["their", "where"], where: ["were", "there"], what: ["which", "who"], who: ["how", "what"], how: ["who", "what"],
+    for: ["four", "from"], from: ["for", "of"], of: ["off", "for"], with: ["without", "which"], go: ["goes", "went"],
+    goes: ["go", "going"], like: ["likes", "liked"], likes: ["like", "liking"], will: ["would", "well"], would: ["will", "could"]
+  };
+  function confusers(tokens, n, extraWords) {
+    const lower = new Set(tokens.map((t) => t.toLowerCase()));
+    const out = [];
+    for (const t of shuffle(tokens)) {
+      const alts = (CONFUSE[t.toLowerCase()] || []).filter((x) => !lower.has(x) && !out.some((o) => o.toLowerCase() === x));
+      if (alts.length) out.push(alts[(Math.random() * alts.length) | 0]);
+    }
+    // Похожие по написанию слова из урока: like - lake, cat - cut
+    for (const t of tokens) {
+      const near = (extraWords || []).filter((w) => !lower.has(w.toLowerCase()) && !out.some((o) => o.toLowerCase() === w.toLowerCase()) && likeness(t, w) > 0.75);
+      if (near.length) out.push(near[0]);
+    }
+    return shuffle(out).slice(0, n);
+  }
+
+  // Буквы, которые легко спутать на слух (по названию) и на вид
+  const LETTER_LIKE = ["bcdegptvz", "ahjk", "flmnsx", "iy", "quw", "bdpq", "mnw", "uvw", "ijl", "ceo"];
+  const letterNear = (l) => new Set(LETTER_LIKE.filter((g) => g.includes(l.toLowerCase())).join("").split(""));
+
   /* ---------- Генератор ---------- */
   function isLetterLesson(lesson) {
     return lesson.words.every((w) => w.en.length === 1);
@@ -119,7 +247,12 @@ const Exercises = (() => {
    */
   function letterBody(words, pool, courseWords) {
     const ws = shuffle(words);
-    const others = (w, n) => sample(pool.filter((x) => x.en !== w.en), n);
+    // Сначала буквы, похожие по названию или виду (b - d - p, m - n), потом остальные
+    const others = (w, n) => {
+      const near = letterNear(w.en);
+      const close = sample(pool.filter((x) => x.en !== w.en && near.has(x.en.toLowerCase())), n);
+      return close.concat(sample(pool.filter((x) => x.en !== w.en && !close.includes(x)), n - close.length));
+    };
     const opts = (w) => shuffle([w, ...others(w, 3)]);
     const body = [];
 
@@ -141,7 +274,10 @@ const Exercises = (() => {
     const optsIn = (w, v, pos) => {
       const word = v.en.toLowerCase();
       const bad = (x) => vocabSet.has(word.slice(0, pos) + x.en.toLowerCase() + word.slice(pos + 1));
-      return shuffle([w, ...sample(pool.filter((x) => x.en !== w.en && !bad(x)), 3)]);
+      const near = letterNear(w.en);
+      const ok = pool.filter((x) => x.en !== w.en && !bad(x));
+      const close = sample(ok.filter((x) => near.has(x.en.toLowerCase())), 2);
+      return shuffle([w, ...close, ...sample(ok.filter((x) => !close.includes(x)), 3 - close.length)]);
     };
 
     // С какой буквы начинается слово: картинка, озвучка, "_og (собака)"
@@ -214,15 +350,10 @@ const Exercises = (() => {
     const unitSentences = unit.lessons.flatMap((l) => l.sentences || []);
     const courseSentences = COURSE.units.flatMap((u) => u.lessons.flatMap((l) => l.sentences || []));
 
-    // Отвлекающие варианты, не совпадающие с правильным ни по en, ни по ru.
-    // Сначала из той же главы (цвета среди цветов, еда среди еды), чтобы ответ нельзя было угадать по теме
+    // Отвлекающие варианты: похожие по написанию и по смыслу (цвета среди цветов, глаголы среди глаголов),
+    // чтобы ответ нельзя было угадать ни по теме, ни на слух
     const unitKeys = new Set(unitWords.map((w) => w.en));
-    const distractors = (word, n, from = pool) => {
-      const ok = (w) => w.en !== word.en && w.ru !== word.ru;
-      const near = sample(from.filter((w) => ok(w) && unitKeys.has(w.en)), n);
-      const nearRu = new Set(near.map((w) => w.ru));
-      return near.concat(sample(from.filter((w) => ok(w) && !unitKeys.has(w.en) && !nearRu.has(w.ru)), n - near.length));
-    };
+    const distractors = (word, n, from = pool) => similar(word, n, from, unitKeys);
 
     const out = [];
     const ws = shuffle(words);
@@ -295,10 +426,14 @@ const Exercises = (() => {
     sample(sentences, 3).forEach((s) => {
       const tokens = tokenize(s.en);
       const lower = new Set(tokens.map((t) => t.toLowerCase()));
-      const extra = uniqBy(
+      const nExtra = Math.min(4, Math.max(2, 7 - tokens.length));
+      const lessonTokens = uniqBy(
         shuffle(unitSentences.concat(sentences).flatMap((x) => tokenize(x.en)).concat(words.map((w) => w.en).filter((e) => !e.includes(" ")))),
         (t) => t.toLowerCase()
-      ).filter((t) => !lower.has(t.toLowerCase())).slice(0, Math.min(4, Math.max(2, 7 - tokens.length)));
+      ).filter((t) => !lower.has(t.toLowerCase()));
+      // Лишние плитки, которые легко перепутать: is/are, in/on, his/her, похожие по написанию
+      const tricky = confusers(tokens, nExtra, lessonTokens);
+      const extra = tricky.concat(lessonTokens.filter((t) => !tricky.some((x) => x.toLowerCase() === t.toLowerCase()))).slice(0, nExtra);
       body.push({ type: "build", sentence: s, tiles: shuffle(tokens.concat(extra).map((t, i) => ({ t, i }))) });
     });
 
@@ -310,7 +445,8 @@ const Exercises = (() => {
       const s = sentences[(Math.random() * sentences.length) | 0];
       if (Math.random() < 0.5) {
         // Услышать фразу и выбрать её перевод
-        const others = sample(uniqBy(unitSentences.concat(courseSentences).filter((x) => x.en !== s.en && x.ru !== s.ru), (x) => x.ru), 3).map((x) => x.ru);
+        // Варианты - похожие фразы: те же слова, то же строение
+        const others = similarSentences(s, 3, unitSentences.concat(courseSentences)).map((x) => x.ru);
         body.push({ type: "listen", meaning: true, target: s.en, ru: s.ru, answer: s.ru, options: shuffle([s.ru, ...others]) });
       } else {
         body.push({ type: "dictation", target: s.en, ru: s.ru, alt: s.alt || [] });
@@ -1128,5 +1264,5 @@ const Exercises = (() => {
     return ctrl;
   }
 
-  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor, ipaOf, ruPhon };
+  return { build, buildReview, buildTest, render, norm, matchText, esc, shuffle, grammarCard, bindSpeak, errorItem, errorList, explain, topicOf, exampleFor, ipaOf, ruPhon, similar };
 })();

@@ -55,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "22";
+  const APP_VERSION = "23";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -2050,8 +2050,9 @@ const App = (() => {
     const g = game;
     if (g.i >= g.words.length) { g.words = Exercises.shuffle(g.words); g.i = 0; }
     const w = g.words[g.i++];
-    const pool = Object.values(WORDS).filter((x) => x.ru !== w.ru && x.en !== w.en);
-    const opts = Exercises.shuffle([w, ...Exercises.shuffle(pool).slice(0, 3)]);
+    // Похожие варианты: по написанию и по смыслу (из той же главы)
+    const near = new Set(Object.values(WORDS).filter((x) => x.ui === w.ui).map((x) => x.en));
+    const opts = Exercises.shuffle([w, ...Exercises.similar(w, 3, Object.values(WORDS), near)]);
     const root = document.getElementById("gameRoot");
     root.innerHTML = `
       <div class="game-score">Верно: <b>${g.score}</b></div>
@@ -4010,6 +4011,8 @@ const App = (() => {
       syncNow();
       maybeWeekReport();
       resumeReminders();
+      // Словарь уровней подгружаем в фоне: из него берутся похожие варианты ответов в заданиях
+      setTimeout(() => loadLevels().catch(() => {}), 2500);
       // Старый профиль без аккаунта: один раз рассказываем про вход с любого устройства
       if (!Store.cloudSession()) {
         Store.setCloudSession({ hinted: true });
