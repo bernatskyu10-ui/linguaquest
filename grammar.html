@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Грамматика с нуля · LinguaQuest</title>
+  <meta name="description" content="45 уроков английской грамматики от первого предложения до C1: правила, примеры, ошибки и задания с проверкой.">
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/grammar.css">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/mascot/favicon-64.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/mascot/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+  <a class="skip" href="#main">К содержанию</a>
+  <header class="topbar">
+    <button class="icon-btn menu-btn" type="button" aria-label="Список уроков" aria-controls="sidebar" aria-expanded="false" data-menu>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <a class="brand" href="#/" aria-label="Грамматика с нуля, главная">
+      <img src="assets/mascot/logo.webp" alt="" width="32" height="32">
+      <span>Грамматика</span>
+    </a>
+    <div class="topbar__progress" aria-hidden="true"><div class="bar"><div class="bar__fill" data-total-bar></div></div><span data-total-text></span></div>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему"></button>
+    <a class="back-app" href="index.html">В приложение</a>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Уроки"></nav>
+    <div class="scrim" data-scrim hidden></div>
+    <main id="main" class="main" tabindex="-1"></main>
+  </div>
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+  <script src="js/svg.js"></script>
+  <script src="js/grammar-data.js"></script>
+  <script src="js/grammar-course.js"></script>
+</body>
+</html>

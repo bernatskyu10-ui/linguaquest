@@ -1558,3 +1558,10 @@ img, svg { display: block; }
   .lv-row--imp { gap: 6px; }
   .lv-row--imp .lv-row__say { width: 30px; }
 }
+
+/* Ссылка на курс «Грамматика с нуля» */
+.course-link { display: flex; align-items: center; gap: 14px; margin-bottom: var(--s-4); text-decoration: none; color: var(--text); border: 1px solid color-mix(in srgb, var(--orange, #ff7a45) 45%, transparent); }
+.course-link svg { width: 30px; height: 30px; flex: none; }
+.course-link span { display: grid; gap: 2px; min-width: 0; }
+.course-link small { color: var(--text-2); font-weight: 600; font-size: 13px; }
+@media (hover: hover) { .course-link:hover { transform: translateY(-1px); } }
