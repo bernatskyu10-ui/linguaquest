@@ -55,7 +55,7 @@ const App = (() => {
 
   // say - озвучка по нажатию кнопки; auto - автоматическая (уважает настройку)
   // Номер версии (совпадает с версией кэша в sw.js): виден на экране входа и в настройках
-  const APP_VERSION = "24";
+  const APP_VERSION = "25";
   const say = (text, slow) => (d() && d().settings.speech ? Speech.speak(text, { slow }) : Promise.resolve());
   const auto = (text) => { if (d() && d().settings.speech && d().settings.autoSpeak) Speech.speak(text); };
 
@@ -2470,7 +2470,7 @@ const App = (() => {
     const list = LEVEL_DATA.grammar.filter((t) => t.level === lvLevel);
     const sayBtn = (en) => (Speech.canSay(en) ? `<button class="speak-btn" type="button" data-say-word="${esc(en)}" aria-label="Прослушать">${SVG.icon("speaker")}</button>` : "");
     return `
-      <a class="card course-link" href="grammar.html">${SVG.icon("book")}<span><b>Курс «Грамматика с нуля»</b><small>45 уроков от A1 до C1: правило, примеры и задания с проверкой</small></span></a>
+      <a class="card course-link" href="grammar/">${SVG.icon("book")}<span><b>Сайт «Грамматика по шагам»</b><small>Объяснение по шагам, разминка и тренажёр перевода с проверкой</small></span></a>
       <p class="page__lead">${list.length} ${plural(list.length, "тема", "темы", "тем")} уровня ${lvLevel}. Нажмите на тему, чтобы раскрыть правило и примеры.</p>
       <div class="lv-topics">
         ${list.map((t, i) => `
@@ -2556,7 +2556,7 @@ const App = (() => {
     return `
       <div class="page">
         <div class="page__head"><h1>Справочник</h1><p>Как устроен английский и почему именно так. Нажимайте на английские слова, чтобы послушать.</p></div>
-        <a class="card course-link" href="grammar.html">${SVG.icon("book")}<span><b>Курс «Грамматика с нуля»</b><small>45 уроков от A1 до C1: правило, примеры и задания с проверкой</small></span></a>
+        <a class="card course-link" href="grammar/">${SVG.icon("book")}<span><b>Сайт «Грамматика по шагам»</b><small>Объяснение по шагам, разминка и тренажёр перевода с проверкой</small></span></a>
         <div class="segmented ref-tabs" role="tablist">${tabs.map(([id, label]) => `<button role="tab" aria-selected="${refTab === id}" class="${refTab === id ? "is-active" : ""}" data-ref-tab="${id}">${label}</button>`).join("")}</div>
         <div id="refBody">${refBody()}</div>
       </div>`;
