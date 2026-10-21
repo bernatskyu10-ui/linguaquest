@@ -40,7 +40,7 @@
       Ch("___ you ever been abroad before that summer?", ["Have", "Did", "Had"], 2, "Опыт до момента в прошлом: Had you ever been ...?"),
       Ch("When I got home, I ___ that I had lost my keys.", ["realized", "had realized", "have realized"], 0, "Понял позже, чем потерял: realized в Past Simple."),
       I("They ___ (already / eat) when I arrived. Впишите три слова.", ["had already eaten"], "Раньше моего прихода: had + already + eaten."),
-      I("Переведите: Когда мы приехали, поезд уже ушёл.", ["When we arrived the train had already left", "The train had already left when we arrived", "When we arrived the train had left", "When we came the train had already left", "When we got there the train had already left", "The train had left when we arrived", "The train had already left when we got there"], "Поезд ушёл раньше: had left."),
+      I("Переведите: Когда мы приехали, поезд уже ушёл.", ["When we arrived the train had already left", "The train had already left when we arrived", "When we arrived the train had left", "When we arrived the train had already gone", "The train had already gone when we arrived", "When we came the train had already left", "When we got there the train had already left", "The train had left when we arrived", "The train had already left when we got there"], "Поезд ушёл раньше: had left."),
       F("Исправьте: When I came, the film already started.", ["When I came the film had already started", "The film had already started when I came"], "Фильм начался раньше моего прихода: had already started.")
     ]
   };
@@ -85,7 +85,7 @@
       O("Соберите: Дождь идёт с утра.", ["It", "has been", "raining", "since", "the morning"], "It has been raining since the morning", "It = оно, значит has. С какого момента: since."),
       Ch("She has been working here ___ 2021.", ["for", "since", "from"], 1, "2021 = точка начала, значит since."),
       Ch("I ___ him for ten years.", ["have been knowing", "have known", "know"], 1, "Know не ставим в -ing: have known."),
-      Ch("I'm tired. I ___ all day.", ["have been studying", "have studied", "study"], 0, "Важен процесс и как долго (весь день): have been studying."),
+      Ch("I'm tired. I ___ all day.", ["have been studying", "am studying", "study"], 0, "Важен процесс и как долго (весь день): have been studying."),
       Ch("I ___ three chapters of this book.", ["have been reading", "have read", "am reading"], 1, "Сколько сделано (результат): Present Perfect Simple."),
       I("They ___ (play) football for two hours. Впишите три слова.", ["have been playing"], "Длится два часа: have been playing."),
       I("Переведите: Я живу здесь с детства.", ["I have been living here since I was a child", "I have lived here since I was a child", "I have been living here since childhood", "I have lived here since childhood", "I have been living here since I was little", "I have lived here since I was little"], "Живу до сих пор: have been living / have lived + since."),
@@ -93,7 +93,7 @@
     ]
   };
   T[55] = [
-    ["Я жду уже двадцать минут.", "I have been waiting for twenty minutes", "have been waiting"],
+    ["Я жду уже двадцать минут.", "I have been waiting for twenty minutes|I have been waiting twenty minutes", "have been waiting"],
     ["Она учит английский с 2020 года.", "She has been learning English since 2020|She has been studying English since 2020|She's been learning English since 2020|She's been studying English since 2020", "since 2020"],
     ["Сколько ты уже здесь живёшь?", "How long have you been living here|How long have you lived here", "How long have you"],
     ["Дождь идёт с утра.", "It has been raining since morning|It has been raining since the morning|It's been raining since morning|It's been raining since the morning", "since morning"],
@@ -262,7 +262,7 @@ Which / Whose / How many + существительное тоже бывают 
 <tr><td><b>get used to</b> + -ing / сущ.</td><td>привыкать, привыкнуть</td><td><i>I <b>am getting used to</b> the cold.</i></td></tr></table>
 <div class="formula">be / get used to + -ing или существительное</div>
 <p>Здесь <b>to</b> работает как русское «к» (привык <b>к</b> чему), поэтому после него <b>-ing</b> или существительное, а не простой глагол.<br>
-<b>be</b> меняется по временам: <i>I <b>was</b> used to it. I'<b>ll</b> never <b>be</b> used to it.</i><br>
+<b>be</b> меняется по лицам и временам: <i>She <b>is</b> used to it. I <b>was</b> used to it.</i><br>
 <b>get</b> тоже: <i>You'<b>ll get used to</b> it. I <b>got used to</b> the noise. I <b>can't get used to</b> it.</i></p>
 <div class="err">❌ I am used to get up early. → ✅ I am used to getting up early.<br>❌ I used to getting up early. (нет am) → ✅ I am used to getting up early.<br>❌ I use to the noise. → ✅ I'm used to the noise.</div>`);
   P[59] = {
@@ -298,7 +298,7 @@ Which / Whose / How many + существительное тоже бывают 
     ["Я не могу привыкнуть к этой погоде.", "I can't get used to this weather", "can't get used to"],
     ["Мне трудно привыкнуть к разнице во времени.", "It is hard for me to get used to the time difference|It is difficult for me to get used to the time difference|I find it hard to get used to the time difference|I find it difficult to get used to the time difference", "get used to"],
     ["Я привык говорить по-английски на уроках.", "I am used to speaking English in class|I am used to speaking English in lessons|I am used to speaking English at lessons|I am used to speaking English in classes", "used to speaking"],
-    ["Раньше она не любила спорт.", "She didn't use to like sport|She didn't use to like sports|She never used to like sport|She never used to like sports", "didn't use to"]
+    ["Раньше она не любила спорт.", "She didn't use to like sport|She didn't use to like sports|She never used to like sport|She never used to like sports|She used not to like sport|She used not to like sports", "didn't use to"]
   ];
 
   /* ---------- 60. Future Continuous и Future Perfect ---------- */

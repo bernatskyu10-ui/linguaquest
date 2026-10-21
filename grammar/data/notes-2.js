@@ -176,7 +176,7 @@
     },
     deep: {
       why: [
-        "Эти слова называют наречиями частотности: наречие (слово, отвечающее «как?») здесь показывает, как часто что-то бывает. Они почти всегда идут с Present Simple (настоящее простое время), потому что описывают привычки и повторяющиеся вещи, а не одно действие прямо сейчас.",
+        "Эти слова называют наречиями частотности: наречие (слово, отвечающее «как?») здесь показывает, как часто что-то бывает. Чаще всего они идут с Present Simple (настоящее простое время), потому что описывают привычки и повторяющиеся вещи, а не одно действие прямо сейчас.",
         "Английский строже русского к порядку слов. По-русски можно «я хожу всегда» и «всегда я хожу». По-английски у наречия частотности своё место: в середине предложения, прямо перед смысловым глаголом (тем, что называет действие: go, eat, play). Между глаголом и предметом действия его не вставляют.",
         "С be (am / is / are, was / were) всё наоборот: наречие идёт ПОСЛЕ. Почему? Be здесь сам главный глагол-связка, а признак после него (late, happy) описывает человека. Наречие встаёт между be и признаком: She is always late. Удобно думать так: наречие стоит после первого «маленького» глагола (am / is / are, don't, can), а если его нет, перед глаголом действия.",
         "Never уже содержит отрицание («никогда не»). В русском двойное отрицание норма («никогда не ем»), а в английском на предложение одно отрицание. Поэтому I never eat fish, без don't. Если очень хочется don't, берём ever: I don't ever eat fish (так говорят реже)."
@@ -189,7 +189,7 @@
         "Шаг 5. Never? Уберите don't / doesn't: never уже отрицание. Глагол после he / she / it всё равно с -s: He never eats fish."
       ],
       cases: [
-        { h: "Sometimes и usually в начале", t: "Sometimes, usually, often можно вынести в начало, чтобы выделить. Always и never в начало обычно не ставят.", ex: [["Sometimes we play chess.", "Иногда мы играем в шахматы."], ["Usually I walk to school.", "Обычно я хожу в школу пешком."]] },
+        { h: "Sometimes и usually в начале", t: "Sometimes и usually можно вынести в начало, чтобы выделить. Always и never в начало обычно не ставят.", ex: [["Sometimes we play chess.", "Иногда мы играем в шахматы."], ["Usually I walk to school.", "Обычно я хожу в школу пешком."]] },
         { h: "He never eats: -s остаётся", t: "Never не помощник, а просто наречие. Поэтому у he / she / it глагол сохраняет -s.", ex: [["She never drinks coffee.", "Она никогда не пьёт кофе."]] },
         { h: "Every day, twice a week: в конец", t: "Длинные выражения частоты (every day, twice a week, on Mondays) ставим в конец или в начало, но не в середину.", ex: [["I play football twice a week.", "Я играю в футбол два раза в неделю."]] },
         { h: "Ever в вопросах", t: "В вопросе «когда-нибудь, вообще» = ever: Do you ever ...? Ответ часто never или sometimes.", ex: [["Do you ever eat sushi? - No, never.", "Ты вообще ешь суши? - Нет, никогда."]] }
@@ -276,7 +276,7 @@
         { h: "Its или it's", t: "Its = «его / её» у предмета или животного, без апострофа. It's = it is. Это та же ловушка, что whose и who's.", ex: [["The dog wagged its tail.", "Собака виляла хвостом."], ["It's my dog.", "Это моя собака."]] }
       ],
       faq: [
-        ["Как произносится 's?", "Как [z] или [s]: Tom's звучит как «Томз». После шипящих звуков (James, Alex) добавляется слог: James's звучит как «Джеймсиз»."],
+        ["Как произносится 's?", "Как [z] или [s]: Tom's звучит как «Томз». После свистящих и шипящих звуков (James, Alex) добавляется слог: James's звучит как «Джеймсиз»."],
         ["Можно ли сказать «the car of my dad»?", "Поймут, но так не говорят. Для людей нормой будет my dad's car."],
         ["Чем whose отличается от who's?", "Whose = чей. Who's = who is (кто есть). Whose bag? = чья сумка? Who's there? = кто там?"],
         ["Как ответить на Whose ...?", "It's mine / yours / his (мой, твой, его) или It's Tom's. Вещь второй раз можно не называть."]
@@ -314,10 +314,10 @@
         { h: "Any- в утверждении = «любой»", t: "В обычном утверждении any- значит «любой, всё равно какой, кто угодно».", ex: [["You can sit anywhere.", "Садись куда хочешь."], ["Anybody can do it.", "Это может сделать кто угодно."]] },
         { h: "Nobody в начале предложения", t: "Если «никто» стоит в начале как подлежащее, берём nobody и глагол без don't. Anybody с not в начало не ставят.", ex: [["Nobody called me.", "Никто мне не звонил."]] },
         { h: "Something + прилагательное", t: "Прилагательное идёт ПОСЛЕ такого слова, а не перед ним.", ex: [["something interesting", "что-то интересное"], ["somewhere warm", "где-нибудь в тёплом месте"]] },
-        { h: "Everyone и every one", t: "Everyone слитно = все люди. Every one раздельно = каждый (из предметов).", ex: [["Everyone is here.", "Все здесь."], ["I ate every one of the cookies.", "Я съел каждое печенье."]] }
+        { h: "Everyone и every one", t: "Everyone слитно = все люди. Every one раздельно = каждый (из предметов).", ex: [["Everyone is here.", "Все здесь."], ["I ate every one of the cookies.", "Я съел все печенья до единого."]] }
       ],
       faq: [
-        ["Somebody и someone одно и то же?", "Да. Смысл одинаковый, -body чуть чаще в разговоре, -one в письме."],
+        ["Somebody и someone одно и то же?", "Да. Смысл одинаковый. Someone встречается чуть чаще, особенно в письме, somebody звучит чуть разговорнее."],
         ["Почему «Everybody is», ведь людей много?", "Грамматически everybody одно слово в единственном числе, как he. Поэтому is, knows, likes."],
         ["Как правильно сказать «ничего не знаю»?", "Два варианта: I don't know anything или I know nothing. Первый в разговоре звучит обычнее."],
         ["А в вопросе можно some?", "Да, если вы что-то предлагаете или просите: Would you like something to drink? Can I ask you something?"]
@@ -354,10 +354,10 @@
         { h: "Very или too", t: "Very просто усиливает. Too говорит, что это слишком и что-то не получится.", ex: [["It's very expensive, but I'll buy it.", "Очень дорого, но я куплю."], ["It's too expensive. I can't buy it.", "Слишком дорого. Я не могу это купить."]] },
         { h: "Not ... enough: не хватает", t: "«Недостаточно» строим через отрицание глагола: isn't ... enough, don't have enough.", ex: [["The room isn't big enough.", "Комната недостаточно большая."], ["I don't have enough money.", "Мне не хватает денег."]] },
         { h: "Too в конце = «тоже»", t: "Too в конце фразы это совсем другое значение: «тоже». Me too = я тоже.", ex: [["I like it too.", "Мне это тоже нравится."]] },
-        { h: "for + человек + to + глагол", t: "Можно сказать, для кого это слишком или достаточно.", ex: [["This book is too difficult for me to read.", "Эта книга слишком трудная, чтобы я её прочитал."]] }
+        { h: "for + человек + to + глагол", t: "Можно сказать, для кого это слишком или достаточно.", ex: [["This book is too difficult for me to read.", "Эта книга слишком трудная, мне её не прочитать."]] }
       ],
       faq: [
-        ["Почему нельзя «enough old»?", "С прилагательными enough всегда после: old enough. Перед словом enough ставят только существительное: enough time."],
+        ["Почему нельзя «enough old»?", "С прилагательными enough всегда после: old enough. Впереди enough стоит только перед существительным: enough time."],
         ["Можно ли сказать «too much hot»?", "Нет. Too much только перед существительным (too much sugar). С прилагательным просто too: too hot."],
         ["Чем too отличается от very?", "Very = очень, просто факт. Too = слишком, это мешает. It's very cold, but I'm OK. It's too cold, I'm going home."],
         ["Как сказать «слишком много людей»?", "Too many people. Людей можно посчитать, поэтому many."]
@@ -372,7 +372,7 @@
       forms: [["хочу", "I'd like + вещь / I'd like to + глагол"], ["предлагаю", "Would you like + вещь / to + глагол?"], ["можно мне?", "Can I / Could I / May I + глагол?"], ["сделай", "Can you / Could you + глагол?"], ["не против?", "Do you mind if I ...? / Do you mind + -ing?"]],
       when: ["Заказ, покупка: I'd like a coffee, please.", "Предложение: Would you like some tea?", "Просьба: Could you help me?", "Разрешение: May I come in?"],
       signals: ["please", "would", "could", "may", "Do you mind"],
-      examples: [["I'd like a glass of water, please.", "Можно мне стакан воды, пожалуйста?"], ["Would you like to come to my party?", "Хочешь прийти ко мне на вечеринку?"], ["Could you open the window, please?", "Не могли бы вы открыть окно?"]],
+      examples: [["I'd like a glass of water, please.", "Я бы хотел стакан воды, пожалуйста."], ["Would you like to come to my party?", "Хочешь прийти ко мне на вечеринку?"], ["Could you open the window, please?", "Не могли бы вы открыть окно?"]],
       mistakes: [["Do you like some tea?", "Would you like some tea?"], ["Would you like go?", "Would you like to go?"], ["Could you to help me?", "Could you help me?"]],
       remember: "Want звучит «Дай!», would like звучит «будьте добры»."
     },
@@ -400,7 +400,7 @@
       faq: [
         ["Сказать I want грубо?", "Не всегда, но в кафе и магазине звучит слишком прямо. I'd like или Can I have ...? звучит нормально."],
         ["Чем could отличается от can в просьбе?", "По смыслу ничем, но could мягче и вежливее. С незнакомыми и взрослыми лучше could."],
-        ["Почему «Would you like to go», но «Could you go» без to?", "Like всегда требует to перед глаголом (like to go). А после could, can, may глагол идёт без to."],
+        ["Почему «Would you like to go», но «Could you go» без to?", "После would like глагол всегда идёт с to (would like to go). А после could, can, may глагол идёт без to."],
         ["Как ответить на Would you like ...?", "Yes, please. или No, thank you. Ответ Yes, I would тоже правильный, но звучит менее естественно."]
       ]
     }
@@ -441,7 +441,7 @@
       faq: [
         ["Почему нельзя «I listen music»?", "Listen всегда требует to перед тем, что слушаем: listen to music. Без to предмет к глаголу не «пристёгивается»."],
         ["Как запомнить все сочетания?", "Учите их в коротких фразах (listen to music, wait for a bus), записывайте в тетрадь и говорите вслух. Через пару недель они станут автоматическими."],
-        ["Почему discuss без about?", "Discuss уже значит «обсуждать что-то», about в нём как будто уже сидит. А talk без about не обойдётся: talk about."],
+        ["Почему discuss без about?", "Discuss уже значит «обсуждать что-то», about в нём как будто уже сидит. А после talk тему называем через about: talk about the plan."],
         ["Hear тоже с to?", "Нет. Hear = слышать, без to: I hear music. Listen to = слушать специально."]
       ]
     }
@@ -482,7 +482,7 @@
         ["Можно ли начать предложение с because?", "В коротком ответе на Why? в разговоре можно: Because I was tired. В письменном тексте лучше соединять с главной частью: Because I was tired, I went to bed."],
         ["Почему «when I come», если это будущее?", "После when, if, before, after, until про будущее пишут настоящее время. Будущее уже видно из другой части с will."],
         ["Чем so отличается от because?", "Because называет причину (почему?), so называет результат (что из этого вышло?)."],
-        ["Куда ставить also и too?", "Too в конце: I like coffee too. Also перед глаголом действия: I also like coffee. После глагола (I like also) нельзя."]
+        ["Куда ставить also и too?", "Too в конце: I like coffee too. Also перед глаголом действия: I also like coffee, но после am / is / are: I am also tired. После глагола действия (I like also) нельзя."]
       ]
     }
   };
@@ -501,7 +501,7 @@
     deep: {
       why: [
         "Английский сравнивает двумя способами, и выбор зависит от длины слова. Короткие (один слог: tall, cheap, big) получают окончание: -er (более) и -est (самый). Длинные (expensive, interesting, beautiful) окончание не берут, иначе слово стало бы неудобным, и вместо него ставят отдельные слова more и the most. Как в русском: «выше», но «более интересный».",
-        "Двусложные слова на -y (happy, easy, busy) ведут себя как короткие: y → i + er: happier, the easiest. Большинство других двусложных слов (modern, famous, careful) берут more. Если сомневаетесь с длинным словом, more почти никогда не будет грубой ошибкой.",
+        "Двусложные слова на -y (happy, easy, busy) ведут себя как короткие: y → i + er: happier, the easiest. Большинство других двусложных слов (modern, famous, careful) берут more. Если сомневаетесь с двусложным словом, more почти никогда не будет грубой ошибкой.",
         "«Чем» = than. Не путайте с then («потом»): они звучат похоже. «Самый» всегда с the, потому что самый бывает только один, конкретный: the tallest boy in the class. Нельзя смешивать два способа: more better и the most biggest ошибки, как «более лучше» по-русски.",
         "Чтобы сказать «такой же, как», сравнительная форма не нужна: as + обычное слово + as: as tall as me. «Не такой, как» = not as ... as. Это удобный способ сравнить, не думая об окончаниях."
       ],
@@ -532,7 +532,7 @@
       name: "Past Continuous: «делал в тот момент»",
       idea: "Was / were + глагол-ing = «делал, был в процессе» в какой-то момент прошлого. Часто это фон, который прервало короткое действие.",
       forms: [["+", "I / he / she / it was, you / we / they were + глагол-ing"], ["-", "wasn't / weren't + глагол-ing"], ["?", "Was / Were + кто + глагол-ing?"]],
-      when: ["Процесс в точный момент: At 8 pm I was watching TV.", "Длинное прервали коротким: I was sleeping when the phone rang.", "Два процесса сразу: While I was cooking, she was reading.", "Фон рассказа: It was raining, people were hurrying home."],
+      when: ["Процесс в точный момент: At 8 pm I was watching TV.", "Длинное прервали коротким: I was sleeping when the phone rang.", "Два процесса сразу: While I was cooking, she was reading.", "Фон рассказа: It was raining and people were hurrying home."],
       signals: ["at 8 pm yesterday", "at that moment", "when", "while", "all evening", "this time last year"],
       examples: [["At 8 pm yesterday I was watching TV.", "Вчера в 8 вечера я смотрел телевизор."], ["I was sleeping when the phone rang.", "Я спал, когда зазвонил телефон."], ["While I was cooking, she was reading.", "Пока я готовил, она читала."]],
       mistakes: [["I was watch TV.", "I was watching TV."], ["When the phone was ringing, I slept.", "When the phone rang, I was sleeping."], ["They was playing.", "They were playing."]],

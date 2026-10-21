@@ -57,12 +57,12 @@
     ["Иногда мы смотрим фильмы.", "Sometimes we watch films|Sometimes we watch movies|We sometimes watch films|We sometimes watch movies|We watch films sometimes|We watch movies sometimes", "sometimes можно в начало"],
     ["Я никогда не пью кофе.", "I never drink coffee", "never без don't"],
     ["Мой брат всегда опаздывает.", "My brother is always late", "is + always"],
-    ["Вечером мы обычно дома.", "We are usually at home in the evening|We are usually at home in the evenings|In the evening we are usually at home|In the evenings we are usually at home|We are usually home in the evening", "are + usually"],
+    ["Вечером мы обычно дома.", "We are usually at home in the evening|We are usually at home in the evenings|In the evening we are usually at home|In the evenings we are usually at home|We are usually home in the evening|We are usually home in the evenings", "are + usually"],
     ["Ты часто ходишь в кино?", "Do you often go to the cinema|Do you often go to the movies", "Do you often"],
     ["Как часто ты читаешь книги?", "How often do you read books", "How often"],
     ["Она редко мне звонит.", "She rarely calls me|She seldom calls me|She rarely phones me|She seldom phones me", "rarely перед глаголом"],
     ["Я обычно не ем мясо.", "I don't usually eat meat|I usually don't eat meat", "don't usually"],
-    ["Он никогда не устаёт.", "He is never tired|He never gets tired", "is + never"]
+    ["Он никогда не устаёт.", "He is never tired|He never gets tired", "is + never или never + gets"]
   ];
 
   /* ---------- 47. Прилагательное или наречие ---------- */
@@ -82,7 +82,7 @@
     steps: [
       S("Шаг 1. Какой? или Как?", "Прилагательное описывает предмет или человека: какой он. Наречие описывает действие: как его делают. Как в русском: быстрый бегун, но бегает быстро.", [["He is a quick runner.", "Он быстрый бегун."], ["He runs quickly.", "Он быстро бегает."]]),
       S("Шаг 2. Наречие = прилагательное + ly", "Чаще всего просто добавляем -ly. Если слово кончается на согласную + y, y меняется на i: easy → easily.", [["Please speak slowly.", "Пожалуйста, говорите медленно."], ["I did it easily.", "Я сделал это легко."], ["Drive carefully!", "Езжай осторожно!"]]),
-      S("Шаг 3. Где стоит наречие", "Наречие ставим после глагола или после того, что делаем. Между глаголом и предметом его не вставляем: не «speaks well English».", [["She speaks English well.", "Она хорошо говорит по-английски."], ["He closed the door quietly.", "Он тихо закрыл дверь."]]),
+      S("Шаг 3. Где стоит наречие", "Наречие обычно ставим после глагола, а если у глагола есть дополнение (что? кого?), то после дополнения. Между глаголом и дополнением его не вставляем: не «speaks well English».", [["She speaks English well.", "Она хорошо говорит по-английски."], ["He closed the door quietly.", "Он тихо закрыл дверь."]]),
       S("Шаг 4. Исключения: well, fast, hard, late, early", "Good → well. А fast, hard, late, early не меняются. «Fastly» не бывает. Осторожно: hardly значит «почти не», lately значит «в последнее время».", [["You play the guitar well.", "Ты хорошо играешь на гитаре."], ["My brother runs fast.", "Мой брат быстро бегает."], ["We work hard.", "Мы усердно работаем."]]),
       S("Шаг 5. Look, feel, sound, taste: прилагательное", "Эти глаголы описывают, какой кто-то или что-то, поэтому после них прилагательное. По-русски «выглядишь устало», а по-английски tired, без -ly.", [["You look tired.", "Ты выглядишь усталым."], ["This cake tastes good.", "Этот торт вкусный."], ["That sounds great!", "Звучит здорово!"]])
     ],
@@ -112,7 +112,7 @@
     ["Эта пицца вкусно пахнет.", "This pizza smells good|This pizza smells nice|This pizza smells delicious|This pizza smells great", "smell + прилагательное"],
     ["Я легко сделал это задание.", "I did this task easily|I did the task easily|I did this exercise easily|I easily did this task|I easily did the task", "easy → easily"],
     ["Она пришла поздно.", "She came late|She arrived late", "late без -ly"],
-    ["Он плохо играет в теннис.", "He plays tennis badly|He is bad at tennis", "bad → badly"]
+    ["Он плохо играет в теннис.", "He plays tennis badly|He plays tennis poorly|He is bad at tennis", "bad → badly"]
   ];
 
   /* ---------- 48. 's и whose ---------- */
@@ -125,7 +125,7 @@
 <tr><td>двое вместе</td><td>'s у второго</td><td>Tom and Anna<b>'s</b> house</td></tr></table>
 <p><b>У вещей</b> обычно <b>of</b>: <i>the end <b>of</b> the film</i> - конец фильма, <i>the name <b>of</b> the street</i> - название улицы.</p>
 <p><b>Whose?</b> = чей? <i><b>Whose</b> phone is this? - It's Tom's.</i> - Чей это телефон? - Тома.</p>
-<div class="err">❌ the car of my dad → ✅ my dad's car &nbsp; ❌ my parents's house → ✅ my parents' house<br>❌ Who's bag is this? → ✅ Whose bag is this? &nbsp; ❌ the film's end → ✅ the end of the film</div>`);
+<div class="err">❌ the car of my dad → ✅ my dad's car &nbsp; ❌ my parents's house → ✅ my parents' house<br>❌ Who's bag is this? → ✅ Whose bag is this? &nbsp; ❌ Toms bike → ✅ Tom's bike</div>`);
 
   P[48] = {
     steps: [
@@ -184,13 +184,13 @@
       S("Шаг 3. Any- в вопросах и после not", "В вопросе и после don't, can't, didn't берём any-: что-нибудь, кто-нибудь, где-нибудь.", [["Is anybody at home?", "Кто-нибудь дома?"], ["I can't see anything.", "Я ничего не вижу."]]),
       S("Шаг 4. Только одно «не»", "По-русски «я никого не видел» с двумя отрицаниями. По-английски отрицание одно: либо not + any-, либо no- без not.", [["I didn't see anybody.", "Я никого не видел."], ["I saw nobody.", "Я никого не видел."], ["I don't know anything. = I know nothing.", "Я ничего не знаю."]]),
       S("Шаг 5. No- в начале и в коротких ответах", "Если «никто» или «ничего» стоит в начале, берём nobody, nothing. Глагол тогда без not. Так же в коротком ответе.", [["Nobody knows the answer.", "Никто не знает ответ."], ["What did you buy? - Nothing.", "Что ты купил? - Ничего."]]),
-      S("Шаг 6. Every-: все, всё, везде", "Everybody и everything по-русски множественные («все», «всё»), но по-английски глагол как с he: is, likes, knows.", [["Everybody likes music.", "Все любят музыку."], ["Everything is OK.", "Всё в порядке."], ["I looked everywhere.", "Я искал везде."]])
+      S("Шаг 6. Every-: все, всё, везде", "По-русски «все любят» во множественном числе, но everybody и everything по-английски требуют глагол как с he: is, likes, knows.", [["Everybody likes music.", "Все любят музыку."], ["Everything is OK.", "Всё в порядке."], ["I looked everywhere.", "Я искал везде."]])
     ],
     tasks: [
       O("Соберите: Я ничего не знаю.", ["I", "don't", "know", "anything"], "I don't know anything", "После don't берём any-: anything."),
       O("Соберите: Все любят пиццу.", ["Everybody", "likes", "pizza"], "Everybody likes pizza", "Everybody как he: likes."),
       O("Соберите: Ты что-нибудь видишь?", ["Can", "you", "see", "anything"], "Can you see anything", "В вопросе any-: anything."),
-      Ch("I didn't buy ___.", ["nothing", "anything", "something"], 1, "Уже есть didn't, поэтому anything."),
+      Ch("I didn't buy ___. (ничего)", ["nothing", "anything", "something"], 1, "«Ничего» при didn't: anything. Nothing дало бы двойное отрицание."),
       Ch("___ knows the answer. (никто)", ["Nobody", "Anybody", "Somebody"], 0, "Никто в начале: Nobody."),
       Ch("I can't find my keys ___.", ["nowhere", "anywhere", "everywhere"], 1, "После can't берём any-: anywhere."),
       Ch("Everybody ___ happy.", ["are", "is", "be"], 1, "Everybody как he: is."),
@@ -230,7 +230,7 @@
 
   P[50] = {
     steps: [
-      S("Шаг 1. Too = слишком", "Too ставим перед прилагательным. Оно всегда значит, что это плохо, мешает. Very просто «очень», без жалобы.", [["The tea is too hot.", "Чай слишком горячий."], ["This jacket is too big for me.", "Эта куртка мне слишком большая."]]),
+      S("Шаг 1. Too = слишком", "Too ставим перед прилагательным. Обычно оно значит, что это плохо, мешает. Very просто «очень», без жалобы.", [["The tea is too hot.", "Чай слишком горячий."], ["This jacket is too big for me.", "Эта куртка мне слишком большая."]]),
       S("Шаг 2. Enough после прилагательного", "По-русски «достаточно большой», а по-английски наоборот: big enough. Enough встаёт после прилагательного.", [["The room is big enough.", "Комната достаточно большая."], ["Is the water warm enough?", "Вода достаточно тёплая?"]]),
       S("Шаг 3. Enough перед существительным", "С существительным enough стоит впереди, как по-русски: достаточно денег, достаточно времени.", [["We have enough time.", "У нас достаточно времени."], ["There aren't enough chairs.", "Не хватает стульев."]]),
       S("Шаг 4. Too much и too many", "Если после «слишком много» идёт существительное, берём too much для того, что не считаем (water, money, sugar), и too many для того, что считаем (people, books).", [["There is too much salt in the soup.", "В супе слишком много соли."], ["There are too many people here.", "Здесь слишком много людей."]]),
@@ -263,7 +263,7 @@
     ["Ты достаточно взрослый, чтобы понять.", "You are old enough to understand", "old enough to"],
     ["Он слишком молод, чтобы водить машину.", "He is too young to drive|He is too young to drive a car", "too young to"],
     ["Вода достаточно тёплая?", "Is the water warm enough", "warm enough"],
-    ["Я ем слишком много сладкого.", "I eat too many sweets|I eat too much sugar|I eat too much sweet food|I eat too many sweet things", "too much / too many"]
+    ["Я ем слишком много сладкого.", "I eat too many sweets|I eat too much sugar|I eat too much sweet food|I eat too many sweet things|I eat too much candy", "too much / too many"]
   ];
 
   /* ---------- 51. Would like и вежливые просьбы ---------- */
@@ -325,7 +325,7 @@
 <tr><td>План, решил раньше</td><td><b>going to</b></td><td>I<b>'m going to</b> learn Spanish.</td></tr>
 <tr><td>Видно по признакам</td><td><b>going to</b></td><td>Look at the clouds! It<b>'s going to</b> rain.</td></tr>
 <tr><td>Договорённость: время, место, билеты</td><td><b>Present Continuous</b></td><td>I<b>'m meeting</b> Tom at 6. We<b>'re flying</b> to Sochi on Friday.</td></tr></table>
-<p><b>Не думаю, что</b>: <i>I <b>don't think</b> he will come.</i> (не «I think he won't»)</p>
+<p><b>Не думаю, что</b>: <i>I <b>don't think</b> he will come.</i> (так естественнее и мягче, чем «I think he won't come»)</p>
 <div class="err">❌ Wait, I help you. → ✅ Wait, I'll help you.<br>❌ Look at the clouds! It will rain. → ✅ It's going to rain.<br>❌ I will to call you. → ✅ I will call you.</div>`);
 
   P[52] = {
@@ -362,7 +362,7 @@
     ["Не думаю, что он придёт.", "I don't think he will come|I don't think he is going to come", "I don't think + will"],
     ["Обещаю, я позвоню тебе.", "I promise I will call you|I promise I will phone you|I promise to call you", "Обещание: will"],
     ["Осторожно! Ты сейчас упадёшь.", "Be careful you are going to fall|Careful you are going to fall", "Видно: going to"],
-    ["Я возьму суп.", "I will have the soup|I will take the soup|I will have soup|I will take soup", "Решил сейчас: will"],
+    ["Я возьму суп.", "I will have the soup|I will take the soup|I will have soup|I will take soup|I will get the soup", "Решил сейчас: will"],
     ["Он, наверное, опоздает.", "He will probably be late|Probably he will be late|He is probably going to be late", "probably + will"]
   ];
 

@@ -115,14 +115,16 @@
   }
 
   /* ---------- Итог ---------- */
-  function result(el, score, total, party) {
+  // keep: не считать очки (например, когда вместо счёта показан уровень)
+  function result(el, score, total, party, keep) {
     rise(el, { y: 12, s: 0.98, d: 0.32 });
-    rise(el.querySelectorAll(".result__text, .next-row, .mist > div"), { y: 8, d: 0.28, gap: 0.05, delay: 0.25 });
+    rise(el.querySelectorAll(".result__text, .next-row, .mist > div, .levels-row > span, .weak__item"), { y: 8, d: 0.28, gap: 0.05, delay: 0.25 });
     if (calm()) return;
+    if (party) setTimeout(() => confetti(el), 350);
+    if (keep) return;
     const n = el.querySelector(".result__score");
     const o = { v: 0 };
     A.animate(o, { v: [0, score], duration: 900, delay: 150, ease: "outExpo", onUpdate: () => { n.textContent = `${Math.round(o.v)} / ${total}`; } });
-    if (party) setTimeout(() => confetti(el), 350);
   }
   function confetti(host) {
     const layer = document.createElement("div");

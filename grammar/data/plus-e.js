@@ -10,7 +10,7 @@
   P[37] = {
     steps: [
       S("Шаг 1. Слово = корень + кусочки", "Как и в русском, из одного корня получается много слов. Приставка спереди меняет смысл, суффикс сзади меняет часть речи. Выучив пару десятков таких кусочков, вы начнёте понимать сотни новых слов без словаря.", [["happy → unhappy → happiness", "счастливый → несчастный → счастье"], ["use → useful → useless", "польза → полезный → бесполезный"]]),
-      S("Шаг 2. «Не-»: un-, in-, im-, dis-", "Самая частая приставка «не» - un- (unhappy). Перед p и m обычно im- (impossible), перед l - il- (illegal), перед r - ir- (irregular). С глаголами чаще dis- (agree → disagree). Точного правила для всех слов нет, поэтому новое слово лучше проверить в словаре.", [["This task is impossible.", "Это задание невыполнимо."], ["I disagree with you.", "Я с тобой не согласен."], ["He looked unhappy.", "Он выглядел несчастным."]]),
+      S("Шаг 2. «Не-»: un-, in-, im-, dis-", "Самая частая приставка «не» - un- (unhappy). Есть и in- (incorrect, independent). Перед p и m обычно im- (impossible), перед l - il- (illegal), перед r - ir- (irregular). С глаголами чаще dis- (agree → disagree). Точного правила для всех слов нет, поэтому новое слово лучше проверить в словаре.", [["This task is impossible.", "Это задание невыполнимо."], ["I disagree with you.", "Я с тобой не согласен."], ["He looked unhappy.", "Он выглядел несчастным."]]),
       S("Шаг 3. re-, mis-, over-, under-, out-, de-", "re- = снова, как русское «пере-» (rewrite = переписать). mis- = неправильно (misunderstand). over- = слишком, under- = недо- (oversleep = проспать, underestimate = недооценить). out- = превзойти (outrun = обогнать). de- = убрать, отменить (deactivate).", [["I overslept and missed the bus.", "Я проспал и опоздал на автобус."], ["Sorry, I misunderstood you.", "Извини, я тебя неправильно понял."], ["Please rewrite this sentence.", "Пожалуйста, перепиши это предложение."]]),
       S("Шаг 4. Человек и существительное: -er, -or, -ist, -tion, -ment, -ness, -ity", "-er / -or / -ist обозначают человека: teacher, actor, economist. -tion, -ment, -ness, -ity делают из глагола или прилагательного существительное: educate → education, develop → development, kind → kindness, possible → possibility. Частая ошибка: ставить прилагательное там, где нужно существительное (не «happy is important», а happiness is important).", [["My sister wants to be an economist.", "Моя сестра хочет стать экономистом."], ["Education is very important.", "Образование очень важно."], ["Thank you for your kindness.", "Спасибо за вашу доброту."]]),
       S("Шаг 5. Прилагательные: -ful, -less, -able / -ible", "-ful = «с чем-то, полный» (useful = полезный), -less = «без» (useless = бесполезный, homeless = бездомный). -able / -ible = «можно сделать» (drinkable = пригодный для питья, readable = читаемый).", [["This app is really useful.", "Это приложение очень полезное."], ["My phone is useless without the internet.", "Без интернета мой телефон бесполезен."], ["Is this water drinkable?", "Эту воду можно пить?"]]),
@@ -113,7 +113,7 @@
       Ch("Where do you usually get your car ___?", ["wash", "washing", "washed"], 2, "После предмета ставим 3-ю форму: washed."),
       Ch("He ___ his phone stolen last week.", ["had", "has", "have"], 0, "Прошлое (last week): had."),
       I("I ___ my car ___ (repair) yesterday. Впишите два слова через пробел.", ["had repaired", "got repaired"], "had + предмет + repaired."),
-      I("Переведите: Мне надо подстричься.", ["I need to have my hair cut", "I need to get my hair cut", "I need a haircut", "I have to get my hair cut", "I have to have my hair cut", "I need to get a haircut"], "have / get my hair cut."),
+      I("Переведите: Мне надо подстричься.", ["I need to have my hair cut", "I need to get my hair cut", "I need a haircut", "I have to get my hair cut", "I have to have my hair cut", "I need to get a haircut", "I have to get a haircut"], "have / get my hair cut."),
       O("Соберите: Я отдам телефон в ремонт.", ["I'm", "going", "to", "get", "my", "phone", "repaired"], "I'm going to get my phone repaired", "get + предмет + 3-я форма."),
       O("Соберите: Она сделала маникюр.", ["She", "had", "her", "nails", "done"], "She had her nails done", "Маникюр делали ей: had + her nails + done."),
       O("Соберите: У него украли велосипед.", ["He", "had", "his", "bike", "stolen"], "He had his bike stolen", "Неприятность тоже через have + предмет + 3-я форма."),
@@ -158,7 +158,7 @@
       Ch("Rarely ___ late.", ["he is", "does he be", "is he"], 2, "Есть is, его и выносим вперёд."),
       Ch("Not only ___ the match, but he also broke the record.", ["he won", "did he win", "won he"], 1, "Past Simple: добавляем did, глагол в обычной форме."),
       Ch("The girl ___ next to me is my cousin.", ["sitting", "is sitting", "sits"], 0, "Сама сидит: причастие на -ing без is."),
-      I("___ (finish) my homework, I went out. (закончив, два слова)", ["Having finished"], "Сначала одно, потом другое: Having + 3-я форма."),
+      I("___ (finish) my homework, I went out. (закончив, два слова)", ["Having finished", "After finishing"], "Сначала одно, потом другое: Having + 3-я форма. Можно и After finishing."),
       I("The phone ___ (make) in China was cheap. (сделанный)", ["made"], "С телефоном сделали: 3-я форма made."),
       O("Соберите: Едва я пришёл домой, как зазвонил телефон.", ["Hardly", "had", "I", "got", "home", "when", "the", "phone", "rang"], "Hardly had I got home when the phone rang", "Hardly + had + I + 3-я форма, потом when."),
       O("Соберите: Почувствовав усталость, я лёг спать.", ["Feeling", "tired,", "I", "went", "to", "bed"], "Feeling tired, I went to bed", "Feeling tired = Because I felt tired, «кто» в обеих частях один: I."),
@@ -173,11 +173,11 @@
       S("Шаг 2. If I were you", "В «если бы» про настоящее для всех лиц можно ставить were, и в правильной письменной речи так и делают. If I were you = «на твоём месте».", [["If I were you, I'd apologise.", "На твоём месте я бы извинился."], ["If she were here, she would help.", "Если бы она была здесь, она бы помогла."]]),
       S("Шаг 3. It's time... и I'd rather...: прошедшее про настоящее", "После It's time и I'd rather + другой человек ставим Past, хотя говорим о сейчас. It's time we went = нам пора идти. I'd rather you stayed = я бы предпочёл, чтобы ты остался.", [["It's time we went home.", "Нам пора домой."], ["I'd rather you stayed.", "Я бы предпочёл, чтобы ты остался."]]),
       S("Шаг 4. the в особых случаях", "the + прилагательное = все такие люди: the rich (богатые), the poor, the young. Также с the: десятилетия (the 1990s), океаны и реки (the Atlantic, the Volga), горные цепи (the Alps), страны во множественном числе или со словами «штаты, королевство» (the Netherlands, the USA, the UK).", [["The rich should pay more taxes.", "Богатые должны платить больше налогов."], ["My parents grew up in the 1990s.", "Мои родители выросли в 1990-е."], ["We flew over the Atlantic.", "Мы пролетели над Атлантикой."]]),
-      S("Шаг 5. Без артикля: озёра, вершины, by email, in hospital", "Одно озеро или одна гора с названием идут без артикля: Lake Baikal, Mount Everest. Без артикля и устойчивые выражения: by email, by bus, go to prison, in hospital (брит.: «лежит в больнице»). Если идём в здание не по его назначению, артикль нужен: go to the hospital to visit a friend.", [["Lake Baikal is very deep.", "Байкал очень глубокий."], ["I'll send it by email.", "Я пришлю это по почте."], ["My grandma is in hospital.", "Бабушка лежит в больнице."]]),
+      S("Шаг 5. Без артикля: озёра, вершины, by email, in hospital", "Одно озеро или одна гора с названием идут без артикля: Lake Baikal, Mount Everest. Без артикля и устойчивые выражения: by email, by bus, go to prison, in hospital (брит.: «лежит в больнице»). Если идём в здание не по его назначению, артикль нужен: go to the hospital to visit a friend.", [["Lake Baikal is very deep.", "Байкал очень глубокий."], ["I'll send it by email.", "Я пришлю это по электронной почте."], ["My grandma is in hospital.", "Бабушка лежит в больнице."]]),
       S("Шаг 6. a / an перед профессией", "В русском «Она экономист», без всего. В английском перед профессией обязательно a / an. Русские часто его забывают.", [["She is an economist.", "Она экономист."], ["I want to be a lawyer.", "Я хочу стать юристом."]])
     ],
     tasks: [
-      Ch("I recommend that he ___ a doctor.", ["sees", "see", "to see"], 1, "После recommend that глагол без -s: see."),
+      Ch("I recommend that he ___ a doctor.", ["seeing", "see", "to see"], 1, "После recommend that глагол «как в словаре», без -s и без to: see."),
       Ch("It's important that she ___ on time.", ["is being", "be", "to be"], 1, "It's important that + глагол «как в словаре»: be."),
       Ch("It's time we ___ home.", ["go", "went", "going"], 1, "После It's time ставим Past: went."),
       Ch("___ rich don't always live happily.", ["The", "A", "-"], 0, "the + прилагательное = все богатые люди."),
@@ -186,7 +186,7 @@
       O("Соберите: Я бы предпочёл, чтобы ты остался.", ["I'd", "rather", "you", "stayed"], "I'd rather you stayed", "I'd rather + другой человек + Past."),
       O("Соберите: Мои родители выросли в 1990-е.", ["My", "parents", "grew", "up", "in", "the", "1990s"], "My parents grew up in the 1990s", "Десятилетия с the: the 1990s."),
       O("Соберите: Врач настоял, чтобы он остался дома.", ["The", "doctor", "insisted", "that", "he", "stay", "at", "home"], "The doctor insisted that he stay at home", "insist that + глагол без -s: stay."),
-      F("Исправьте: I want to see the Lake Baikal.", ["I want to see Lake Baikal"], "Lake + название идёт без артикля.")
+      F("Исправьте: I want to see the Lake Baikal.", ["I want to see Lake Baikal", "I want to see Baikal"], "Lake + название идёт без артикля.")
     ]
   };
 
@@ -219,7 +219,7 @@
     ["Это невозможно.", "It is impossible|It's impossible|This is impossible|That is impossible", "im- + possible"],
     ["Я не согласен.", "I disagree|I do not agree|I don't agree", "dis- + agree"],
     ["Извини, я тебя неправильно понял.", "Sorry, I misunderstood you|I'm sorry, I misunderstood you|I am sorry, I misunderstood you|Sorry, I misunderstood", "mis- = неправильно"],
-    ["Я сегодня проспал.", "I overslept today|Today I overslept", "over- = слишком"],
+    ["Я сегодня проспал.", "I overslept today|Today I overslept|I overslept this morning","over- = слишком"],
     ["Моя сестра хочет стать экономистом.", "My sister wants to be an economist|My sister wants to become an economist", "econom + ist"],
     ["Этот телефон бесполезен.", "This phone is useless", "-less = без"],
     ["Это приложение очень полезное.", "This app is very useful|This app is really useful|This application is very useful|This is a very useful app|It is a very useful app", "-ful = с"],
@@ -233,7 +233,7 @@
   T[38] = [
     ["Скажи мне правду.", "Tell me the truth", "tell + кому"],
     ["Он сказал «привет».", "He said hello|He said hi", "say + слова"],
-    ["Ты говоришь по-английски?", "Do you speak English", "язык: speak"],
+    ["Ты говоришь по-английски?", "Do you speak English|Can you speak English", "язык: speak"],
     ["Нам нужно поговорить.", "We need to talk|We have to talk", "talk = беседовать"],
     ["Я делаю домашнее задание.", "I'm doing my homework|I am doing my homework|I do my homework", "do homework"],
     ["Не бойся делать ошибки.", "Don't be afraid to make mistakes|Do not be afraid to make mistakes|Don't be afraid of making mistakes|Do not be afraid of making mistakes", "make a mistake"],
@@ -252,7 +252,7 @@
     ["Жаль, что я не пошёл на вечеринку.", "I wish I had gone to the party|If only I had gone to the party", "wish + had + 3-я ф."],
     ["Зря я это сказал.", "I wish I had not said that|I wish I hadn't said that|If only I had not said that|If only I hadn't said that|I should not have said that|I shouldn't have said that|I wish I had not said it|I wish I hadn't said it", "wish + had not"],
     ["Скорее бы кончился дождь.", "I wish it would stop raining|If only it would stop raining", "wish + would"],
-    ["Хоть бы ты меня послушал!", "I wish you would listen to me|If only you would listen to me", "wish + would"],
+    ["Хоть бы ты наконец меня послушал!","I wish you would listen to me|If only you would listen to me", "wish + would"],
     ["Жаль, что я не знаю его номер.", "I wish I knew his number|I wish I knew his phone number|If only I knew his number|If only I knew his phone number", "wish + knew"],
     ["Ах, если бы я тебя послушал!", "If only I had listened to you|I wish I had listened to you", "If only + had"],
     ["Если бы я лучше учился, я бы сейчас был в хорошем университете.", "If I had studied harder, I would be at a good university now|If I had studied harder, I would be in a good university now|If I had studied better, I would be at a good university now|If I had studied better, I would be in a good university now|If I had studied harder, I would now be at a good university|If I had studied harder, I would now be in a good university|Had I studied harder, I would be at a good university now|Had I studied harder, I would be in a good university now", "прошлое → сейчас"],
@@ -267,8 +267,8 @@
     ["Она, должно быть, забыла.", "She must have forgotten|She must have forgotten it|She must have forgotten about it", "must have"],
     ["Возможно, он опоздал на автобус.", "He might have missed the bus|He may have missed the bus|He could have missed the bus", "might have"],
     ["Он не мог это сказать.", "He can't have said that|He cannot have said that|He couldn't have said that|He could not have said that|He can't have said it|He cannot have said it|He couldn't have said it|He could not have said it", "can't have"],
-    ["Надо было раньше лечь спать.", "I should have gone to bed earlier", "should have"],
-    ["Мы могли бы выиграть.", "We could have won", "could have"],
+    ["Мне надо было раньше лечь спать.", "I should have gone to bed earlier", "should have"],
+    ["Мы могли бы выиграть тот матч.", "We could have won that match|We could have won that game|We could have won the match|We could have won the game", "could have"],
     ["Наверное, был дождь.", "It must have rained|It must have been raining", "must have"],
     ["Может быть, она потеряла твой номер.", "She might have lost your number|She may have lost your number|She could have lost your number", "may have"],
     ["Тебе не надо было ему говорить.", "You shouldn't have told him|You should not have told him", "shouldn't have"],
@@ -284,7 +284,7 @@
     ["Мне помыли машину.", "I had my car washed|I got my car washed|I have had my car washed|I've had my car washed", "had ... washed"],
     ["Ты отдавал ноутбук в ремонт?", "Did you have your laptop repaired|Did you get your laptop repaired|Did you have your laptop fixed|Did you get your laptop fixed|Have you had your laptop repaired|Have you had your laptop fixed", "Did you get ... repaired"],
     ["Давай закажем пиццу с доставкой.", "Let's have a pizza delivered|Let's get a pizza delivered|Let's have pizza delivered|Let's get pizza delivered|Let us have a pizza delivered|Let us get a pizza delivered|Let us have pizza delivered|Let us get pizza delivered|Let's order a pizza|Let's order pizza|Let us order a pizza|Let us order pizza", "have ... delivered"],
-    ["Мне проверили зрение.", "I had my eyes tested|I got my eyes tested|I had my eyes checked|I got my eyes checked|I had my eyesight tested|I had my eyesight checked|I got my eyesight checked", "had ... tested"],
+    ["Мне проверили зрение.", "I had my eyes tested|I got my eyes tested|I had my eyes checked|I got my eyes checked|I had my eyesight tested|I had my eyesight checked|I got my eyesight tested|I got my eyesight checked","had ... tested"],
     ["Я хочу проколоть уши (в салоне).", "I want to have my ears pierced|I want to get my ears pierced", "get ... pierced"],
     ["Ему починили часы.", "He had his watch repaired|He got his watch repaired|He had his watch fixed|He got his watch fixed", "had ... repaired"],
     ["Тебе стоит подстричься.", "You should have your hair cut|You should get your hair cut|You should get a haircut|You should have a haircut", "should get ... cut"]
@@ -295,7 +295,7 @@
     ["Считается, что она живёт в Лондоне.", "She is believed to live in London|She is thought to live in London|It is believed that she lives in London|It is thought that she lives in London|It is believed she lives in London|It is thought she lives in London", "is believed to"],
     ["Ожидается, что завтра будет дождь.", "It is expected to rain tomorrow|It is expected that it will rain tomorrow|It is expected that there will be rain tomorrow|Rain is expected tomorrow", "It is expected"],
     ["Говорят, он уехал из страны.", "He is said to have left the country|It is said that he left the country|It is said that he has left the country|It is said he left the country|It is said he has left the country|People say that he left the country|People say he left the country|People say he has left the country|They say he left the country|They say he has left the country", "to have left"],
-    ["Я ненавижу, когда мне указывают, что делать.", "I hate being told what to do", "being told"],
+    ["Я ненавижу, когда мне указывают, что делать.", "I hate being told what to do|I hate to be told what to do", "being told"],
     ["Она хочет, чтобы её пригласили.", "She wants to be invited", "to be invited"],
     ["Он посоветовал мне больше заниматься.", "He advised me to study more|He advised me to study harder", "advise + to"],
     ["Она отказалась помочь.", "She refused to help|She refused to help me|She refused to help us", "refuse + to"],
@@ -307,11 +307,11 @@
 
   T[43] = [
     ["Никогда я не видел такого красивого города.", "Never have I seen such a beautiful city|Never have I seen a more beautiful city|Never have I seen a city so beautiful|I have never seen such a beautiful city|I have never seen a more beautiful city", "Never have I"],
-    ["Он не только победил, но и побил рекорд.", "Not only did he win, but he also broke the record|Not only did he win, he also broke the record|Not only did he win, but also broke the record|Not only did he win, but he broke the record too|He not only won, but also broke the record|He not only won, but he also broke the record", "Not only did he"],
+    ["Он не только победил, но и побил рекорд.", "Not only did he win, but he also broke the record|Not only did he win, he also broke the record|Not only did he win, but he broke the record too|He not only won, but also broke the record|He not only won, but he also broke the record", "Not only did he"],
     ["Едва я приехал, как пошёл дождь.", "Hardly had I arrived when it started to rain|Hardly had I arrived when it started raining|Hardly had I arrived when it began to rain|Hardly had I arrived when it began raining|No sooner had I arrived than it started to rain|No sooner had I arrived than it started raining|No sooner had I arrived than it began to rain|No sooner had I arrived than it began raining|Scarcely had I arrived when it started to rain|Scarcely had I arrived when it began to rain|I had hardly arrived when it started to rain|I had hardly arrived when it started raining|I had hardly arrived when it began to rain", "Hardly had I"],
     ["Я никогда этого не забуду.", "Never will I forget this|Never will I forget it|Never will I forget that|I will never forget this|I will never forget it|I will never forget that", "Never will I"],
     ["Он редко опаздывает.", "Rarely is he late|Seldom is he late|He is rarely late|He is seldom late", "Rarely is he"],
-    ["Почувствовав усталость, я лёг спать.", "Feeling tired, I went to bed|Having felt tired, I went to bed|Because I felt tired, I went to bed|As I felt tired, I went to bed|I felt tired, so I went to bed", "Feeling tired"],
+    ["Почувствовав усталость, я лёг спать.", "Feeling tired, I went to bed|Because I felt tired, I went to bed|As I felt tired, I went to bed|I felt tired, so I went to bed", "Feeling tired"],
     ["Закончив работу, она пошла домой.", "Having finished work, she went home|Having finished her work, she went home|After finishing work, she went home|After finishing her work, she went home|After she had finished work, she went home|After she had finished her work, she went home|After she finished work, she went home|After she finished her work, she went home", "Having finished"],
     ["Мужчина, который сидит там, мой начальник.", "The man sitting there is my boss|The man sitting over there is my boss|The man who is sitting there is my boss|The man who is sitting over there is my boss|The man that is sitting there is my boss", "The man sitting"],
     ["Машины, сделанные в Германии, дорогие.", "Cars made in Germany are expensive|The cars made in Germany are expensive|Cars which are made in Germany are expensive|Cars that are made in Germany are expensive", "made in"],

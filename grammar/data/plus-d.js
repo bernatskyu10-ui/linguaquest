@@ -23,7 +23,7 @@
       Ch("Paper ___ from wood.", ["makes", "is made", "is make"], 1, "Бумагу делают: is + 3-я форма made."),
       Ch("War and Peace was written ___ Tolstoy.", ["from", "by", "with"], 1, "Кем сделано: by."),
       Ch("The homework must ___ today.", ["be done", "done", "be do"], 0, "После must: be + 3-я форма."),
-      I("The results ___ tomorrow. (announce, будущее)", ["will be announced"], "Будущее в пассиве: will be + announced."),
+      I("The results ___ tomorrow. (announce, будущее)", ["will be announced", "are going to be announced"],"Будущее в пассиве: will be + announced."),
       I("Переведите: Я родился в Москве.", ["I was born in Moscow"], "«Родился» по-английски: was born."),
       F("Исправьте: The house built in 1990.", ["The house was built in 1990"], "Не хватает be: was built."),
       F("Исправьте: This film was make in 2010.", ["This film was made in 2010"], "Нужна 3-я форма: made.")
@@ -33,7 +33,7 @@
   P[29] = {
     steps: [
       S("Шаг 1. Пересказ: said (that) ...", "Когда пересказываем чужие слова в прошлом, время сдвигается на шаг назад. По-русски время не меняется («Он сказал, что устал»), поэтому русские часто забывают про сдвиг. Слово that можно не ставить.", [["\"I am tired.\" → He said (that) he was tired.", "«Я устал». → Он сказал, что устал."], ["\"I like it.\" → She said she liked it.", "«Мне нравится». → Она сказала, что ей нравится."]]),
-      S("Шаг 2. Шаг назад: как меняются времена", "am / is → was, like → liked, will → would, can → could, saw → had seen.", [["\"I will call.\" → He said he would call.", "«Я позвоню». → Он сказал, что позвонит."], ["\"I can swim.\" → She said she could swim.", "«Я умею плавать». → Она сказала, что умеет плавать."], ["\"I saw him.\" → She said she had seen him.", "«Я видела его». → Она сказала, что видела его."]]),
+      S("Шаг 2. Шаг назад: как меняются времена", "am / is → was, like → liked, will → would, can → could, saw → had seen. Если сказанное всё ещё правда, сдвиг можно не делать, но со сдвигом всегда правильно.",[["\"I will call.\" → He said he would call.", "«Я позвоню». → Он сказал, что позвонит."], ["\"I can swim.\" → She said she could swim.", "«Я умею плавать». → Она сказала, что умеет плавать."], ["\"I saw him.\" → She said she had seen him.", "«Я видела его». → Она сказала, что видела его."]]),
       S("Шаг 3. Меняйте и местоимения", "I, my, your меняем по смыслу, как и в русском: кто теперь говорит и о ком.", [["\"I like your idea.\" → She said she liked my idea.", "«Мне нравится твоя идея». → Она сказала, что ей нравится моя идея."]]),
       S("Шаг 4. say или tell", "say без «кому»: He said that... tell всегда с «кому»: He told me that... Нельзя сказать «He said me».", [["He said that he was busy.", "Он сказал, что занят."], ["He told me that he was busy.", "Он сказал мне, что занят."]]),
       S("Шаг 5. Пересказ вопроса: asked if / asked where", "Вопрос «да / нет» пересказываем через if. С вопросительным словом порядок как в обычном предложении: сначала кто, потом глагол, без do / did.", [["\"Can you help?\" → He asked if I could help.", "«Можешь помочь?» → Он спросил, могу ли я помочь."], ["\"Where do you live?\" → She asked where I lived.", "«Где ты живёшь?» → Она спросила, где я живу."]]),
@@ -49,7 +49,7 @@
       I("\"I like pizza.\" → She said she ___ pizza. (like)", ["liked"], "Сдвиг на шаг назад: like → liked."),
       I("Переведите: Он сказал мне, что он занят.", ["He told me that he was busy", "He told me he was busy"], "Сказал мне: told me. Занят: was busy."),
       F("Исправьте: Can you tell me where is the bank?", ["Can you tell me where the bank is"], "В косвенном вопросе прямой порядок: the bank is."),
-      F("Исправьте: He said me that he was ill.", ["He told me that he was ill", "He told me he was ill", "He said that he was ill", "He said he was ill"], "С «кому» нужен tell: told me. Или убираем me.")
+      F("Исправьте: He said me that he was ill.", ["He told me that he was ill", "He told me he was ill", "He said that he was ill", "He said he was ill", "He said to me that he was ill", "He said to me he was ill"], "С «кому» нужен tell: told me. Или said to me, или просто said без me.")
     ]
   };
 
@@ -57,7 +57,7 @@
     steps: [
       S("Шаг 1. who: о людях", "Слово «который» соединяет два предложения в одно и уточняет, о ком речь. Если речь о человеке, ставим who.", [["The man who lives next door is a doctor.", "Мужчина, который живёт по соседству, врач."], ["I know a girl who speaks French.", "Я знаю девочку, которая говорит по-французски."]]),
       S("Шаг 2. which: о вещах и животных", "Для предметов и животных ставим which. Частая ошибка: сказать what вместо which («the phone what I bought»).", [["The phone which I bought is great.", "Телефон, который я купил, отличный."], ["I have a dog which loves water.", "У меня собака, которая любит воду."]]),
-      S("Шаг 3. that: и люди, и вещи", "В разговоре вместо who и which часто говорят that. Если сразу после «который» идёт новый «кто» (I, we, my mom), that можно вообще убрать.", [["The film that we watched was boring.", "Фильм, который мы смотрели, был скучным."], ["The film we watched was boring.", "То же самое без that."]]),
+      S("Шаг 3. that: и люди, и вещи", "В разговоре вместо who и which часто говорят that. Если сразу после «который» идёт новый «кто» (I, we, my mom), that можно вообще убрать.", [["The film that we watched was boring.", "Фильм, который мы смотрели, был скучным."], ["The film we watched was boring.", "Фильм, который мы смотрели, был скучным. (без that)"]]),
       S("Шаг 4. whose = чей, where = где", "whose ставим вместо his / her / their: «девочка, чей папа пилот». where ставим после места: город, кафе, школа.", [["The girl whose dad is a pilot is my friend.", "Девочка, чей папа пилот, моя подруга."], ["This is the city where I was born.", "Это город, где я родился."]]),
       S("Шаг 5. С запятыми и без", "Без запятых: без этой части непонятно, о ком речь. С запятыми: просто добавляем информацию, человек и так понятен. С запятыми that нельзя, только who или which.", [["The students who passed got a prize.", "Ученики, которые сдали, получили приз. (только они)"], ["My brother, who lives in Kazan, is a doctor.", "Мой брат, который живёт в Казани, врач."]])
     ],
@@ -70,7 +70,7 @@
       Ch("My sister, ___ lives in Kazan, is a doctor.", ["that", "who", "which"], 1, "С запятыми that нельзя, о человеке: who."),
       Ch("The girl ___ bag was stolen called the police.", ["who", "whose", "which"], 1, "Чья сумка: whose."),
       I("That's the shop ___ I buy bread. (где)", ["where"], "О месте: where."),
-      I("Переведите: Мне понравился фильм, который мы смотрели.", ["I liked the film that we watched", "I liked the film which we watched", "I liked the film we watched", "I liked the movie that we watched", "I liked the movie which we watched", "I liked the movie we watched", "I liked the film that we saw", "I liked the film we saw", "I liked the movie we saw"], "Фильм = вещь: that или which, а можно и без них."),
+      I("Переведите: Мне понравился фильм, который мы смотрели.", ["I liked the film that we watched", "I liked the film which we watched", "I liked the film we watched", "I liked the movie that we watched", "I liked the movie which we watched", "I liked the movie we watched", "I liked the film that we saw", "I liked the film which we saw", "I liked the film we saw", "I liked the movie that we saw", "I liked the movie which we saw", "I liked the movie we saw"], "Фильм = вещь: that или which, а можно и без них."),
       F("Исправьте: The phone what I bought is great.", ["The phone that I bought is great", "The phone which I bought is great", "The phone I bought is great"], "Не what, а which или that.")
     ]
   };
@@ -101,7 +101,7 @@
   P[32] = {
     steps: [
       S("Шаг 1. Второй глагол: -ing или to", "По-русски после «люблю», «хочу», «закончил» всегда идёт инфинитив. В английском второй глагол бывает с -ing или с to. Какой выбрать, зависит от первого глагола, поэтому учите их парами.", [["I enjoy reading.", "Мне нравится читать."], ["I want to read.", "Я хочу читать."]]),
-      S("Шаг 2. После этих глаголов: -ing", "enjoy, finish, stop, avoid, mind, keep, practise, suggest, spend time. Частая ошибка: «I finished to do».", [["Stop talking!", "Перестань разговаривать!"], ["I finished doing my homework.", "Я закончил делать уроки."], ["Do you mind opening the window?", "Не против открыть окно?"]]),
+      S("Шаг 2. После этих глаголов: -ing", "enjoy, finish, stop, avoid, mind, keep, practise, suggest, spend time. Частая ошибка: «I finished to do». Осторожно со stop: stop to + глагол значит другое, «остановиться, чтобы» (He stopped to rest = он остановился отдохнуть).",[["Stop talking!", "Перестань разговаривать!"], ["I finished doing my homework.", "Я закончил делать уроки."], ["Do you mind opening the window?", "Не против открыть окно?"]]),
       S("Шаг 3. После этих глаголов: to + глагол", "want, need, decide, plan, hope, learn, agree, promise, would like.", [["I decided to go.", "Я решил пойти."], ["She hopes to see you.", "Она надеется увидеть тебя."], ["I'd like to go to the cinema.", "Я бы хотел сходить в кино."]]),
       S("Шаг 4. После предлогов всегда -ing", "at, for, in, about, before, after, without: после них глагол только с -ing.", [["I'm good at drawing.", "Я хорошо рисую."], ["Thank you for helping me.", "Спасибо, что помог мне."], ["Before leaving, turn off the light.", "Перед уходом выключи свет."]]),
       S("Шаг 5. После прилагательных: to, после can / must / let: без to", "easy, hard, nice + to. А после can, must, should, will, let, make глагол идёт голый.", [["It's easy to learn.", "Это легко выучить."], ["Nice to meet you.", "Приятно познакомиться."], ["Let me help you.", "Давай я помогу."]]),
@@ -139,7 +139,7 @@
       Ch("He played well, ___?", ["didn't he", "wasn't he", "doesn't he"], 0, "Прошлое без помощника: didn't he."),
       Ch("I'm right, ___?", ["am not I", "aren't I", "isn't I"], 1, "Исключение: I am → aren't I."),
       I("She isn't at home, ___? (2 слова)", ["is she"], "Минус в предложении, хвостик с плюсом: is she."),
-      I("Your brother lives in Kazan, ___? (2 слова)", ["doesn't he", "does not he"], "lives = he, нет помощника: doesn't he."),
+      I("Your brother lives in Kazan, ___? (2 слова)", ["doesn't he"], "Your brother = he, глагол lives без помощника, поэтому doesn't he."),
       F("Исправьте: You will come, won't he?", ["You will come, won't you", "You'll come, won't you"], "В хвостике то же местоимение: you.")
     ]
   };
@@ -149,7 +149,7 @@
       S("Шаг 1. every и each + одно", "every и each = «каждый». После них существительное в единственном числе, а глагол как с he: has, knows. Частая ошибка: «every students». each of + them / us = «каждый из них».", [["Every student has a book.", "У каждого ученика есть книга."], ["Each of them got a prize.", "Каждый из них получил приз."]]),
       S("Шаг 2. all = все", "all + множественное число. Можно all my friends или all of my friends. С местоимением только с of: all of us, all of them.", [["All my friends came.", "Все мои друзья пришли."], ["All of us are ready.", "Мы все готовы."]]),
       S("Шаг 3. both = оба", "both только про двоих. Глагол во множественном числе.", [["Both my parents work.", "Оба моих родителя работают."], ["Both of them speak English.", "Они оба говорят по-английски."]]),
-      S("Шаг 4. either и neither: из двух", "either = любой из двух. neither = ни один из двух, после него существительное в единственном числе. Ещё either = «тоже» в отрицании: I don't like it either (не too!).", [["You can take either bus.", "Можешь сесть на любой из двух автобусов."], ["Neither answer is correct.", "Ни один из двух ответов не верный."], ["I don't like coffee either.", "Я тоже не люблю кофе."]]),
+      S("Шаг 4. either и neither: из двух", "either = любой из двух. neither = ни один из двух, после него существительное в единственном числе. Ещё either = «тоже» в отрицании: I don't like it either (не too!).", [["You can take either bus.", "Можешь сесть на любой из двух автобусов."], ["Neither answer is correct.", "Ни один из двух ответов не верен."], ["I don't like coffee either.", "Я тоже не люблю кофе."]]),
       S("Шаг 5. none = ни один", "none of = ни один из многих. В русском два отрицания («никто не позвонил»), а в английском одно: none уже значит «нет», второе not не нужно.", [["None of them called.", "Никто из них не позвонил."], ["None of my friends play chess.", "Никто из моих друзей не играет в шахматы."]]),
       S("Шаг 6. a few / few, a little / little", "a few = несколько (это хорошо), few = мало (это плохо). С неисчисляемыми (time, money, water) то же самое с a little / little.", [["I have a few friends here.", "У меня тут есть несколько друзей."], ["Few people came.", "Пришло мало людей."], ["We have a little time.", "У нас есть немного времени."]])
     ],
@@ -174,7 +174,7 @@
       S("Шаг 3. Противопоставить", "but в середине. However в начале нового предложения, с запятой. although / even though + целое предложение (кто + глагол). whereas = тогда как.", [["I like the city. However, it is very expensive.", "Мне нравится город. Однако он очень дорогой."], ["Although it was raining, we went out.", "Хотя шёл дождь, мы вышли гулять."], ["I love tea, whereas my sister loves coffee.", "Я люблю чай, тогда как сестра любит кофе."]]),
       S("Шаг 4. despite / in spite of + существительное", "После despite и in spite of идёт существительное или -ing, но не целое предложение. Ошибка: «despite of». Правильно despite или in spite of.", [["Despite the rain, we went out.", "Несмотря на дождь, мы вышли гулять."], ["In spite of being tired, he finished the work.", "Несмотря на усталость, он закончил работу."]]),
       S("Шаг 5. Причина и следствие", "Причина: because + предложение, because of / due to + существительное, since / as. Следствие: so, therefore, as a result, that's why.", [["We stayed at home because of the rain.", "Мы остались дома из-за дождя."], ["I studied a lot, so I passed the exam.", "Я много учился, поэтому сдал экзамен."], ["As a result, we were late.", "В результате мы опоздали."]]),
-      S("Шаг 6. Пример и итог", "Пример: for example, for instance, such as. Итог в конце эссе: in conclusion, to sum up, overall.", [["I like sports such as tennis and football.", "Я люблю такие виды спорта, как теннис и футбол."], ["To sum up, the internet is very useful.", "Подводя итог, интернет очень полезен."]])
+      S("Шаг 6. Пример и итог", "Пример: for example, for instance, such as. Итог в конце эссе: in conclusion, to sum up, overall.", [["I like sports such as tennis and football.", "Я люблю такие виды спорта, как теннис и футбол."], ["To sum up, the internet is very useful.", "Подводя итог, можно сказать, что интернет очень полезен."]])
     ],
     tasks: [
       O("Соберите: По-моему, это хорошая идея.", ["In", "my", "opinion,", "this", "is", "a", "good", "idea"], "In my opinion, this is a good idea", "По-моему: in my opinion (с in, не on)."),
@@ -184,8 +184,8 @@
       Ch("I like the city. ___, it is very expensive.", ["However", "Although", "Because"], 0, "Начало нового предложения с запятой: however."),
       Ch("We stayed at home ___ the rain.", ["because", "because of", "so"], 1, "Дальше существительное: because of."),
       Ch("Some people love big cities, ___ others hate them.", ["whereas", "despite", "moreover"], 0, "Противопоставляем две группы: whereas."),
-      I("___, social networks have pros and cons. (в заключение)", ["In conclusion", "To sum up"], "Итог: in conclusion или to sum up."),
-      I("Переведите: Мне нравится спорт, например, футбол и теннис.", ["I like sports such as football and tennis", "I like sport such as football and tennis", "I like sports for example football and tennis", "I like sport for example football and tennis", "I like sports for instance football and tennis", "I like sports like football and tennis", "I like sport like football and tennis"], "Пример: such as или for example."),
+      I("___, social networks have pros and cons. (в заключение)", ["In conclusion", "To sum up", "To conclude"], "Итог: in conclusion или to sum up."),
+      I("Переведите: Мне нравится спорт, например, футбол и теннис.", ["I like sports such as football and tennis", "I like sport such as football and tennis", "I like sports for example football and tennis", "I like sport for example football and tennis", "I like sports for instance football and tennis", "I like sport for instance football and tennis","I like sports like football and tennis", "I like sport like football and tennis"], "Пример: such as или for example."),
       F("Исправьте: Despite of the rain, we went out.", ["Despite the rain, we went out", "In spite of the rain, we went out"], "despite без of, или in spite of.")
     ]
   };
@@ -221,8 +221,8 @@
     ["Мой телефон украли.", "My phone has been stolen|My phone was stolen", "has been stolen"],
     ["Я родился в 2010 году.", "I was born in 2010", "was born"],
     ["Эти машины делают в Японии.", "These cars are made in Japan", "are + made"],
-    ["Книга была написана Толстым.", "The book was written by Tolstoy", "Кем: by"],
-    ["Результаты объявят завтра.", "The results will be announced tomorrow", "will be + 3-я форма"],
+    ["Книга была написана Толстым.", "The book was written by Tolstoy|This book was written by Tolstoy", "Кем: by"],
+    ["Результаты объявят завтра.", "The results will be announced tomorrow|The results are going to be announced tomorrow", "will be + 3-я форма"],
     ["Это нужно сделать сегодня.", "It must be done today|This must be done today|It has to be done today|This has to be done today|It needs to be done today|This needs to be done today", "must be done"],
     ["Окно разбили вчера.", "The window was broken yesterday", "was + broken"],
     ["Меня пригласили на вечеринку.", "I was invited to the party|I was invited to a party|I have been invited to the party|I have been invited to a party", "was invited"],
@@ -235,11 +235,11 @@
     ["Она сказала, что любит кошек.", "She said that she liked cats|She said she liked cats|She said that she loved cats|She said she loved cats", "like → liked"],
     ["Он сказал, что позвонит.", "He said that he would call|He said he would call|He said he would phone|He said that he would phone", "will → would"],
     ["Она сказала мне, что занята.", "She told me that she was busy|She told me she was busy", "told me"],
-    ["Он спросил, могу ли я помочь.", "He asked if I could help|He asked whether I could help|He asked if I could help him|He asked whether I could help him|He asked me if I could help|He asked me if I could help him", "asked if"],
+    ["Он спросил, могу ли я помочь.", "He asked if I could help|He asked whether I could help|He asked if I could help him|He asked whether I could help him|He asked me if I could help|He asked me if I could help him|He asked me whether I could help|He asked me whether I could help him", "asked if"],
     ["Она спросила, где я живу.", "She asked where I lived|She asked me where I lived", "Прямой порядок"],
     ["Вы не знаете, где вокзал?", "Do you know where the station is|Do you know where the railway station is|Do you know where the train station is", "where the station is"],
-    ["Не подскажете, который час?", "Can you tell me what time it is|Could you tell me what time it is", "what time it is"],
-    ["Он сказал, что видел этот фильм.", "He said that he had seen this film|He said he had seen this film|He said that he had seen the film|He said he had seen the film|He said that he had seen this movie|He said he had seen this movie|He said he had seen the movie", "saw → had seen"],
+    ["Не подскажете, который час?", "Can you tell me what time it is|Could you tell me what time it is|Do you know what time it is|Can you tell me the time|Could you tell me the time","what time it is"],
+    ["Он сказал, что видел этот фильм.", "He said that he had seen this film|He said he had seen this film|He said that he had seen the film|He said he had seen the film|He said that he had seen this movie|He said he had seen this movie|He said that he had seen the movie|He said he had seen the movie","saw → had seen"],
     ["Я спросил его, сколько ему лет.", "I asked him how old he was", "how old he was"],
     ["Она сказала, что не может прийти.", "She said that she couldn't come|She said she couldn't come|She said that she could not come|She said she could not come", "can → could"],
     ["Я не знаю, где он работает.", "I don't know where he works|I do not know where he works", "where he works"]
@@ -250,7 +250,7 @@
     ["Телефон, который я купил, отличный.", "The phone which I bought is great|The phone that I bought is great|The phone I bought is great", "which о вещах"],
     ["Это город, где я родился.", "This is the city where I was born|This is the town where I was born", "where о месте"],
     ["У меня есть друг, чей папа пилот.", "I have a friend whose dad is a pilot|I have a friend whose father is a pilot|I've got a friend whose dad is a pilot|I have got a friend whose dad is a pilot", "чей: whose"],
-    ["Фильм, который мы смотрели, был скучным.", "The film that we watched was boring|The film which we watched was boring|The film we watched was boring|The movie that we watched was boring|The movie which we watched was boring|The movie we watched was boring", "that можно убрать"],
+    ["Фильм, который мы смотрели, был скучным.", "The film that we watched was boring|The film which we watched was boring|The film we watched was boring|The movie that we watched was boring|The movie which we watched was boring|The movie we watched was boring|The film that we saw was boring|The film we saw was boring|The movie that we saw was boring|The movie we saw was boring", "that можно убрать"],
     ["Я знаю девочку, которая говорит по-французски.", "I know a girl who speaks French|I know a girl that speaks French|I know the girl who speaks French|I know the girl that speaks French", "who о людях"],
     ["Это книга, которую мне дала мама.", "This is the book that my mom gave me|This is the book which my mom gave me|This is the book my mom gave me|This is the book that my mother gave me|This is the book which my mother gave me|This is the book my mother gave me", "that / which"],
     ["Мой брат, который живёт в Казани, учитель.", "My brother, who lives in Kazan, is a teacher", "С запятыми: who"],
@@ -261,17 +261,17 @@
   ];
 
   T[31] = [
-    ["Он, наверное, устал.", "He must be tired", "must be"],
+    ["Он, должно быть, устал.", "He must be tired", "must be"],
     ["Она, может быть, дома.", "She might be at home|She may be at home|She could be at home|She might be home|She may be home|She could be home|Maybe she is at home|Maybe she is home", "might be"],
     ["Это не может быть правдой.", "It can't be true|It cannot be true|That can't be true|That cannot be true|This can't be true|This cannot be true", "can't be"],
     ["Ты, должно быть, голоден.", "You must be hungry", "must be"],
-    ["Он, наверное, спит.", "He must be sleeping|He must be asleep", "must be + -ing"],
+    ["Он, должно быть, спит.","He must be sleeping|He must be asleep", "must be + -ing"],
     ["Она, возможно, забыла.", "She might have forgotten|She may have forgotten|She could have forgotten|Maybe she forgot|Maybe she has forgotten", "might have + 3-я форма"],
     ["Он не мог этого сделать.", "He can't have done it|He cannot have done it|He couldn't have done it|He could not have done it|He can't have done that|He cannot have done that|He couldn't have done that|He could not have done that", "can't have done"],
     ["Тебе надо было учиться.", "You should have studied", "should have + 3-я форма"],
-    ["Они, наверное, уже дома.", "They must be at home already|They must be home already|They must already be at home|They must already be home", "must be"],
+    ["Они, должно быть, уже дома.","They must be at home already|They must be home already|They must already be at home|They must already be home", "must be"],
     ["Возможно, это его телефон.", "It might be his phone|It may be his phone|It could be his phone|This might be his phone|This may be his phone|This could be his phone|Maybe it is his phone|Maybe this is his phone", "might be"],
-    ["Она, наверное, была очень рада.", "She must have been very happy|She must have been very glad|She must have been really happy", "must have been"],
+    ["Она, должно быть, была очень рада.","She must have been very happy|She must have been very glad|She must have been really happy", "must have been"],
     ["Мне надо было позвонить тебе.", "I should have called you|I should have phoned you", "should have called"]
   ];
 
@@ -298,7 +298,7 @@
     ["Я прав, не так ли?", "I'm right, aren't I|I am right, aren't I", "aren't I"],
     ["Ты устал, да?", "You are tired, aren't you|You're tired, aren't you", "aren't you"],
     ["Он не говорит по-английски, да?", "He doesn't speak English, does he|He does not speak English, does he", "does he"],
-    ["Мы опаздываем, да?", "We are late, aren't we|We're late, aren't we", "aren't we"],
+    ["Мы опаздываем, да?", "We are late, aren't we|We're late, aren't we|We are running late, aren't we","aren't we"],
     ["Ты мне позвонишь, да?", "You will call me, won't you|You'll call me, won't you|You will phone me, won't you|You'll phone me, won't you", "won't you"],
     ["Фильм был хороший, правда?", "The film was good, wasn't it|The movie was good, wasn't it|The film was great, wasn't it|The movie was great, wasn't it", "wasn't it"],
     ["Твоей сестры нет дома, да?", "Your sister isn't at home, is she|Your sister is not at home, is she|Your sister isn't home, is she|Your sister is not home, is she", "is she"],
@@ -311,12 +311,12 @@
     ["Все мои друзья пришли.", "All my friends came|All of my friends came", "all (of)"],
     ["Никто из них не позвонил.", "None of them called|None of them phoned", "none of"],
     ["Я тоже не люблю кофе.", "I don't like coffee either|I do not like coffee either", "either"],
-    ["Ни один из двух ответов не верный.", "Neither answer is correct|Neither answer is right|Neither of the answers is correct|Neither of the answers is right|Neither of the two answers is correct", "neither"],
+    ["Ни один из двух ответов не верен.", "Neither answer is correct|Neither answer is right|Neither of the answers is correct|Neither of the answers is right|Neither of the two answers is correct|Neither of the two answers is right","neither"],
     ["Можешь взять любую из двух книг.", "You can take either book|You can take either of the books|You can take either of the two books", "either"],
     ["Пришло мало людей.", "Few people came|Not many people came|Very few people came", "few"],
     ["У меня есть несколько друзей в Лондоне.", "I have a few friends in London|I've got a few friends in London|I have got a few friends in London|I have some friends in London", "a few"],
     ["Каждый из них получил приз.", "Each of them got a prize|Each of them received a prize|Each of them won a prize", "each of"],
-    ["У нас мало времени.", "We have little time|We don't have much time|We do not have much time|We haven't got much time|We have not got much time", "little"],
+    ["У нас мало времени.", "We have little time|We have very little time|We don't have much time|We do not have much time|We haven't got much time|We have not got much time", "little"],
     ["Обе сестры говорят по-английски.", "Both sisters speak English|Both of the sisters speak English|Both the sisters speak English", "both"]
   ];
 

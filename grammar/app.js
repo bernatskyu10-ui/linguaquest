@@ -10,6 +10,7 @@
   const PLUS = window.GRAMMAR_PLUS || {};
   const TR = window.TRAINER || {};
   const NOTES = window.GRAMMAR_NOTES || {};
+  const TESTS = window.GRAMMAR_TESTS || { placement: [], exam: {} };
   const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
   // Порядок и уровни берём из data/order.js; темы вне списка идут в конец своего уровня
   const ORDER = window.GRAMMAR_ORDER || {};
@@ -108,7 +109,7 @@
       .replace(/\b(\d{1,2})\b/g, (m, d) => NUMS[Number(d)] || m).replace(/\btwenty five\b/g, "twenty-five")
       .replace(/[a-z]+'[a-z]+/g, (w) => CONTR[w] || w).replace(/\bcan not\b/g, "cannot")
       .replace(/\b(mum|mom)\b/g, "mom").replace(/\bmaths\b/g, "math")
-      .replace(/[.,!?;:«»"()]/g, " ").replace(/\s+/g, " ").trim();
+      .replace(/[.,!?;:«»"()]/g, " ").replace(/(^|\s)-+(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();
   }
   const NONE = ["-", "нет", "0", "без", "ничего", "не нужен", "без артикля", "без предлога", "no"];
   const variants = (a) => [...new Set((Array.isArray(a) ? a : [a]).flatMap((v) => (/^без /.test(v) || v === "-" ? NONE : [v])).map(norm))];
@@ -200,7 +201,8 @@
           <div class="how__item"><span class="how__n">2</span><div><b>Разминка</b><span>10 коротких заданий с разбором ошибок</span></div></div>
           <div class="how__item"><span class="how__n">3</span><div><b>Перевод</b><span>Пишете фразу по-английски, сайт проверяет каждое слово</span></div></div>
         </section>
-        ${topicsBlock("A1")}
+        ${TESTS.placement.length ? testCTA() : ""}
+        ${topicsBlock(P.test && P.test.lvl ? P.test.start : "A1")}
       </div>`;
     bindTopics();
     FX.home($main);
@@ -224,7 +226,17 @@
         <span class="ring ${p === 100 ? "is-full" : ""}" style="--p:${p}"><span>${p === 100 ? "✓" : l.n}</span></span>
         <span class="topic__body"><span class="topic__title">${esc(l.t)}</span>
           <span class="topic__meta">${tr ? `<span class="badge">Перевод: ${tr.length} фраз</span>` : `<span class="badge badge--muted">Разминка</span>`}${p ? `<span>${p}%</span>` : ""}</span></span><svg class="topic__go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>`;
-    }).join("");
+    }).join("") + examCard(level);
+  }
+  function examCard(level) {
+    const list = TESTS.exam[level];
+    if (!list || !list.length) return "";
+    const best = (P.exam || {})[level];
+    const passed = best != null && best >= PASS;
+    return `<a class="topic exam-card ${passed ? "is-passed" : ""}" href="#/exam/${level}">
+      <span class="exam-card__ic" aria-hidden="true">${passed ? "✓" : "★"}</span>
+      <span class="topic__body"><span class="topic__title">Контрольная ${LV_NAME[level]}</span>
+        <span class="topic__meta"><span class="badge">${plural(list.length, "вопрос", "вопроса", "вопросов")}</span>${best != null ? `<span>Лучший результат: ${best}%</span>` : "<span>Проверьте весь уровень</span>"}</span></span><svg class="topic__go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>`;
   }
   function bindTopics() {
     const wrap = $main.querySelector(".tabs");
@@ -526,6 +538,176 @@
     return r;
   }
 
+  /* ---------- Входной тест и контрольные ---------- */
+  const PASS = 80;
+  const lessonById = (id) => L.find((l) => l.id === id);
+  function testCTA() {
+    const t = P.test;
+    return `<a class="test-cta" href="#/test">
+      <span class="test-cta__ic" aria-hidden="true">?</span>
+      <span><b>${t ? `Ваш уровень по тесту: ${LV_NAME[t.lvl] || "ниже A1"}` : "Не знаете свой уровень?"}</b>
+      <small>${t ? "Пройти тест ещё раз" : "Тест на 10 минут покажет уровень и тему, с которой начать"}</small></span>
+      <svg class="topic__go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>`;
+  }
+
+  // Общий движок: один вопрос за раз, выбор или ввод, разбор после ответа
+  function quiz(box, list, opt) {
+    let pos = 0;
+    const res = [];
+    function show() {
+      if (pos >= list.length || (opt.stop && opt.stop(res))) return opt.finish(res);
+      const q = list[pos];
+      box.innerHTML = `<div class="drill">
+        <div class="drill__top"><div class="drill__bar"><i style="transform:translateX(${(pos / list.length - 1) * 100}%)"></i></div><span class="drill__count">${pos + 1} / ${list.length}</span></div>
+        <div class="card"><div class="card__kind">${opt.label(q)}</div>
+          <div class="card__q">${esc(q.q)}</div>
+          <div data-ui>${q.k === "choice"
+            ? `<div class="opts">${q.o.map((o, i) => `<button class="opt" type="button" data-o="${i}"><kbd>${i + 1}</kbd>${esc(o)}</button>`).join("")}</div>`
+            : `<input class="field" type="text" placeholder="Ваш ответ" autocomplete="off" autocapitalize="off" spellcheck="false">`}</div>
+          <div class="card__actions"><button class="btn btn--primary" type="button" data-check>Проверить</button><span class="spacer"></span><button class="link-btn" type="button" data-skip>Не знаю</button></div>
+          <div data-fb></div></div></div>`;
+      FX.card(box.querySelector(".card"), pos === 0);
+      const $check = box.querySelector("[data-check]"), $fb = box.querySelector("[data-fb]");
+      let pick = -1;
+      box.querySelectorAll("[data-o]").forEach((b) => b.addEventListener("click", () => {
+        if ($check.dataset.done) return;
+        pick = Number(b.dataset.o);
+        box.querySelectorAll("[data-o]").forEach((x) => x.classList.toggle("is-pick", x === b));
+      }));
+      const f = box.querySelector(".field");
+      if (f) {
+        f.focus({ preventScroll: true });
+        f.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $check.click(); } });
+      }
+      const resolve = (ok, skipped) => {
+        $check.dataset.done = "1";
+        res.push({ q, ok });
+        const right = q.k === "choice" ? q.o[q.a] : q.a[0];
+        $fb.innerHTML = `<div class="fb ${ok ? "fb--ok" : "fb--bad"}"><span class="fb__icon" aria-hidden="true">${ok ? "✓" : "✕"}</span><div><div class="fb__title">${ok ? "Верно" : skipped ? "Правильный ответ" : "Ошибка"}</div>${ok ? "" : `<div>Правильно: <span class="fb__answer">${esc(right)}</span></div>`}${q.why ? `<div class="fb__why">${esc(q.why)}</div>` : ""}</div></div>`;
+        FX.fb($fb.firstElementChild, ok);
+        box.querySelector(".drill__bar i").style.transform = `translateX(${((pos + 1) / list.length - 1) * 100}%)`;
+        if (q.k === "choice") box.querySelectorAll("[data-o]").forEach((b) => { const i = Number(b.dataset.o); if (i === q.a) b.classList.add("is-ok"); else if (i === pick) b.classList.add("is-bad"); });
+        if (f) { f.readOnly = true; f.classList.add(ok ? "is-ok" : "is-bad"); }
+        box.querySelector("[data-skip]").hidden = true;
+        $check.textContent = "Дальше";
+        $check.focus({ preventScroll: true });
+      };
+      $check.addEventListener("click", () => {
+        if ($check.dataset.done) { pos++; show(); return; }
+        if (q.k === "choice") { if (pick < 0) { toast("Выберите вариант"); return; } return resolve(pick === q.a); }
+        const r = judge(f.value, q.a);
+        if (r.empty) { toast("Сначала напишите ответ"); return; }
+        resolve(r.ok);
+      });
+      box.querySelector("[data-skip]").addEventListener("click", () => resolve(false, true));
+    }
+    show();
+  }
+
+  // Слабые темы: ссылки на темы, где были ошибки
+  function weakHTML(res) {
+    const ids = [...new Set(res.filter((r) => !r.ok).map((r) => r.q.t))].map(lessonById).filter(Boolean);
+    if (!ids.length) return "";
+    return `<h3 class="weak__title">Повторите эти темы</h3><div class="weak">${ids.map((l) => `<a class="weak__item" href="#/t/${l.id}/learn"><span class="badge">${LV_NAME[l.lvl]}</span><span>${esc(l.t)}</span></a>`).join("")}</div>`;
+  }
+
+  function testPage() {
+    document.title = "Тест на уровень · Грамматика по шагам";
+    const qs = TESTS.placement;
+    if (!qs.length) { $main.innerHTML = `<div class="empty">Тест скоро появится.</div>`; return; }
+    const levels = LEVELS.filter((lv) => qs.some((q) => q.lvl === lv));
+    $main.innerHTML = `<a class="crumb" href="#/">← Главная</a>
+      <div class="topic-head"><h1>Тест на уровень</h1></div>
+      <div class="test-intro card">
+        <p>${plural(qs.length, "вопрос", "вопроса", "вопросов")}, от простых к сложным: по ${qs.length / levels.length} на каждый уровень от A1 до C1-C2. Если на каком-то уровне сделано меньше 7 из 10, тест заканчивается сам: дальше будет слишком сложно.</p>
+        <ul class="test-intro__list"><li>Отвечайте честно, без подсказок: так тест покажет, где вы сейчас</li><li>Не знаете ответ? Жмите «Не знаю», это тоже честно</li><li>В конце: ваш уровень, тема, с которой начать, и темы для повторения</li></ul>
+        ${P.test ? `<p class="test-intro__last">Прошлый результат: <b>${LV_NAME[P.test.lvl] || "ниже A1"}</b></p>` : ""}
+        <button class="btn btn--primary" type="button" data-start>Начать тест</button>
+      </div>`;
+    FX.rise($main.querySelectorAll(".crumb, .topic-head, .test-intro"), { y: 8, gap: 0.05 });
+    $main.querySelector("[data-start]").addEventListener("click", () => {
+      const box = $main.querySelector(".test-intro").parentNode;
+      $main.querySelector(".test-intro").remove();
+      const holder = document.createElement("div");
+      box.appendChild(holder);
+      quiz(holder, qs, {
+        label: (q) => `Уровень ${LV_NAME[q.lvl]}`,
+        // После каждого блока уровня: меньше 7 из 10 - дальше не идём
+        stop: (res) => {
+          const last = res[res.length - 1];
+          if (!last) return false;
+          const blk = res.filter((r) => r.q.lvl === last.q.lvl);
+          const total = qs.filter((q) => q.lvl === last.q.lvl).length;
+          return blk.length === total && blk.filter((r) => r.ok).length < Math.ceil(total * 0.7);
+        },
+        finish: (res) => {
+          const per = {};
+          levels.forEach((lv) => { const b = res.filter((r) => r.q.lvl === lv); if (b.length) per[lv] = b.filter((r) => r.ok).length + "/" + b.length; });
+          let lvl = null;
+          for (const lv of levels) {
+            const b = res.filter((r) => r.q.lvl === lv), total = qs.filter((q) => q.lvl === lv).length;
+            if (b.length === total && b.filter((r) => r.ok).length >= Math.ceil(total * 0.7)) lvl = lv; else break;
+          }
+          const start = lvl ? LEVELS[Math.min(LEVELS.indexOf(lvl) + 1, LEVELS.length - 1)] : "A1";
+          const first = L.find((l) => l.lvl === start);
+          P.test = { lvl, start, per, at: Date.now() };
+          save();
+          const score = res.filter((r) => r.ok).length;
+          holder.innerHTML = `<div class="drill"><div class="card result">
+            <div class="result__kicker">Ваш уровень</div>
+            <div class="result__score">${lvl ? LV_NAME[lvl] : "A0"}</div>
+            <p class="result__text">${lvl ? `Уровень ${LV_NAME[lvl]} вы знаете уверенно. Начните с уровня ${LV_NAME[start]}${lvl === "C1" ? " и закрепляйте сложные темы" : ""}.` : "Начните с самого начала, с уровня A1: так основа будет крепкой."}</p>
+            <div class="levels-row">${levels.map((lv) => `<span class="${per[lv] && Number(per[lv].split("/")[0]) >= 7 ? "is-ok" : per[lv] ? "is-bad" : ""}"><b>${LV_NAME[lv]}</b>${per[lv] || "не дошли"}</span>`).join("")}</div>
+            <div class="next-row"><a class="btn btn--primary" href="#/t/${first.id}/learn">Начать: тема ${first.n}</a><a class="btn btn--ghost" href="#/topics">Все темы</a></div>
+            ${weakHTML(res)}
+          </div></div>`;
+          FX.result(holder.querySelector(".result"), score, res.length, !!lvl, true);
+        },
+      });
+    });
+  }
+
+  function examPage(level) {
+    const qs = TESTS.exam[level];
+    document.title = `Контрольная ${LV_NAME[level]} · Грамматика по шагам`;
+    if (!qs || !qs.length) { $main.innerHTML = `<div class="empty">Контрольная для этого уровня скоро появится.</div>`; return; }
+    const best = (P.exam || {})[level];
+    $main.innerHTML = `<a class="crumb" href="#/topics">← Все темы</a>
+      <div class="topic-head"><div><span class="badge">${LV_NAME[level]}</span></div><h1>Контрольная ${LV_NAME[level]}</h1></div>
+      <div class="test-intro card">
+        <p>${plural(qs.length, "вопрос", "вопроса", "вопросов")} по всем темам уровня ${LV_NAME[level]}. Чтобы сдать, нужно ${PASS}% и больше. После каждого ответа будет разбор, а в конце список тем, которые стоит повторить.</p>
+        ${best != null ? `<p class="test-intro__last">Лучший результат: <b>${best}%</b>${best >= PASS ? " · сдано" : ""}</p>` : ""}
+        <button class="btn btn--primary" type="button" data-start>Начать контрольную</button>
+      </div>`;
+    FX.rise($main.querySelectorAll(".crumb, .topic-head, .test-intro"), { y: 8, gap: 0.05 });
+    $main.querySelector("[data-start]").addEventListener("click", () => {
+      const intro = $main.querySelector(".test-intro");
+      const holder = document.createElement("div");
+      intro.replaceWith(holder);
+      quiz(holder, shuffle(qs.map((q) => Object.assign({ i: 0 }, q))), {
+        label: (q) => { const l = lessonById(q.t); return l ? esc(l.t) : "Вопрос"; },
+        finish: (res) => {
+          const score = res.filter((r) => r.ok).length;
+          const pct = Math.round((score / res.length) * 100);
+          P.exam = P.exam || {};
+          P.exam[level] = Math.max(P.exam[level] || 0, pct);
+          save();
+          const ok = pct >= PASS;
+          const nextLv = LEVELS[LEVELS.indexOf(level) + 1];
+          holder.innerHTML = `<div class="drill"><div class="card result">
+            <div class="result__kicker">${pct}% правильно</div>
+            <div class="result__score">${score} / ${res.length}</div>
+            <p class="result__text">${ok ? `Уровень ${LV_NAME[level]} сдан.${nextLv ? ` Можно переходить к ${LV_NAME[nextLv]}.` : " Это вершина курса."}` : `Пока не сдано: нужно ${PASS}%. Повторите темы ниже и попробуйте ещё раз.`}</p>
+            <div class="next-row"><button class="btn ${ok ? "btn--ghost" : "btn--primary"}" type="button" data-again>Пройти ещё раз</button>${ok && nextLv ? `<a class="btn btn--primary" href="#/t/${L.find((l) => l.lvl === nextLv).id}/learn">Начать ${LV_NAME[nextLv]}</a>` : `<a class="btn btn--ghost" href="#/topics">Все темы</a>`}</div>
+            ${weakHTML(res)}
+          </div></div>`;
+          FX.result(holder.querySelector(".result"), score, res.length, ok);
+          holder.querySelector("[data-again]").addEventListener("click", () => route());
+        },
+      });
+    });
+  }
+
   /* ---------- Маршруты ---------- */
   function route() {
     const h = location.hash;
@@ -535,6 +717,8 @@
     if (m) topic(Number(m[1]), m[2] || "learn");
     else if (h === "#/topics") topicsPage();
     else if (h === "#/how") howPage();
+    else if (h === "#/test") testPage();
+    else if (/^#\/exam\/(A1|A2|B1|B2|C1)$/.test(h)) examPage(h.slice(7));
     else home();
     if (!m || !m[2] || m[2] === "learn") document.title = m ? document.title : "Грамматика по шагам";
     scrollTo({ top: 0 });

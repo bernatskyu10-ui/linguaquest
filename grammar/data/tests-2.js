@@ -1,0 +1,95 @@
+/* Тесты: контрольные B1, B2, C1 (C1-C2) */
+(function () {
+  const G = (window.GRAMMAR_TESTS = window.GRAMMAR_TESTS || { placement: [], exam: {} });
+  const C = (lvl, t, q, o, a, why) => ({ lvl, t, k: "choice", q, o, a, why });
+  const I = (lvl, t, q, a, why) => ({ lvl, t, k: "input", q, a, why });
+
+  G.exam.B1 = [
+    C("B1", 25, "I ___ this film last weekend.", ["saw", "have seen", "have saw"], 0, "Last weekend - конкретное время в прошлом, поэтому Past Simple."),
+    I("B1", 25, "She ___ (never / be) to Japan, but she really wants to go.", ["has never been"], "Жизненный опыт без указания времени: Present Perfect."),
+    C("B1", 55, "We ___ for the bus for twenty minutes, and it still hasn't come.", ["have been waiting", "are waiting", "waited"], 0, "Действие началось в прошлом и всё ещё длится: Present Perfect Continuous."),
+    I("B1", 55, "It ___ (rain) since the morning, so the streets are wet.", ["has been raining"], "Since + процесс, который продолжается до сих пор: has been + -ing."),
+    C("B1", 54, "When we got to the cinema, the film ___.", ["had already started", "has already started", "already starts"], 0, "Фильм начался раньше другого прошлого события: Past Perfect."),
+    I("B1", 54, "She was nervous because she ___ (not / fly) before.", ["had not flown", "had never flown"], "Опыт до момента в прошлом: had + V3."),
+    C("B1", 26, "My grandfather ___ smoke, but he stopped ten years ago.", ["used to", "use to", "was used to"], 0, "Привычка в прошлом, которой больше нет: used to + глагол."),
+    I("B1", 26, "There ___ (раньше был) a cinema on this street, but now it's a supermarket.", ["used to be"], "Состояние в прошлом передаём через used to, would здесь не подходит."),
+    C("B1", 59, "After a month in London, I'm finally getting used to ___ on the left.", ["driving", "drive", "drove"], 0, "После get used to нужен глагол с -ing."),
+    C("B1", 27, "If I ___ you, I would talk to the teacher.", ["were", "am", "will be"], 0, "Второй тип условия: If I were you, would + глагол."),
+    I("B1", 27, "If you mix red and white paint, you ___ (get) pink.", ["get"], "Нулевой тип для общих истин: Present Simple в обеих частях."),
+    I("B1", 28, "Paper ___ (make) from wood.", ["is made"], "Общий факт в пассиве: is + V3."),
+    C("B1", 29, "My aunt asked me what time the concert ___.", ["started", "did start", "does start"], 0, "В косвенном вопросе прямой порядок слов и сдвиг времени назад."),
+    I("B1", 29, "\"I will call you.\" → He promised that he ___ (call) me.", ["would call"], "В косвенной речи will меняется на would."),
+    C("B1", 30, "That's the girl ___ brother plays in our team.", ["whose", "who", "which"], 0, "Принадлежность (её брат): whose."),
+    I("B1", 30, "That's the park ___ (где) I learned to ride a bike.", ["where", "in which"], "Место в придаточном: where."),
+    C("B1", 56, "Who ___ the window? - Mike did.", ["broke", "did break", "did broke"], 0, "Вопрос к подлежащему строится без did."),
+    C("B1", 57, "Be careful with that knife, or you'll cut ___.", ["yourself", "you", "your"], 0, "Действие направлено на себя: возвратное местоимение yourself."),
+    I("B1", 57, "Anna and Kate always help ___ (друг другу) with their homework.", ["each other", "one another"], "Взаимное действие: each other."),
+    C("B1", 58, "I can't stand horror films. - ___", ["Neither can I.", "So can I.", "Neither do I."], 0, "Согласие с отрицанием: Neither + тот же вспомогательный глагол (can)."),
+    C("B1", 31, "He has three cars and a huge house. He ___ be rich.", ["must", "can't", "should"], 0, "Уверенный вывод по фактам: must be."),
+    I("B1", 31, "That ___ (не может быть) Sarah, she's in Paris this week.", ["can't be", "couldn't be"], "Уверенность, что это невозможно: can't be."),
+    C("B1", 32, "My little sister is really good at ___ cakes.", ["baking", "to bake", "bake"], 0, "После предлога (at) глагол идёт с -ing."),
+    I("B1", 32, "We decided ___ (stay) at home because of the storm.", ["to stay"], "После decide нужен инфинитив с to."),
+    C("B1", 33, "You haven't seen my keys, ___?", ["have you", "haven't you", "did you"], 0, "Отрицательная часть, значит хвостик положительный с тем же вспомогательным: have you."),
+    C("B1", 34, "___ of my parents can swim, so they never go to the sea.", ["Neither", "Both", "None"], 0, "О двух людях с отрицательным смыслом: neither."),
+    C("B1", 35, "___ the bad weather, we enjoyed the trip.", ["Despite", "Although", "However"], 0, "Перед существительным нужен despite, although требует целого предложения."),
+    I("B1", 36, "Please ___ (выключи) the TV, I'm trying to sleep.", ["turn off", "switch off"], "Выключить прибор: turn off."),
+    C("B1", 38, "Can you ___ me the way to the station?", ["tell", "say", "speak"], 0, "Сказать кому-то, объяснить: tell + человек."),
+    C("B1", 24, "She can't come to the phone, she ___ a shower right now.", ["is having", "has", "has had"], 0, "Действие происходит прямо сейчас: Present Continuous.")
+  ];
+
+  G.exam.B2 = [
+    C("B2", 60, "Don't call me at 8 pm tonight, I ___ my favourite show.", ["will be watching", "will watch", "will have watched"], 0, "Процесс в конкретный момент будущего: Future Continuous."),
+    I("B2", 60, "By the end of June, we ___ (finish) all our exams.", ["will have finished"], "Действие завершится к моменту в будущем: Future Perfect."),
+    C("B2", 61, "By the time the taxi arrived, she ___ for over an hour.", ["had been waiting", "has been waiting", "is waiting"], 0, "Долгий процесс до момента в прошлом: Past Perfect Continuous."),
+    I("B2", 61, "Her hands were dirty because she ___ (work) in the garden all afternoon.", ["had been working"], "Процесс шёл долго до момента в прошлом и оставил след: had been + -ing."),
+    C("B2", 64, "I ___ call you last night, but my phone died.", ["was going to", "am going to", "will"], 0, "Собирался в прошлом, но не сделал: was going to."),
+    I("B2", 64, "Yesterday she said she ___ (help) us the next day.", ["would help"], "Будущее с точки зрения прошлого: would + глагол."),
+    C("B2", 39, "I wish I ___ taller.", ["were", "am", "would be"], 0, "Сожаление о настоящем: wish + прошедшая форма (were)."),
+    C("B2", 39, "If I had studied medicine, I ___ a doctor now.", ["would be", "would have been", "will be"], 0, "Смешанное условие: условие в прошлом, результат сейчас (would be)."),
+    I("B2", 39, "I wish I ___ (not / say) that to her yesterday.", ["had not said"], "Сожаление о прошлом: wish + Past Perfect."),
+    C("B2", 62, "You ___ hurry, or you'll miss the last bus.", ["had better", "would rather", "had better to"], 0, "Совет с предупреждением: had better + глагол без to."),
+    I("B2", 62, "It's time we ___ (go) home, it's nearly midnight.", ["went"], "После it's time we глагол стоит в прошедшей форме."),
+    C("B2", 40, "You ___ me! I would have helped you.", ["should have told", "should told", "must have told"], 0, "Упрёк о прошлом: should have + V3."),
+    I("B2", 40, "Tom is very late. He ___ (might / get) stuck in traffic.", ["might have got", "might have gotten", "may have got", "may have gotten"], "Предположение о прошлом: might have + V3."),
+    C("B2", 63, "My parents won't let me ___ out after ten.", ["go", "to go", "going"], 0, "После let someone глагол без to."),
+    C("B2", 63, "The teacher wants us ___ the essay by Friday.", ["to finish", "finish", "that we finish"], 0, "Want someone to do something: нужен инфинитив с to."),
+    C("B2", 41, "I'm going to ___ next week, it's far too long.", ["have my hair cut", "cut me my hair", "have cut my hair"], 0, "Услугу делает другой человек: have + предмет + V3."),
+    I("B2", 41, "Our TV was broken, so we ___ (have / it / repair).", ["had it repaired"], "Causative: had + предмет + V3."),
+    C("B2", 42, "The thief ___ to have escaped through the window.", ["is believed", "believes", "is believing"], 0, "Безличный пассив о мнениях: is believed to."),
+    I("B2", 42, "It ___ (say) that the old castle is haunted.", ["is said"], "Говорят, что: It is said that."),
+    C("B2", 65, "It was ___ cold day that the school was closed.", ["such a", "so", "so a"], 0, "Перед прилагательным с существительным в единственном числе: such a."),
+    C("B2", 65, "The soup was ___ hot that I couldn't eat it.", ["so", "such", "such a"], 0, "Перед прилагательным без существительного: so."),
+    I("B2", 37, "His handwriting is ___ (read, с отрицательной приставкой), I can't understand a word.", ["unreadable", "illegible"], "Приставка un- даёт отрицание, суффикс -able значит можно."),
+    C("B2", 37, "The ___ of the new library took two years.", ["construction", "constructive", "constructor"], 0, "После the нужно существительное со значением процесса: construction."),
+    C("B2", 43, "Not only ___ late, but he also forgot the tickets.", ["was he", "he was", "did he was"], 0, "После Not only в начале предложения идёт инверсия."),
+    I("B2", 43, "___ (finish) her homework, she went out with her friends.", ["having finished"], "Одно действие закончилось до другого: причастный оборот Having + V3.")
+  ];
+
+  G.exam.C1 = [
+    C("C1", 66, "___ I need right now is a long holiday.", ["What", "That", "Which"], 0, "Выделение с what: What I need is..."),
+    I("C1", 66, "It was my uncle ___ (кто) taught me to play chess.", ["who", "that"], "В конструкции It was... who/that выделяем того, кто сделал."),
+    C("C1", 67, "I ___ lock the door, I'm absolutely sure of it!", ["did", "have", "was"], 0, "Эмфатическое did + глагол усиливает утверждение."),
+    I("C1", 67, "He didn't say anything ___ (вообще).", ["at all"], "Усиление отрицания: at all."),
+    C("C1", 68, "Will it rain tomorrow? - I hope ___.", ["not", "no", "don't"], 0, "Краткий отрицательный ответ с hope: I hope not."),
+    C("C1", 68, "I don't like this jacket. Can I see the blue ___?", ["one", "it", "ones"], 0, "Замена исчисляемого существительного в единственном числе: one."),
+    C("C1", 44, "It is essential that every student ___ the form before Monday.", ["submit", "will submit", "to submit"], 0, "После it is essential that ставится subjunctive: глагол без окончания."),
+    I("C1", 44, "___ (артикль) unemployed often find it hard to get a loan.", ["the"], "The + прилагательное обозначает группу людей."),
+    I("C1", 44, "The committee recommended that the plan ___ (be) changed.", ["be", "should be"], "После recommend that используется subjunctive: be."),
+    C("C1", 69, "Never ___ such a beautiful sunset.", ["have I seen", "I have seen", "I saw"], 0, "После Never в начале нужна инверсия: have I seen."),
+    C("C1", 69, "Hardly had we sat down ___ the phone rang.", ["when", "than", "that"], 0, "Пара Hardly... when: едва... как."),
+    I("C1", 69, "No sooner ___ (she / arrive) than it started to snow.", ["had she arrived"], "No sooner + инверсия в Past Perfect + than."),
+    C("C1", 70, "The ministers ___ meet in Geneva on Friday.", ["are to", "are about", "are going"], 0, "Официальный план: be to + глагол."),
+    I("C1", 70, "Hurry up, the train is ___ (вот-вот) leave.", ["about to"], "Сейчас произойдёт: be about to."),
+    C("C1", 71, "It would ___ that the results were not accurate.", ["seem", "seems", "seeming"], 0, "Осторожная формулировка: it would seem that."),
+    I("C1", 71, "Teenagers ___ (обычно склонны) sleep later than adults.", ["tend to"], "Общая тенденция без категоричности: tend to."),
+    C("C1", 45, "Which sentence is written in academic style?", ["The data suggest that further research is required.", "The data kinda show we need more research.", "We gotta do more research, the data says."], 0, "Академический стиль: без разговорных сокращений, с нейтральными глаголами."),
+    C("C1", 45, "___ students took part in the study.", ["A considerable number of", "Loads of", "A bunch of"], 0, "В академическом тексте вместо loads of пишут a considerable number of."),
+    C("C1", 72, "I'd rather you ___ smoke in here.", ["didn't", "don't", "won't"], 0, "Would rather + другой человек + прошедшая форма."),
+    I("C1", 72, "She looked at me as though I ___ (be) a ghost.", ["were", "was"], "Нереальное сравнение после as though: were."),
+    C("C1", 73, "___, he still refused to give up.", ["Tired as he was", "As tired he was", "Tired he was as"], 0, "Fronting: прилагательное + as + подлежащее + глагол (хотя он и устал)."),
+    I("C1", 73, "Down the hill ___ (roll) a huge rock.", ["rolled"], "Обстоятельство места вынесено вперёд, глагол идёт перед подлежащим."),
+    C("C1", 74, "You can borrow my car ___ you bring it back by six.", ["provided that", "whereas", "notwithstanding"], 0, "Условие: provided that (при условии что)."),
+    C("C1", 74, "Tom is very quiet, ___ his brother never stops talking.", ["whereas", "provided", "despite"], 0, "Противопоставление двух частей: whereas."),
+    I("C1", 74, "___ (несмотря на) the high costs, the project was completed on time.", ["notwithstanding", "despite", "in spite of"], "Уступка в формальном стиле: notwithstanding.")
+  ];
+})();

@@ -58,7 +58,7 @@
 
   T[66] = [
     ["Звонила именно моя мама.", X("It was my {mom/mother} who called", "It was my {mom/mother} that called"), "It was ... who"],
-    ["Познакомились мы именно в Лондоне.", X("It was in London that we met", "It was in London where we met", "It was London where we met"), "It was ... that"],
+    ["Познакомились мы именно в Лондоне.", X("It was in London that we met", "It was London where we met"), "It was ... that"],
     ["Что мне нужно, так это время.", X("What I need is time", "What I need is more time"), "What I need is"],
     ["Всё, чего я хочу, это спать.", X("All I want is to sleep", "All I want is sleep", "All I want to do is sleep", "All I want to do is to sleep"), "All I want is"],
     ["Дело в том, что у меня нет денег.", X("The thing is {that /}I have no money", "The thing is {that /}I don't have any money", "The thing is {that /}I don't have money"), "The thing is"],
@@ -66,8 +66,8 @@
     ["Я сделал вот что: позвонил другу.", X("What I did was {call/to call} {my/a} friend"), "What I did was"],
     ["Решения принимает именно учитель.", X("It is the teacher {who/that} makes the decisions", "It is the teacher {who/that} decides", "It's the teacher {who/that} makes the decisions", "It's the teacher {who/that} decides"), "It is ... who"],
     ["Важнее всего мотивация.", X("What matters most is motivation", "What is most important is motivation", "The most important thing is motivation"), "What matters most is"],
-    ["Я понял это только вчера.", X("It was only yesterday that I {realized/realised/understood} it", "It was only yesterday that I {realized/realised/understood} this", "It was yesterday that I {realized/realised/understood} it"), "It was only ... that"],
-    ["Я учу английский потому, что хочу учиться в США.", X("The reason {why /}I {learn/am learning/study} English is that I want to study in the {USA/US/States}"), "The reason why ... is that"],
+    ["Понял я это только вчера.", X("It was only yesterday that I {realized/realised/understood} {it/this}", "It {wasn't/was not} until yesterday that I {realized/realised/understood} {it/this}"), "It was only ... that"],
+    ["Причина, по которой я учу английский, в том, что я хочу учиться в США.", X("The reason {why /that /}I {learn/am learning/study} English is that I want to study in the {USA/US/States}"), "The reason why ... is that"],
     ["Тебе нужно сделать вот что: извиниться.", X("What you need to do is {apologize/apologise/to apologize/to apologise}", "What you should do is {apologize/apologise}", "What you have to do is {apologize/apologise}"), "What you need to do is"]
   ];
 
@@ -117,7 +117,7 @@
     ["Ты его вообще знаешь?", X("Do you know him at all", "Do you even know him"), "at all в вопросе"],
     ["Это именно та книга, которая мне нужна.", X("{This/That/It} is the very book {that /which /}I need"), "the very"],
     ["Что бы ни случилось, не сдавайся.", X("Whatever happens {don't/do not} give up", "No matter what happens {don't/do not} give up"), "whatever"],
-    ["Он безусловно лучший игрок в команде.", X("He is by far the best player {in/on} the team", "He is by far the best player of the team"), "by far"],
+    ["Он безусловно лучший игрок в команде.", X("He is by far the best player {in/on} the team"), "by far"],
     ["Я сам приготовил ужин.", X("I {cooked/made} {dinner/the dinner} myself", "I myself {cooked/made} {dinner/the dinner}"), "myself"],
     ["У меня нет абсолютно никакого опыта.", X("I have no experience whatsoever", "I have no experience at all", "I {don't/do not} have any experience {at all/whatsoever}"), "no ... whatsoever"],
     ["Да садитесь же!", X("Do sit down", "Please do sit down", "Do sit down please", "Do take a seat"), "Do + глагол"],
@@ -155,7 +155,7 @@
       Ch("Did you lock the door? - Yes, I ___ .", ["locked", "did", "do"], 1, "Короткий ответ: помощник прошлого did."),
       I("Do you want to dance? - I'd like ___ . (одно слово)", ["to"], "После like глагол опущен, to остаётся."),
       I("Переведите: Боюсь, что нет.", ["I am afraid not", "I'm afraid not"], "be afraid + not."),
-      F("Исправьте: Is he at home? - I think yes.", ["I think so"], "«Думаю, да» = I think so.")
+      F("Исправьте: Is he at home? - I think yes.", XA("{/Is he at home? {/- }}I think so"), "«Думаю, да» = I think so.")
     ]
   };
 
@@ -166,12 +166,12 @@
     ["Боюсь, что да.", X("I am afraid so", "I'm afraid so"), "afraid so"],
     ["Мне не нравится эта рубашка. Покажите синюю.", X("I {don't/do not} like this shirt. {Show/Can you show/Could you show} me the blue one{ please/}"), "one"],
     ["Я возьму красные (яблоки).", X("I'll take the red ones", "I will take the red ones"), "ones"],
-    ["Я не умею готовить. - Я тоже.", X("I can't cook. {Neither/Nor} can I", "I cannot cook. {Neither/Nor} can I", "I can't cook. Me neither", "I cannot cook. Me neither"), "neither can I"],
+    ["Я не умею готовить. - Я тоже.", X("I {can't/cannot} cook. {/- }{Neither/Nor} can I", "I {can't/cannot} cook. {/- }Me neither"), "neither can I"],
     ["Она любит джаз, и я тоже.", X("She {likes/loves} jazz and so do I", "She {likes/loves} jazz and I do too", "She {likes/loves} jazz and I do as well"), "so do I"],
     ["Я не позвонил ему, хотя собирался.", X("I {didn't/did not} call him {although/though/but} I {meant/wanted/was going} to"), "оставляем to"],
     ["С удовольствием! (ответ на приглашение)", X("I'd love to", "I would love to", "I'd be happy to", "I would be happy to", "I'd be glad to"), "love to"],
     ["Он обещал помочь и сделал это.", X("He promised to help and he did so", "He promised to help and he did", "He promised to help and he did it", "He promised to help and did so"), "do so"],
-    ["Ты сделал домашнее задание? - Да.", X("Have you done your homework? Yes I have", "Did you do your homework? Yes I did"), "ответ помощником"]
+    ["Ты сделал домашнее задание? - Да.", X("Have you done your homework? {/- }Yes I have", "Did you do your homework? {/- }Yes I did"), "ответ помощником"]
   ];
 
   /* ---------- 69. Продвинутая инверсия ---------- */
@@ -217,7 +217,7 @@
     ["Он редко опаздывает.", X("Rarely is he late", "Seldom is he late", "Rarely does he come late", "Seldom does he come late"), "Rarely is he"],
     ["Она не только поёт, но и танцует.", X("Not only does she sing but she also dances", "Not only does she sing but she dances too", "Not only does she sing but also dances"), "Not only does"],
     ["Едва мы приехали, как начался дождь.", X("{Hardly/Scarcely} had we arrived when it {started/began} {to rain/raining}", "No sooner had we arrived than it {started/began} {to rain/raining}"), "Hardly had we"],
-    ["Не успел я лечь, как зазвонил телефон.", X("No sooner had I {gone to bed/lain down/gone to sleep} than the phone rang", "{Hardly/Scarcely} had I {gone to bed/lain down/gone to sleep} when the phone rang"), "No sooner had I"],
+    ["Не успел я лечь, как зазвонил телефон.", X("No sooner had I {gone to bed/lain down} than the phone rang", "{Hardly/Scarcely} had I {gone to bed/lain down} when the phone rang"), "No sooner had I"],
     ["Только тогда я понял правду.", X("Only then did I {understand/realize/realise/see} the truth"), "Only then did I"],
     ["Я и не подозревал, что она уезжает.", X("Little did I know {that /}she was leaving"), "Little did I know"],
     ["Ни в коем случае не открывай эту дверь.", X("Under no circumstances should you open {this/that} door", "On no account should you open {this/that} door"), "Under no circumstances"],
@@ -256,7 +256,7 @@
       O("Соберите: Самолёт должен приземлиться в восемь.", ["The plane", "is", "due", "to", "land", "at eight"], "The plane is due to land at eight", "be due to = по расписанию."),
       Ch("Hurry up! The shop is ___ close.", ["about to", "due", "to about"], 0, "Вот-вот: is about to."),
       Ch("The prime minister ___ visit Japan next month.", ["is to", "is about", "to be"], 0, "Официальный план: is to."),
-      Ch("We were to ___ at six, but he never came.", ["meet", "have met", "meeting"], 1, "План сорвался: were to have met."),
+      Ch("We were to ___ at six, but he never came.", ["met", "have met", "meeting"], 1, "План сорвался: were to have met."),
       Ch("If we ___ win, we must train every day.", ["are to", "will", "are about to"], 0, "If + be to = если хотим."),
       I("I was about ___ go to bed when you called. (одно слово)", ["to"], "be about to + глагол."),
       I("Переведите: Ты не должен никому говорить. (be to)", XA("You are not to tell {anyone/anybody}", "You aren't to tell {anyone/anybody}", "You are to tell {no one/nobody}"), "be not to = запрет."),
@@ -378,7 +378,7 @@
     ["Вот бы он перестал жаловаться!", X("If only he would stop complaining", "I wish he would stop complaining"), "If only + would"],
     ["Тебе давно пора найти работу.", X("{It's/It is} high time you {found/got} a job", "{It's/It is} time you {found/got} a job"), "It's high time + Past"],
     ["Нам пора домой.", X("{It's/It is} time we went home", "{It's/It is} time for us to go home"), "It's time we + Past"],
-    ["А что, если бы он тогда отказался?", X("{Supposing/Suppose/What if} he had refused"), "Supposing + Past Perfect"],
+    ["А что, если бы он тогда отказался?", X("{Supposing/Suppose/What if} he had refused{ then/}"), "Supposing + Past Perfect"],
     ["Она смотрела на меня так, будто не знала меня.", X("She looked at me as {if/though} she {didn't/did not} know me", "She looked at me as {if/though} she had never met me"), "as if + Past"]
   ];
 

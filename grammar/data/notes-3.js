@@ -86,7 +86,7 @@
       ],
       when: [
         "Длится до сих пор: I have been waiting for an hour.",
-        "Только что закончилось, видны следы: I'm tired, I've been running.",
+        "Только что закончилось, видны следы: I'm tired because I've been running.",
         "Вопрос «как долго»: How long have you been learning English?"
       ],
       signals: ["for", "since", "how long", "all day", "lately", "recently"],
@@ -100,7 +100,7 @@
         ["I have been knowing him for years.", "I have known him for years."],
         ["She has been work here since 2021.", "She has been working here since 2021."]
       ],
-      remember: "Началось вчера, идёт сейчас: have been + ing, и всё сейчас!"
+      remember: "Началось раньше, идёт до сих пор: have / has been + -ing."
     },
     deep: {
       why: [
@@ -110,7 +110,7 @@
         "Отличие от Present Perfect Simple: Continuous про процесс и длительность («как долго»), Simple про результат и количество («сколько сделал»). I've been reading this book all day (процесс), I've read 50 pages (результат)."
       ],
       algo: [
-        "Шаг 1. Слышишь «уже + срок» (уже час, уже три года) или «с + момент» (с утра, с 2020)? Действие идёт до сих пор? Значит, нужен Perfect, не Present Simple.",
+        "Шаг 1. Слышишь «уже + срок» (уже час, уже три года) или «с + момент» (с утра, с 2020)? Действие идёт до сих пор? Значит, нужен Perfect, а не Present Simple или Present Continuous.",
         "Шаг 2. Глагол про действие (wait, learn, work, play)? → Present Perfect Continuous. Глагол состояния (know, like, want, have = иметь, be)? → обычный Present Perfect: have known.",
         "Шаг 3. Выбери for или since: for + сколько (for two hours), since + с какого момента (since Monday, since I was ten).",
         "Шаг 4. Строим: have / has + been + глагол-ing. Has для he, she, it. Проверь, что на месте все три части.",
@@ -154,7 +154,7 @@
       when: [
         "Раньше другого прошлого: When I came, the film had started.",
         "By the time + PS, ... had + 3-я ф.: the party had ended.",
-        "Причина из «давнего» прошлого: I knew him because I had met him."
+        "Причина, которая случилась раньше: I knew him because I had met him before."
       ],
       signals: ["by the time", "before", "after", "already", "just", "never ... before"],
       examples: [
@@ -307,7 +307,7 @@
       why: [
         "Здесь used это не глагол «использовал», а прилагательное «привыкший». Поэтому be used to буквально «быть привыкшим к». Как be tired (быть уставшим) или be afraid of (бояться).",
         "Главная ловушка: маленькое to. В used to + глагол (раньше делал) to это частица перед глаголом, как в to go. А в be used to это предлог «к», как в русском «привык к». После предлога глагол не может стоять голым, ему нужно окончание -ing (это называется герундий, глагол в роли существительного). Поэтому I'm used to getting up, а не to get up.",
-        "Be и get делят работу так же, как в русском «привык» и «привыкаю». Be used to = состояние: уже привык, мне нормально. Get used to = процесс или его итог: привыкаю, привыкнул, привыкну. Get даже в других выражениях значит «становиться»: get tired (устать), get dark (стемнеть).",
+        "Be и get делят работу так же, как в русском «привык» и «привыкаю». Be used to = состояние: уже привык, мне нормально. Get used to = процесс или его итог: привыкаю, привык (со временем), привыкну. Get даже в других выражениях значит «становиться»: get tired (устать), get dark (стемнеть).",
         "Be и get меняются по временам как обычно, а used to остаётся неизменным: I was used to it, I'll get used to it, I got used to it, I'm getting used to it."
       ],
       algo: [
@@ -321,7 +321,7 @@
         {
           h: "Три выражения рядом",
           t: "Разница только в слове перед used: ничего, be или get. Сравни:",
-          ex: [["I used to live alone.", "Раньше я жил один."], ["I'm used to living alone.", "Я привык жить один."]]
+          ex: [["I used to live alone.", "Раньше я жил один."], ["I'm used to living alone.", "Я привык жить один."], ["I'm getting used to living alone.", "Я привыкаю жить один."]]
         },
         {
           h: "Привыкнуть в прошлом: was used to или got used to",
@@ -355,7 +355,7 @@
       ],
       when: [
         "0: факт. If you heat ice, it melts.",
-        "1: реальный план. If it rains, I will stay home.",
+        "1: реально в будущем. If it rains, I will stay home.",
         "2: мечта сейчас. If I had money, I would buy a car.",
         "3: жалею о прошлом. If I had studied, I would have passed."
       ],
@@ -404,7 +404,7 @@
         },
         {
           h: "when и if в типе 1",
-          t: "If = может, случится, а может, нет. When = точно случится, вопрос только в моменте. После when тоже Present, а не will.",
+          t: "If = может случиться, а может и нет. When = точно случится, вопрос только в моменте. После when тоже Present, а не will.",
           ex: [["When I get home, I'll call you.", "Когда приду домой, позвоню тебе."]]
         }
       ],

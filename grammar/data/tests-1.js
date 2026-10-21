@@ -1,0 +1,120 @@
+/* Тесты: входной тест на уровень (50 вопросов, A1-C1) и контрольные A1, A2 */
+(function () {
+  const G = (window.GRAMMAR_TESTS = window.GRAMMAR_TESTS || { placement: [], exam: {} });
+  const C = (lvl, t, q, o, a, why) => ({ lvl, t, k: "choice", q, o, a, why });   // a = 0-based index of the correct option
+  const I = (lvl, t, q, a, why) => ({ lvl, t, k: "input", q, a, why });         // a = array of accepted answers
+
+  G.placement.push(
+    // A1
+    C("A1", 2, "My brother ___ twelve years old.", ["is", "are", "has"], 0, "Возраст говорим через to be: he → is, а не has."),
+    C("A1", 6, "This is my aunt. I visit ___ every Sunday.", ["her", "she", "hers"], 0, "После глагола нужно объектное местоимение: her (её)."),
+    C("A1", 3, "My dad ___ to work by bus every day.", ["goes", "go", "is go"], 0, "Present Simple, he/she/it: к глаголу добавляем -es: goes."),
+    C("A1", 10, "My little sister can ___ very well.", ["read", "reads", "to read"], 0, "После can глагол в начальной форме без to и без -s."),
+    C("A1", 8, "___ two cats in our garden.", ["There are", "There is", "It is"], 0, "Два кота: множественное число, поэтому there are."),
+    C("A1", 5, "I have ___ orange and a banana.", ["an", "a", "the"], 0, "Orange начинается с гласного звука, поэтому an."),
+    C("A1", 9, "___ your sister got a bike?", ["Has", "Have", "Does"], 0, "Вопрос с have got: has + she/he + got."),
+    C("A1", 7, "We don't have ___ time, hurry up!", ["much", "many", "a few"], 0, "Time неисчисляемое, поэтому much."),
+    C("A1", 11, "Be quiet! The baby ___.", ["is sleeping", "sleeps", "sleeping"], 0, "Происходит прямо сейчас: am/is/are + -ing."),
+    C("A1", 12, "We ___ a great film last night.", ["saw", "seen", "have seen"], 0, "Last night: прошлое, Past Simple, see → saw."),
+    // A2
+    C("A2", 46, "She ___ late for school.", ["is never", "never is", "never"], 0, "Наречие частотности ставим после to be: is never."),
+    C("A2", 22, "This test is ___ than the last one.", ["easier", "more easy", "easyer"], 0, "Короткое прилагательное на -y: y → i + er, easier."),
+    C("A2", 51, "I ___ a glass of water, please.", ["would like", "like", "am liking"], 0, "Вежливая просьба: I would like (я бы хотел)."),
+    C("A2", 19, "Look at those dark clouds! It ___ rain.", ["is going to", "will to", "going to"], 0, "Видим признаки сейчас: be going to."),
+    C("A2", 47, "He speaks English very ___.", ["well", "good", "goodly"], 0, "Как говорит? Нужно наречие: good → well."),
+    C("A2", 49, "I'm hungry, but there isn't ___ in the fridge.", ["anything", "nothing", "something"], 0, "В отрицании с isn't используем anything, двойного отрицания нет."),
+    C("A2", 50, "This soup is ___ hot to eat.", ["too", "enough", "very"], 0, "Слишком горячий, чтобы есть: too + прилагательное + to."),
+    C("A2", 21, "I ___ a shower when the phone rang.", ["was having", "am having", "have had"], 0, "Длительное действие в прошлом, которое прервали: Past Continuous."),
+    C("A2", 23, "You ___ park here. It's against the law.", ["mustn't", "don't have to", "needn't"], 0, "Запрет: mustn't. Don't have to значит «не обязательно»."),
+    C("A2", 20, "We ___ each other since we were kids.", ["have known", "know", "knew"], 0, "Since + до сих пор: Present Perfect, have known."),
+    // B1
+    C("B1", 30, "The girl ___ lives next door is a dancer.", ["who", "which", "whose"], 0, "О человеке говорим who."),
+    C("B1", 32, "I enjoy ___ to music in the evening.", ["listening", "to listen", "listen"], 0, "После enjoy всегда -ing."),
+    C("B1", 26, "When I was little, I ___ hate vegetables.", ["used to", "use to", "was used to"], 0, "Привычка в прошлом: used to + глагол."),
+    C("B1", 28, "This bridge ___ in 1890.", ["was built", "built", "was build"], 0, "Мост построили: пассив was + 3-я форма built."),
+    C("B1", 27, "If I ___ you, I would talk to her.", ["were", "am", "would be"], 0, "Второй тип условных: if + were, would + глагол."),
+    C("B1", 25, "I ___ to Italy two years ago.", ["went", "have gone", "have been"], 0, "Ago называет время в прошлом: только Past Simple."),
+    C("B1", 33, "You're coming tomorrow, ___?", ["aren't you", "don't you", "isn't it"], 0, "В основе are, значит в хвостике aren't you."),
+    C("B1", 54, "When we arrived at the cinema, the film ___.", ["had already started", "already started", "has already started"], 0, "Фильм начался раньше нашего прихода: Past Perfect."),
+    C("B1", 29, "She asked me where ___.", ["I lived", "did I live", "do I live"], 0, "В косвенном вопросе прямой порядок слов и сдвиг времени: I lived."),
+    C("B1", 31, "That ___ be Tom, he's in London today.", ["can't", "mustn't", "doesn't have to"], 0, "Уверены, что это невозможно: can't be."),
+    // B2
+    C("B2", 65, "It was ___ boring film that I fell asleep.", ["such a", "so", "so a"], 0, "Перед прилагательным с существительным: such a."),
+    C("B2", 63, "My parents don't let me ___ out late.", ["stay", "to stay", "staying"], 0, "Let someone do: глагол без to."),
+    C("B2", 41, "I need to ___ my hair cut.", ["have", "make", "do"], 0, "Услуга, которую делает другой: have something done."),
+    C("B2", 62, "You'd better ___ a jacket, it's cold outside.", ["take", "to take", "taking"], 0, "После had better глагол без to."),
+    C("B2", 37, "Leaving a small child alone is ___.", ["irresponsible", "unresponsible", "disresponsible"], 0, "Responsible образует отрицание с приставкой ir-."),
+    C("B2", 60, "This time tomorrow I ___ on a beach in Greece.", ["will be lying", "will lie", "am lying"], 0, "Процесс в определённый момент будущего: Future Continuous."),
+    C("B2", 40, "You ___ me! I would have helped you.", ["should have told", "should told", "must have told"], 0, "Упрёк о прошлом: should have + 3-я форма."),
+    C("B2", 39, "If I had studied harder at school, I ___ a better job now.", ["would have", "would have had", "had"], 0, "Смешанное условие: прошлое условие, результат сейчас: would have."),
+    C("B2", 42, "He is said ___ very rich.", ["to be", "being", "that he is"], 0, "Конструкция is said + to + глагол."),
+    C("B2", 43, "Not only ___ late, but he also forgot the tickets.", ["was he", "he was", "did he"], 0, "После Not only в начале нужна инверсия: was he."),
+    // C1
+    C("C1", 67, "I ___ like the film, I just found it too long.", ["did", "do", "was"], 0, "Усиление в прошлом: did + глагол."),
+    C("C1", 66, "___ I need now is a long holiday.", ["What", "That", "Which"], 0, "Выделение: What I need is... (то, что мне нужно)."),
+    C("C1", 68, "Will it rain tomorrow? I hope ___.", ["not", "no", "don't"], 0, "Краткий отрицательный ответ после hope: I hope not."),
+    C("C1", 70, "According to the official programme, the minister ___ open the new hospital on Monday.", ["is to", "is about to", "is being to"], 0, "Официальный план: be to. Be about to значит «вот-вот»."),
+    C("C1", 71, "There ___ to be a problem with your booking.", ["appears", "appear", "is appearing"], 0, "There appears to be: глагол согласуется с a problem."),
+    C("C1", 72, "I'd rather you ___ smoke in the house.", ["didn't", "don't", "not"], 0, "Would rather + другой человек + прошедшее время."),
+    C("C1", 44, "The doctor insisted that he ___ more water.", ["drink", "to drink", "drank"], 0, "После insist that в формальном стиле глагол без изменений: drink."),
+    C("C1", 69, "Never ___ such a beautiful sunset.", ["have I seen", "I have seen", "I saw"], 0, "После Never в начале инверсия: have I seen."),
+    C("C1", 74, "You can borrow my car ___ you bring it back by six.", ["provided that", "whereas", "notwithstanding"], 0, "Provided that значит «при условии, что»."),
+    C("C1", 73, "___ he may be, he isn't always right.", ["Clever as", "As clever", "So clever"], 0, "Уступка через вынос: прилагательное + as + кто + глагол.")
+  );
+
+  G.exam.A1 = [
+    C("A1", 1, "Выбери предложение с правильным порядком слов: «Мой брат любит собак».", ["My brother likes dogs.", "My brother dogs likes.", "Likes my brother dogs."], 0, "Порядок: кто + действие + что."),
+    C("A1", 2, "We ___ from Russia.", ["are", "is", "am"], 0, "We → are."),
+    I("A1", 2, "___ your parents at home now? (be)", ["are"], "Parents: множественное число, вопрос начинается с Are."),
+    C("A1", 3, "My cat ___ milk.", ["doesn't like", "don't like", "not likes"], 0, "Отрицание для he/she/it: doesn't + глагол без -s."),
+    I("A1", 3, "My grandmother ___ (live) in a small village.", ["lives"], "She → к глаголу добавляем -s."),
+    C("A1", 4, "___ do you get up? - At seven o'clock.", ["What time", "Where", "Who"], 0, "Ответ про время: What time."),
+    I("A1", 4, "___ old is your sister? (сколько лет)", ["how"], "Возраст спрашиваем How old."),
+    C("A1", 5, "Look at ___ moon! It's so bright tonight.", ["the", "a", "an"], 0, "Луна одна на всех, поэтому the."),
+    I("A1", 5, "My uncle is ___ engineer. (артикль)", ["an"], "Профессия с артиклем, engineer начинается с гласного звука: an."),
+    C("A1", 6, "Is this bag ___? - Yes, it's mine.", ["yours", "your", "you"], 0, "Без существительного после: yours (твоя)."),
+    I("A1", 6, "Tom and Ann are my friends. I often play with ___. (они)", ["them"], "После предлога объектная форма: them."),
+    C("A1", 7, "How ___ apples do you need?", ["many", "much", "any"], 0, "Яблоки можно посчитать: many."),
+    C("A1", 7, "Two ___ are playing in the park.", ["children", "childs", "childrens"], 0, "Child во множественном числе: children."),
+    C("A1", 8, "___ a bank near here?", ["Is there", "Are there", "There is"], 0, "Вопрос про один банк: Is there."),
+    I("A1", 8, "There ___ three bedrooms in our flat. (be)", ["are"], "Три комнаты: there are."),
+    C("A1", 9, "I ___ a brother, but I have a sister.", ["haven't got", "don't got", "not have got"], 0, "Отрицание с have got: haven't got."),
+    C("A1", 10, "___ you play the guitar?", ["Can", "Are", "Does"], 0, "Вопрос с can: Can + you + глагол."),
+    I("A1", 10, "I'm sorry, I ___ come to your party. (не могу)", ["cannot"], "Не могу: can't (cannot)."),
+    C("A1", 11, "What ___ now? - I'm doing my homework.", ["are you doing", "do you do", "you are doing"], 0, "Сейчас: are + you + -ing."),
+    I("A1", 11, "Listen! Somebody ___ (sing) in the next room.", ["is singing"], "Listen! значит прямо сейчас: is singing."),
+    C("A1", 12, "___ you watch TV yesterday?", ["Did", "Do", "Were"], 0, "Вопрос в прошлом: Did + глагол."),
+    I("A1", 12, "Last summer we ___ (fly) to Spain.", ["flew"], "Fly неправильный глагол: flew."),
+    C("A1", 14, "We have English ___ Monday.", ["on", "in", "at"], 0, "С днями недели: on."),
+    C("A1", 15, "The cat is sleeping ___ the sofa.", ["on", "at", "to"], 0, "На поверхности: on."),
+    I("A1", 16, "This present is ___ you. Happy birthday! (для)", ["for"], "Для кого-то: for.")
+  ];
+
+  G.exam.A2 = [
+    C("A2", 53, "___ go to the cinema tonight!", ["Let's", "Let us to", "Lets we"], 0, "Предложение сделать вместе: Let's + глагол."),
+    I("A2", 53, "___ (not / touch) the oven, it's hot!", ["do not touch"], "Запрет: Don't + глагол."),
+    C("A2", 13, "I think it ___ sunny tomorrow.", ["will be", "is being", "will"], 0, "Предположение о будущем с I think: will be."),
+    I("A2", 13, "Don't worry, I ___ (help) you with this box.", ["will help"], "Решение прямо сейчас, предложение помощи: will."),
+    C("A2", 19, "We ___ visit our grandparents next weekend. We've already bought the tickets.", ["are going to", "will", "go"], 0, "План, решённый заранее: be going to."),
+    I("A2", 19, "Look at the sky. It ___ (rain).", ["is going to rain"], "Видим признаки: is going to."),
+    C("A2", 52, "What ___ on Saturday evening? - I'm meeting Kate at the cafe.", ["are you doing", "will you do", "do you do"], 0, "Договорённость на будущее: Present Continuous."),
+    I("A2", 46, "My dad ___ tired after work. (всегда, be)", ["is always"], "Always ставим после to be: is always."),
+    C("A2", 47, "Please drive ___. The road is wet.", ["carefully", "careful", "more careful"], 0, "Как вести машину? Нужно наречие: carefully."),
+    I("A2", 47, "Tom plays the piano very ___. (хорошо)", ["well"], "Наречие от good: well."),
+    C("A2", 48, "___ phone is this? - It's Mark's.", ["Whose", "Who's", "Who"], 0, "Чей: whose."),
+    I("A2", 48, "This is my ___ room. (сестры)", ["sister's"], "Принадлежность: sister's."),
+    C("A2", 49, "I looked for my keys ___, but I couldn't find them.", ["everywhere", "anywhere", "nowhere"], 0, "Везде: everywhere."),
+    I("A2", 49, "I'm bored. There's ___ to do here. (ничего)", ["nothing"], "Ничего при утвердительном глаголе: nothing."),
+    C("A2", 50, "She isn't old ___ to drive a car.", ["enough", "too", "very"], 0, "Enough ставим после прилагательного."),
+    I("A2", 50, "I can't buy this jacket. It's ___ expensive. (слишком)", ["too"], "Слишком: too."),
+    C("A2", 51, "___ you open the window, please?", ["Could", "Would like", "Should"], 0, "Вежливая просьба: Could you...?"),
+    C("A2", 17, "Listen ___ me, please!", ["to", "at", "for"], 0, "Listen всегда с предлогом to."),
+    I("A2", 17, "What are you looking ___? - My glasses. (предлог)", ["for"], "Искать: look for."),
+    C("A2", 18, "I was tired, ___ I went to bed early.", ["so", "because", "but"], 0, "Следствие: so (поэтому)."),
+    C("A2", 22, "Sam is ___ student in our class.", ["the best", "the better", "the most good"], 0, "Превосходная степень от good: the best."),
+    I("A2", 22, "My bag is ___ than yours. (heavy)", ["heavier"], "Heavy → heavier, y меняется на i."),
+    C("A2", 21, "While I ___ dinner, the lights went out.", ["was cooking", "have cooked", "am cooking"], 0, "Процесс в прошлом, который прервали: was cooking."),
+    C("A2", 20, "Have you ever ___ sushi?", ["eaten", "ate", "eat"], 0, "Present Perfect: have + 3-я форма eaten."),
+    C("A2", 23, "It's a really good book. You ___ read it.", ["should", "mustn't", "don't have to"], 0, "Совет: should.")
+  ];
+})();

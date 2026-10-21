@@ -20,12 +20,12 @@
       O("Соберите: Я собираюсь изучать экономику.", ["I'm", "going to", "study", "economics"], "I'm going to study economics", "I'm + going to + глагол."),
       O("Соберите: Что ты собираешься делать завтра?", ["What", "are", "you", "going to", "do", "tomorrow"], "What are you going to do tomorrow", "What + are + you + going to + глагол."),
       O("Соберите: Она не собирается продавать свою машину.", ["She", "isn't", "going to", "sell", "her car"], "She isn't going to sell her car", "Отрицание: isn't + going to."),
-      Ch("Look at the sky! It ___ rain.", ["will", "is going to", "going to"], 1, "Видим тучи, это признак: is going to."),
+      Ch("Look at the sky! It ___ rain.", ["is going", "is going to", "going to"], 1, "Видим тучи, это признак: is going to."),
       Ch("I ___ visit my grandma on Sunday. (план уже есть)", ["am going to", "going to", "am going"], 0, "План: am going to + глагол. Без am нельзя."),
       Ch("The phone is ringing. - I ___ answer it.", ["am going to", "'ll", "going to"], 1, "Решил прямо сейчас: will (I'll)."),
       Ch("We are going to ___ a cake.", ["making", "make", "makes"], 1, "После going to простая форма: make."),
       I("They ___ play tennis. (собираются)", ["are going to", "'re going to"], "They: are going to."),
-      I("Переведите: Я не собираюсь ему звонить.", ["I'm not going to call him", "I am not going to call him"], "I'm not + going to + call."),
+      I("Переведите: Я не собираюсь ему звонить.", ["I'm not going to call him", "I am not going to call him", "I am not going to phone him"],"I'm not + going to + call."),
       F("Исправьте: I going to study.", ["I'm going to study", "I am going to study"], "Не хватает am.")
     ]
   };
@@ -46,9 +46,9 @@
       Ch("She ___ to London twice.", ["has been", "have been", "was been"], 0, "She: has. Бывала: been to."),
       Ch("I ___ him yesterday.", ["have seen", "saw", "have saw"], 1, "Есть yesterday: Past Simple."),
       Ch("We have lived here ___ 2020.", ["for", "since", "from"], 1, "С какого момента: since."),
-      Ch("Have you finished ___ ?", ["already", "yet", "just"], 1, "В вопросе в конце: yet."),
+      Ch("Have you finished ___ ?", ["still", "yet", "just"], 1, "В вопросе «уже?» в конце: yet."),
       I("He ___ his keys. (lose, и сейчас их нет)", ["has lost", "'s lost"], "He: has + lost."),
-      I("Переведите: Ты когда-нибудь был в Лондоне?", ["Have you ever been to London"], "Have you ever been to ...?"),
+      I("Переведите: Ты когда-нибудь был в Лондоне?", ["Have you ever been to London", "Have you ever visited London"],"Have you ever been to ...?"),
       F("Исправьте: I live here for 5 years.", ["I have lived here for 5 years", "I've lived here for 5 years", "I have been living here for 5 years"], "До сих пор + for: Present Perfect.")
     ]
   };
@@ -67,7 +67,7 @@
       O("Соберите: Пока я готовил, она читала.", ["While", "I", "was cooking", "she", "was reading"], "While I was cooking she was reading", "Два процесса: оба was + -ing."),
       O("Соберите: Мы не спали в полночь.", ["We", "weren't", "sleeping", "at midnight"], "We weren't sleeping at midnight", "We: weren't + -ing."),
       Ch("At 9 pm yesterday I ___ TV.", ["watched", "was watching", "were watching"], 1, "Процесс в момент: I was watching."),
-      Ch("They ___ football when it started to rain.", ["was playing", "were playing", "played"], 1, "They: were + playing."),
+      Ch("They ___ football when it started to rain.", ["was playing", "were playing", "are playing"], 1, "They: were + playing."),
       Ch("I was sleeping when the phone ___ .", ["rang", "was ringing", "rings"], 0, "Короткое событие: Past Simple (rang)."),
       I("She ___ dinner at 7 pm. (cook, процесс)", ["was cooking"], "She: was + cooking."),
       I("Переведите: Что ты делал вчера в 6 вечера?", ["What were you doing at 6 pm yesterday", "What were you doing yesterday at 6 pm", "What were you doing at 6 yesterday", "What were you doing yesterday at 6", "What were you doing at 6 yesterday evening", "What were you doing yesterday at 6 in the evening", "What were you doing at 6 in the evening yesterday"], "What + were + you + doing?"),
@@ -79,8 +79,8 @@
   P[22] = {
     steps: [
       S("Шаг 1. Короткие слова: + er и than", "Чтобы сказать «выше, дешевле», к короткому слову добавляем -er. «Чем» = than. Частая ошибка: then (это «потом»).", [["My brother is taller than me.", "Мой брат выше меня."], ["This bag is cheaper than that one.", "Эта сумка дешевле той."]]),
-      S("Шаг 2. Самый: the + est", "«Самый» у коротких слов: the + слово + est. The нужен всегда.", [["He is the tallest in the class.", "Он самый высокий в классе."], ["This is the cheapest phone.", "Это самый дешёвый телефон."]]),
-      S("Шаг 3. Как писать: big, nice, happy", "Одна гласная + одна согласная на конце: согласную удваиваем (big → bigger). Слово на -e: только -r (nice → nicer). На -y: y меняем на i (happy → happier, easy → the easiest).", [["English is easier than Chinese.", "Английский легче китайского."], ["Today is the hottest day of the year.", "Сегодня самый жаркий день в году."]]),
+      S("Шаг 2. Самый: the + est", "«Самый» у коротких слов: the + слово + est. The почти всегда нужен.", [["He is the tallest in the class.", "Он самый высокий в классе."], ["This is the cheapest phone.", "Это самый дешёвый телефон."]]),
+      S("Шаг 3. Как писать: big, nice, happy", "Короткое слово кончается на одну гласную + одну согласную: согласную удваиваем (big → bigger, hot → hotter). Слово на -e: только -r (nice → nicer). На -y: y меняем на i (happy → happier, easy → the easiest).", [["English is easier than Chinese.", "Английский легче китайского."], ["Today is the hottest day of the year.", "Сегодня самый жаркий день в году."]]),
       S("Шаг 4. Длинные слова: more и the most", "У длинных слов (expensive, interesting, beautiful) -er не добавляем, а ставим more (более) или the most (самый). Нельзя сразу и more, и -er.", [["This phone is more expensive.", "Этот телефон дороже."], ["It's the most interesting book.", "Это самая интересная книга."]]),
       S("Шаг 5. Исключения: учим наизусть", "good → better → the best, bad → worse → the worst, far → further → the furthest, many / much → more → the most, little → less → the least.", [["My English is better now.", "Мой английский теперь лучше."], ["This is the worst film.", "Это худший фильм."]]),
       S("Шаг 6. Такой же, как: as ... as", "as + слово + as = такой же, как. not as ... as = не такой, как. Слово стоит в обычной форме, без -er.", [["She is as tall as me.", "Она такая же высокая, как я."], ["Tea is not as expensive as coffee.", "Чай не такой дорогой, как кофе."]])
@@ -92,7 +92,7 @@
       Ch("My brother is ___ than me.", ["older", "more old", "oldest"], 0, "Короткое слово: old → older."),
       Ch("This is ___ film of the year.", ["the better", "the best", "the most good"], 1, "good → the best."),
       Ch("He is taller ___ me.", ["then", "than", "as"], 1, "«Чем» = than."),
-      Ch("This phone is ___ in the shop.", ["the most expensive", "the expensivest", "more expensive"], 0, "Длинное слово + самый: the most."),
+      Ch("This is ___ phone in the shop.", ["the most expensive", "the expensivest", "more expensive"], 0, "Длинное слово + самый: the most."),
       I("English is ___ than Chinese. (easy)", ["easier"], "easy → easier (y → i)."),
       I("Today is ___ day of the year. (hot, самый)", ["the hottest"], "hot → the hottest (удваиваем t)."),
       F("Исправьте: This book is more better.", ["This book is better"], "better уже значит «лучше», more не нужно.")
@@ -116,7 +116,7 @@
       Ch("You ___ use phones in the exam. (нельзя)", ["don't have to", "mustn't", "shouldn't to"], 1, "Нельзя: mustn't."),
       Ch("Tomorrow is Sunday. You ___ get up early. (не обязательно)", ["mustn't", "don't have to", "must"], 1, "Не обязательно: don't have to."),
       Ch("She ___ work on Saturdays. (приходится)", ["have to", "has to", "must to"], 1, "She: has to."),
-      I("It ___ snow tomorrow. (возможно)", ["might", "may"], "Возможно: might или may."),
+      I("It ___ snow tomorrow. (возможно)", ["might", "may", "could"], "Возможно: might или may (можно и could)."),
       I("Переведите: Тебе стоит больше спать.", ["You should sleep more", "You should get more sleep"], "Совет: should."),
       F("Исправьте: You must to go.", ["You must go"], "После must без to.")
     ]
@@ -206,7 +206,7 @@
       Ch("If you heat ice, it ___ .", ["melts", "melted", "would have melted"], 0, "Тип 0, факт: Present."),
       Ch("If it ___ tomorrow, we will stay home.", ["will rain", "rains", "rained"], 1, "После if без will: rains."),
       Ch("If I ___ money, I would buy a car.", ["have", "had", "would have"], 1, "Тип 2: if + Past (had)."),
-      Ch("If I had studied, I ___ the test.", ["would pass", "will pass", "would have passed"], 2, "Тип 3: would have + 3-я форма."),
+      Ch("If I had studied, I ___ the test yesterday.", ["would pass", "will pass", "would have passed"], 2, "Тип 3, о прошлом (yesterday): would have + 3-я форма."),
       I("If I ___ you, I would apply to UPenn. (be)", ["were"], "If I were you."),
       I("If she had left earlier, she ___ the bus. (not / miss)", ["wouldn't have missed", "would not have missed"], "Тип 3: wouldn't have + missed."),
       F("Исправьте: If I would have money, I would travel.", ["If I had money I would travel", "If I had money, I would travel", "If I had money, I'd travel", "If I had money I'd travel"], "После if не ставим would: had.")
@@ -220,7 +220,7 @@
     ["Мы собираемся купить машину.", "We are going to buy a car|We're going to buy a car", "are going to"],
     ["Она собирается навестить бабушку в воскресенье.", "She is going to visit her grandma on Sunday|She is going to visit her grandmother on Sunday|On Sunday she is going to visit her grandma|On Sunday she is going to visit her grandmother", "is going to"],
     ["Посмотри на тучи! Будет дождь.", "Look at the clouds it is going to rain|Look at the clouds it's going to rain", "Признаки: going to"],
-    ["Я не собираюсь ему звонить.", "I am not going to call him|I'm not going to call him", "am not going to"],
+    ["Я не собираюсь ему звонить.", "I am not going to call him|I'm not going to call him|I am not going to phone him","am not going to"],
     ["Ты собираешься пойти на вечеринку?", "Are you going to go to the party|Are you going to the party", "Are в начало"],
     ["Что ты собираешься делать в выходные?", "What are you going to do at the weekend|What are you going to do on the weekend|What are you going to do this weekend", "What are you going to"],
     ["Сегодня вечером они собираются смотреть фильм.", "They are going to watch a film tonight|They are going to watch a movie tonight|They are going to watch a film this evening|They are going to watch a movie this evening|Tonight they are going to watch a film|Tonight they are going to watch a movie", "are going to watch"],
@@ -231,10 +231,10 @@
   ];
 
   T[20] = [
-    ["Я потерял ключи.", "I have lost my keys|I've lost my keys", "have + lost"],
+    ["Я потерял ключи (их сейчас нет).","I have lost my keys|I've lost my keys", "have + lost"],
     ["Она бывала в Лондоне.", "She has been to London|She's been to London", "has been to"],
     ["Ты когда-нибудь видел снег?", "Have you ever seen snow", "Have you ever"],
-    ["Я никогда не ел суши.", "I have never eaten sushi|I have never tried sushi", "have never + 3-я форма"],
+    ["Я никогда не ел суши.", "I have never eaten sushi|I have never tried sushi|I have never had sushi", "have never + 3-я форма"],
     ["Я уже сделал домашнее задание.", "I have already done my homework|I have done my homework already|I have already finished my homework|I have finished my homework already", "already"],
     ["Он только что пришёл.", "He has just come|He has just arrived|He has just come in|He has just come home", "has just"],
     ["Я ещё не закончил.", "I have not finished yet|I haven't finished yet", "yet в конце"],
@@ -256,8 +256,8 @@
     ["Когда я пришёл домой, мама готовила ужин.", "When I came home my mom was cooking dinner|When I got home my mom was cooking dinner|When I came home mom was cooking dinner|When I got home mom was cooking dinner|My mom was cooking dinner when I came home|My mom was cooking dinner when I got home|When I came home my mom was making dinner|When I got home my mom was making dinner|When I came home my mother was cooking dinner|When I got home my mother was cooking dinner", "came + was cooking"],
     ["Шёл дождь, и дул ветер.", "It was raining and the wind was blowing|It was raining and it was windy", "was raining"],
     ["Я шёл в школу, когда увидел его.", "I was walking to school when I saw him|I was going to school when I saw him|When I was walking to school I saw him", "was walking + saw"],
-    ["Дети играли в парке.", "The children were playing in the park|The kids were playing in the park|Children were playing in the park|Kids were playing in the park", "were playing"],
-    ["Он не слушал учителя.", "He was not listening to the teacher|He wasn't listening to the teacher", "wasn't listening to"]
+    ["В пять часов дети играли в парке.", "At 5 the children were playing in the park|The children were playing in the park at 5|At 5 o'clock the children were playing in the park|The children were playing in the park at 5 o'clock|At 5 the kids were playing in the park|The kids were playing in the park at 5", "were playing"],
+    ["В тот момент он не слушал учителя.", "At that moment he was not listening to the teacher|He was not listening to the teacher at that moment|At that moment he wasn't listening to the teacher|He wasn't listening to the teacher at that moment","wasn't listening to"]
   ];
 
   T[22] = [
@@ -265,8 +265,8 @@
     ["Это лучший фильм года.", "This is the best film of the year|This is the best movie of the year|It is the best film of the year|It is the best movie of the year", "good → the best"],
     ["Английский легче, чем китайский.", "English is easier than Chinese", "easy → easier"],
     ["Этот телефон дороже.", "This phone is more expensive", "more + длинное"],
-    ["Сегодня самый жаркий день.", "Today is the hottest day|It is the hottest day today", "the hottest"],
-    ["Она самая умная в классе.", "She is the smartest in the class|She is the cleverest in the class|She is the smartest in our class|She is the cleverest in our class|She is the smartest in class|She is the smartest girl in the class|She is the cleverest girl in the class", "the + est"],
+    ["Сегодня самый жаркий день в году.", "Today is the hottest day of the year|It is the hottest day of the year today|This is the hottest day of the year","the hottest"],
+    ["Она самая умная в классе.", "She is the smartest in the class|She is the cleverest in the class|She is the smartest in our class|She is the cleverest in our class|She is the smartest in class|She is the cleverest in class|She is the smartest girl in the class|She is the cleverest girl in the class|She is the smartest student in the class", "the + est"],
     ["Моя комната меньше твоей.", "My room is smaller than yours|My room is smaller than your room", "smaller than"],
     ["Сегодня погода хуже, чем вчера.", "The weather is worse today than yesterday|Today the weather is worse than yesterday|The weather today is worse than yesterday|The weather is worse today than it was yesterday|Today the weather is worse than it was yesterday", "bad → worse"],
     ["Он такой же высокий, как его папа.", "He is as tall as his dad|He is as tall as his father", "as ... as"],
@@ -283,8 +283,8 @@
     ["Тебе не обязательно приходить.", "You do not have to come|You don't have to come|You do not need to come|You need not come", "don't have to"],
     ["Тебе стоит сходить к врачу.", "You should see a doctor|You should go to the doctor|You should go to a doctor|You should visit a doctor|You should go and see a doctor", "совет: should"],
     ["Тебе не стоит есть так много сахара.", "You should not eat so much sugar|You shouldn't eat so much sugar|You should not eat that much sugar", "shouldn't"],
-    ["Завтра, возможно, пойдёт снег.", "It might snow tomorrow|It may snow tomorrow|Tomorrow it might snow|Tomorrow it may snow", "might / may"],
-    ["Я, может быть, опоздаю.", "I might be late|I may be late", "might + be"],
+    ["Завтра, возможно, пойдёт снег.", "It might snow tomorrow|It may snow tomorrow|Tomorrow it might snow|Tomorrow it may snow|It could snow tomorrow", "might / may"],
+    ["Я, может быть, опоздаю.", "I might be late|I may be late|I could be late","might + be"],
     ["Можно мне войти?", "May I come in|Can I come in", "May I"],
     ["Я должен больше заниматься.", "I must study more|I have to study more|I must study harder|I have to study harder", "must + глагол"],
     ["Тебе нужно носить школьную форму?", "Do you have to wear a uniform|Do you have to wear a school uniform", "Do you have to"]
@@ -296,7 +296,7 @@
     ["Вчера я ходил в кино.", "I went to the cinema yesterday|Yesterday I went to the cinema|I went to the movies yesterday|Yesterday I went to the movies", "go → went"],
     ["Я уже сделал уроки.", "I have already done my homework|I have done my homework already|I have already finished my homework|I have finished my homework already", "have + done"],
     ["Я жду тебя уже час.", "I have been waiting for you for an hour|I have been waiting for you for one hour", "have been + -ing"],
-    ["Она учит английский три года.", "She has been learning English for three years|She has been studying English for three years|She has learned English for three years|She has studied English for three years", "has been + -ing"],
+    ["Она учит английский уже три года.", "She has been learning English for three years|She has been studying English for three years|She has studied English for three years", "has been + -ing"],
     ["Когда я пришёл, фильм уже начался.", "When I arrived the film had already started|When I came the film had already started|When I got there the film had already started|The film had already started when I arrived|The film had already started when I came|When I arrived the movie had already started|The movie had already started when I arrived", "had + started"],
     ["Она ушла до того, как я позвонил.", "She had left before I called|She left before I called|She had gone before I called|She had left before I phoned", "had + left"],
     ["Завтра в 10 я буду лететь в Париж.", "At 10 tomorrow I will be flying to Paris|Tomorrow at 10 I will be flying to Paris|I will be flying to Paris at 10 tomorrow|I will be flying to Paris tomorrow at 10", "will be + -ing"],
@@ -308,10 +308,10 @@
   T[25] = [
     ["Я видел его вчера.", "I saw him yesterday|Yesterday I saw him", "yesterday: Past Simple"],
     ["Ой, я потерял ключи!", "Oh I have lost my keys|Oh no I have lost my keys|I have lost my keys", "результат сейчас"],
-    ["Я был в Париже два раза.", "I have been to Paris twice|I have been to Paris two times|I have visited Paris twice|I have visited Paris two times", "опыт: have been"],
+    ["Я бывал в Париже два раза.", "I have been to Paris twice|I have been to Paris two times|I have visited Paris twice|I have visited Paris two times", "опыт: have been"],
     ["Я ездил в Париж в 2019 году.", "I went to Paris in 2019|I visited Paris in 2019|In 2019 I went to Paris|In 2019 I visited Paris", "in 2019: Past Simple"],
-    ["Когда ты приехал?", "When did you arrive|When did you come", "When: Past Simple"],
-    ["Ты когда-нибудь был за границей?", "Have you ever been abroad", "Have you ever"],
+    ["Когда ты приехал?", "When did you arrive|When did you come|When did you get here","When: Past Simple"],
+    ["Ты когда-нибудь был за границей?", "Have you ever been abroad|Have you ever traveled abroad|Have you ever travelled abroad","Have you ever"],
     ["Она живёт в Лондоне с 2019 года.", "She has lived in London since 2019|She has been living in London since 2019", "since: Present Perfect"],
     ["В детстве она жила в Лондоне.", "She lived in London when she was a child|When she was a child she lived in London|She lived in London as a child|As a child she lived in London", "закончилось: Past Simple"],
     ["Я никогда не видел снег.", "I have never seen snow", "have never seen"],

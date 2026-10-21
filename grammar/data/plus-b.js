@@ -9,7 +9,7 @@
 
   P[10] = {
     steps: [
-      S("Шаг 1. can + глагол = могу, умею", "После can глагол в обычной форме: без to и без -s. Can одинаковый для всех.", [["I can swim.", "Я умею плавать."], ["She can speak English.", "Она говорит по-английски."]]),
+      S("Шаг 1. can + глагол = могу, умею", "После can глагол в обычной форме: без to и без -s. Can одинаковый для всех.", [["I can swim.", "Я умею плавать."], ["She can speak English.", "Она умеет говорить по-английски."]]),
       S("Шаг 2. Не могу: can't", "can't = cannot.", [["I can't drive.", "Я не умею водить."]]),
       S("Шаг 3. Вопрос: Can в начало", "", [["Can you help me?", "Можешь помочь?"], ["Can I open the window?", "Можно открыть окно?"]]),
       S("Шаг 4. Прошлое и вежливость: could", "Could = мог, умел. Could you ...? = Не могли бы вы ...?", [["I could swim at 5.", "Я умел плавать в 5 лет."], ["Could you help me?", "Не могли бы вы помочь?"]])
@@ -57,7 +57,7 @@
       S("Шаг 3. Неправильные: 2-я форма", "go → went, see → saw, buy → bought, have → had. Их учат наизусть (файл «Неправильные глаголы»).", [["I went to school.", "Я ходил в школу."], ["We bought a car.", "Мы купили машину."]]),
       S("Шаг 4. Отрицание: didn't + обычный глагол", "Прошлое уже в didn't, поэтому глагол обычный.", [["I didn't go.", "Я не ходил."], ["She didn't see him.", "Она его не видела."]]),
       S("Шаг 5. Вопрос: Did + кто + обычный глагол", "", [["Did you go?", "Ты ходил?"], ["What did you buy?", "Что ты купил?"]]),
-      S("Шаг 6. to be в прошлом", "I / he / she / it: was. You / we / they: were.", [["I was tired.", "Я устал."], ["They were at home.", "Они были дома."]])
+      S("Шаг 6. to be в прошлом", "I / he / she / it: was. You / we / they: were.", [["I was at school.", "Я был в школе."], ["They were at home.", "Они были дома."]])
     ],
     tasks: [
       I("Yesterday I ___ (buy) a phone.", ["bought"], "buy → bought."),
@@ -69,7 +69,7 @@
       F("Исправьте: Did you saw the film?", ["Did you see the film"], "После did: see."),
       Ch("They ___ at home last night.", ["was", "were"], 1, "They: were."),
       I("Переведите: Я купил хлеб.", ["I bought bread", "I bought some bread"], "buy → bought."),
-      I("Переведите: Что ты делал вчера?", ["What did you do yesterday"], "What did you do?")
+      I("Переведите: Что ты делал вчера?", ["What did you do yesterday", "What were you doing yesterday"], "What did you do?")
     ]
   };
 
@@ -78,15 +78,15 @@
       S("Шаг 1. will + глагол = буду, сделаю", "Одинаково для всех, глагол без to.", [["I will call you.", "Я тебе позвоню."], ["It will rain.", "Будет дождь."]]),
       S("Шаг 2. Сокращение и отрицание", "I will = I'll. will not = won't.", [["I'll help you.", "Я тебе помогу."], ["I won't be late.", "Я не опоздаю."]]),
       S("Шаг 3. Вопрос: Will в начало", "", [["Will you come?", "Ты придёшь?"]]),
-      S("Шаг 4. Когда will", "Решил прямо сейчас, обещание, «думаю, будет», просьба. Если план уже был, лучше going to (урок 19).", [["I think he will win.", "Думаю, он победит."]]),
+      S("Шаг 4. Когда will", "Решил прямо сейчас, обещание, «думаю, будет», просьба. Если план уже был, лучше be going to (тема уровня A2).", [["I think he will win.", "Думаю, он победит."]]),
       S("Шаг 5. После if и when будущее не пишут", "If it rains (а не will rain), I'll stay home.", [["When I get home, I'll call you.", "Когда приду домой, позвоню."]])
     ],
     tasks: [
       I("I ___ you tomorrow. (позвоню)", ["will call", "'ll call"], "will + call."),
       I("She ___ be late. (не будет)", ["won't", "will not"], "won't."),
-      Ch("___ you help me?", ["Do", "Will", "Are"], 1, "Просьба о будущем: Will you ...?"),
+      Ch("___ you help me?", ["Does", "Will", "Are"], 1, "Просьба о будущем: Will you ...?"),
       F("Исправьте: I will to go.", ["I will go", "I'll go"], "После will без to."),
-      F("Исправьте: If it will rain, I'll stay home.", ["If it rains I'll stay home", "If it rains, I'll stay home", "If it rains I will stay home"], "После if настоящее: rains."),
+      F("Исправьте: If it will rain, I'll stay home.", ["If it rains I'll stay home", "If it rains I will stay at home", "I'll stay home if it rains", "I will stay at home if it rains"], "После if настоящее: rains."),
       O("Соберите: Я думаю, он победит.", ["win", "will", "he", "I think"], "I think he will win", "I think + he will win."),
       I("Переведите: Я тебе помогу.", ["I will help you", "I'll help you"], "I'll help you."),
       I("Переведите: Будет холодно.", ["It will be cold", "It'll be cold"], "Нет «кто»: it will be."),
@@ -113,7 +113,7 @@
       I("My birthday is ___ May 9th.", ["on"], "Дата: on."),
       I("I was born ___ 2010.", ["in"], "Год: in."),
       F("Исправьте: See you in Monday.", ["See you on Monday"], "День недели: on."),
-      I("Переведите: Я встаю в 7 утра.", ["I get up at 7 am", "I get up at seven in the morning", "I get up at 7 in the morning", "I get up at seven am"], "Время: at 7.")
+      I("Переведите: Я встаю в 7 утра.", ["I get up at 7 am", "I get up at 7 a.m.", "I get up at 7 in the morning", "I get up at 7 o'clock in the morning"], "Время: at 7.")
     ]
   };
 
@@ -135,7 +135,7 @@
       F("Исправьте: I'm in home.", ["I'm at home", "I am at home"], "Дома: at home."),
       F("Исправьте: I go to home.", ["I go home"], "go home без to."),
       I("Переведите: Кошка под столом.", ["The cat is under the table"], "Под: under."),
-      I("Переведите: Аптека рядом с банком.", ["The pharmacy is next to the bank"], "Рядом с: next to.")
+      I("Переведите: Аптека рядом с банком.", ["The pharmacy is next to the bank", "The pharmacy is near the bank"], "Рядом с: next to (или near).")
     ]
   };
 
@@ -176,7 +176,7 @@
       Ch("Call ___ tonight.", ["to me", "me", "for me"], 1, "call без предлога."),
       I("I'm afraid ___ dogs.", ["of"], "afraid of."),
       F("Исправьте: I listen music.", ["I listen to music"], "listen to."),
-      F("Исправьте: I'm looking my keys.", ["I'm looking for my keys", "I am looking for my keys"], "Искать: look for."),
+      F("Исправьте: I'm looking my keys. (= я ищу ключи)", ["I'm looking for my keys", "I am looking for my keys"], "Искать: look for."),
       I("Переведите: Я согласен с тобой.", ["I agree with you"], "agree with. Без am!")
     ]
   };
@@ -187,7 +187,7 @@
       S("Шаг 2. Причина и следствие", "because = потому что (причина). so = поэтому (следствие).", [["I stayed home because I was ill.", "Я остался дома, потому что болел."], ["I was ill, so I stayed home.", "Я болел, поэтому остался дома."]]),
       S("Шаг 3. Время и условие", "when (когда), if (если), before / after (до / после того как), until (пока не), while (пока).", [["When I was a child, I lived in a village.", "В детстве я жил в деревне."]]),
       S("Шаг 4. Главная ловушка", "После when, if, before, after, until про будущее пишем настоящее время.", [["I'll call you when I get home.", "Я позвоню, когда приду домой."]]),
-      S("Шаг 5. Мнение: that и although", "I think (that) ... = я думаю, что ... although = хотя.", [["I think that he is right.", "Я думаю, что он прав."], ["Although it was late, we went out.", "Хотя было поздно, мы пошли гулять."]])
+      S("Шаг 5. that (что) и although (хотя)", "I think (that) ... = я думаю, что ... although = хотя.", [["I think that he is right.", "Я думаю, что он прав."], ["Although it was late, we went out.", "Хотя было поздно, мы пошли гулять."]])
     ],
     tasks: [
       Ch("I was hungry, ___ I ate a sandwich.", ["because", "so", "but"], 1, "Следствие: so."),
@@ -196,9 +196,9 @@
       Ch("I'll call you when I ___ home.", ["will get", "get", "got"], 1, "После when настоящее."),
       I("Tea ___ coffee? (или)", ["or"], "Или: or."),
       I("Wash your hands ___ you eat. (перед тем как)", ["before"], "before."),
-      F("Исправьте: If it will rain, we'll stay home.", ["If it rains we'll stay home", "If it rains, we'll stay home", "If it rains we will stay home"], "После if настоящее."),
+      F("Исправьте: If it will rain, we'll stay home.", ["If it rains we'll stay home", "If it rains we will stay at home", "We'll stay home if it rains", "We will stay at home if it rains"], "После if настоящее."),
       O("Соберите: Я думаю, что ты прав.", ["right", "I think", "you are", "that"], "I think that you are right", "I think + that + you are right."),
-      I("Переведите: Я устал, поэтому лёг спать.", ["I was tired so I went to bed", "I was tired, so I went to bed"], "so = поэтому. went to bed."),
+      I("Переведите: Я устал, поэтому лёг спать.", ["I was tired so I went to bed", "I was tired so I went to sleep"], "so = поэтому. went to bed."),
       I("Переведите: Хотя было холодно, мы пошли гулять.", ["Although it was cold we went for a walk", "Although it was cold, we went for a walk", "Although it was cold we went out", "Although it was cold, we went out"], "although = хотя. Гулять: go for a walk / go out.")
     ]
   };
