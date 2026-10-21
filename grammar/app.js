@@ -9,6 +9,7 @@
   const C = window.GRAMMAR_COURSE;
   const PLUS = window.GRAMMAR_PLUS || {};
   const TR = window.TRAINER || {};
+  const NOTES = window.GRAMMAR_NOTES || {};
   const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
   // Порядок и уровни берём из data/order.js; темы вне списка идут в конец своего уровня
   const ORDER = window.GRAMMAR_ORDER || {};
@@ -266,7 +267,7 @@
     P.last = id; save();
     const hasTr = !!TR[id];
     const r = rec(id);
-    const parts = [["learn", "Объяснение", r.learn], ["warm", "Разминка", r.warm != null]].concat(hasTr ? [["tr", "Перевод", r.tr != null]] : []);
+    const parts = [["learn", "Правило", r.learn], ["note", "Конспект", !!r.note], ["warm", "Разминка", r.warm != null]].concat(hasTr ? [["tr", "Перевод", r.tr != null]] : []);
     $main.innerHTML = `
       <a class="crumb" href="#/topics">← Все темы</a>
       <div class="topic-head"><div><span class="badge">${LV_NAME[l.lvl]}</span> <span class="badge badge--muted">Тема ${l.n}</span></div><h1>${esc(l.t)}</h1></div>
@@ -279,6 +280,7 @@
     topic.cur = id;
     if (part === "warm") drill(box, l, "warm");
     else if (part === "tr" && hasTr) drill(box, l, "tr");
+    else if (part === "note") notePage(box, l);
     else learn(box, l, hasTr);
     document.title = `${l.t} · Грамматика по шагам`;
   }
@@ -296,6 +298,8 @@
     const watch = `<button class="watch" type="button" data-watch><span class="watch__play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></span><span><b>Разбор за минуту</b><small>Анимированное объяснение с озвучкой</small><span class="watch__chips" aria-hidden="true"><span>Смысл</span><span>Строим</span><span>Ошибка</span></span></span></button>`;
     box.innerHTML = `<div class="learn-grid"><div class="reading">${watch}
       ${plus ? plus.steps.map((s, i) => `<section class="step" style="--i:${i}"><span class="step__n">${i + 1}</span><h3>${esc(s.h.replace(/^Шаг \d+\.\s*/, ""))}</h3>${s.t ? `<p>${esc(s.t)}</p>` : ""}${s.ex.length ? `<div class="ex">${s.ex.map(exRow).join("")}</div>` : ""}</section>`).join("") : ""}
+      ${deepHTML(l)}
+      <a class="note-link" href="#/t/${l.id}/note"><span class="note-link__ic" aria-hidden="true">✎</span><span><b>Конспект для тетради</b><small>Правило на одну страницу: формулы, примеры, ошибки. Можно распечатать</small></span></a>
       <details class="cheat" ${plus ? "" : "open"}><summary>${plus ? "Шпаргалка: правило и таблицы" : "Правило"}</summary><div class="cheat__body">${clean(l.body)}</div></details>
       <div class="next-row"><a class="btn btn--primary" href="#/t/${l.id}/warm" data-learned>Понятно, к разминке</a>${hasTr ? `<a class="btn btn--ghost" href="#/t/${l.id}/tr" data-learned>Сразу к переводу</a>` : ""}</div></div>${aside}</div>`;
     box.querySelectorAll(".cheat__body table").forEach((t) => { const w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); });
@@ -305,7 +309,81 @@
       window.PLAYER.play(l, plus, l.n, { speak, hush: () => "speechSynthesis" in window && speechSynthesis.cancel(), onClose: () => btn.focus({ preventScroll: true }) });
     });
     box.querySelectorAll("[data-learned]").forEach((a) => a.addEventListener("click", () => { r.learn = true; save(); }));
-    FX.rise(box.querySelectorAll(".step, .cheat, .next-row"), { y: 10, gap: 0.05, delay: 0.08, d: 0.3 });
+    FX.rise(box.querySelectorAll(".step, .deep, .note-link, .cheat, .next-row"), { y: 10, gap: 0.05, delay: 0.08, d: 0.3 });
+  }
+
+  /* ---------- Подробный разбор ---------- */
+  function deepHTML(l) {
+    const d = NOTES[l.id] && NOTES[l.id].deep;
+    if (!d) return "";
+    const exRow = ([en, ru]) => `<div class="ex__row"><button class="say" type="button" data-say="${esc(en.split(" → ").pop())}" aria-label="Послушать">${SPEAKER}</button><div><b>${esc(en)}</b><span>${esc(ru)}</span></div></div>`;
+    return `<section class="deep" aria-labelledby="deep-h">
+      <h2 class="deep__title" id="deep-h">Разбираем подробно</h2>
+      <div class="deep__block"><h3>Почему так</h3>${d.why.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+      <div class="deep__block"><h3>Как применять: алгоритм</h3><ol class="algo">${d.algo.map((a) => `<li>${esc(a.replace(/^Шаг \d+[.:]\s*/, ""))}</li>`).join("")}</ol></div>
+      <div class="deep__block"><h3>Сложные случаи</h3>${d.cases.map((c) => `<div class="case"><b>${esc(c.h)}</b><p>${esc(c.t)}</p>${c.ex && c.ex.length ? `<div class="ex">${c.ex.map(exRow).join("")}</div>` : ""}</div>`).join("")}</div>
+      <div class="deep__block"><h3>Частые вопросы</h3>${d.faq.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</div>
+    </section>`;
+  }
+
+  /* ---------- Конспект для тетради ---------- */
+  function noteText(l, n) {
+    const lines = [`${n.name} (${LV_NAME[l.lvl]}, тема ${l.n})`, "", `Суть: ${n.idea}`, "", "Формулы:"];
+    n.forms.forEach(([k, v]) => lines.push(`  ${k}  ${v}`));
+    lines.push("", "Когда используем:");
+    n.when.forEach((w, i) => lines.push(`  ${i + 1}. ${w}`));
+    if (n.signals && n.signals.length) lines.push("", `Слова-подсказки: ${n.signals.join(", ")}`);
+    lines.push("", "Примеры:");
+    n.examples.forEach(([en, ru]) => lines.push(`  ${en} = ${ru}`));
+    lines.push("", "Ошибки:");
+    n.mistakes.forEach(([w, rt]) => lines.push(`  ✗ ${w}  →  ✓ ${rt}`));
+    lines.push("", `Запомни: ${n.remember}`);
+    return lines.join("\n");
+  }
+  function notePage(box, l) {
+    const n = NOTES[l.id] && NOTES[l.id].note;
+    const r = rec(l.id);
+    if (!n) {
+      box.innerHTML = `<div class="reading"><div class="empty">Конспект для этой темы ещё готовится. Пока можно переписать шпаргалку:</div><div class="cheat"><div class="cheat__body" style="padding-top:18px">${clean(l.body)}</div></div></div>`;
+      return;
+    }
+    const mark = (k) => (k === "+" ? "plus" : k === "-" ? "minus" : k === "?" ? "q" : "other");
+    box.innerHTML = `<div class="note-wrap">
+      <div class="note-tools">
+        <button class="btn btn--ghost btn--sm" type="button" data-print>Распечатать</button>
+        <button class="btn btn--ghost btn--sm" type="button" data-copy>Скопировать текст</button>
+        <label class="note-done"><input type="checkbox" data-done ${r.note ? "checked" : ""}><span>Записал в тетрадь</span></label>
+      </div>
+      <article class="paper" aria-label="Конспект">
+        <header class="paper__head"><span class="paper__meta">${LV_NAME[l.lvl]} · тема ${l.n}</span><span class="paper__date">Дата: ________</span></header>
+        <h2 class="paper__title">${esc(n.name)}</h2>
+        <p class="paper__idea"><span class="hand">Суть:</span> ${esc(n.idea)}</p>
+        <h3 class="hand">Формулы</h3>
+        <div class="forms">${n.forms.map(([k, v]) => `<div class="form"><span class="form__k form__k--${mark(k)}">${esc(k)}</span><span class="form__v">${esc(v)}</span></div>`).join("")}</div>
+        <h3 class="hand">Когда используем</h3>
+        <ol class="paper__list">${n.when.map((w) => `<li>${esc(w)}</li>`).join("")}</ol>
+        ${n.signals && n.signals.length ? `<h3 class="hand">Слова-подсказки</h3><div class="signals">${n.signals.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : ""}
+        <h3 class="hand">Примеры</h3>
+        <div class="paper__ex">${n.examples.map(([en, ru]) => `<div><button class="say say--ink" type="button" data-say="${esc(en)}" aria-label="Послушать">${SPEAKER}</button><p><b>${esc(en)}</b><span>${esc(ru)}</span></p></div>`).join("")}</div>
+        <h3 class="hand">Ошибки</h3>
+        <div class="paper__err">${n.mistakes.map(([w, rt]) => `<div><s>✗ ${esc(w)}</s><b>✓ ${esc(rt)}</b></div>`).join("")}</div>
+        <div class="remember"><span class="hand">Запомни!</span> ${esc(n.remember)}</div>
+      </article>
+      <p class="note-tip">Совет: перепишите конспект от руки, а не копируйте. Когда пишешь сам, правило запоминается лучше. Цветной ручкой выделите формулы и ошибки.</p>
+      <div class="next-row"><a class="btn btn--primary" href="#/t/${l.id}/warm">К разминке</a><a class="btn btn--ghost" href="#/t/${l.id}/learn">Назад к правилу</a></div>
+    </div>`;
+    box.querySelectorAll("[data-say]").forEach((b) => b.addEventListener("click", () => say(b.dataset.say, b)));
+    box.querySelector("[data-print]").addEventListener("click", () => print());
+    box.querySelector("[data-copy]").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(noteText(l, n)); toast("Конспект скопирован"); } catch (e) { toast("Не получилось скопировать"); }
+    });
+    box.querySelector("[data-done]").addEventListener("change", (e) => {
+      r.note = e.target.checked; save();
+      const b = $main.querySelector('[data-go="note"]');
+      if (b) { b.classList.toggle("is-done", r.note); b.querySelector("i").textContent = r.note ? "✓" : "2"; if (r.note) FX.pop(b.querySelector("i")); }
+      if (r.note) toast("Отлично, конспект записан");
+    });
+    FX.rise(box.querySelectorAll(".note-tools, .paper, .note-tip, .next-row"), { y: 10, gap: 0.06, d: 0.3 });
   }
 
   /* ---------- Разминка и перевод: одна карточка за раз ---------- */
@@ -451,7 +529,7 @@
   /* ---------- Маршруты ---------- */
   function route() {
     const h = location.hash;
-    const m = h.match(/^#\/t\/(\d+)(?:\/(learn|warm|tr))?/);
+    const m = h.match(/^#\/t\/(\d+)(?:\/(learn|note|warm|tr))?/);
     document.querySelectorAll(".nav a").forEach((a) => a.classList.toggle("is-on", h.startsWith(a.getAttribute("href"))));
     if (!m) topic.cur = null;
     if (m) topic(Number(m[1]), m[2] || "learn");

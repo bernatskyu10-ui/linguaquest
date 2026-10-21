@@ -482,3 +482,95 @@ body { background: transparent; }
 .pl.is-paused .pl-scene { opacity: 0.55; transition: opacity 0.2s; }
 @media (prefers-reduced-motion: reduce) { .pl-it { transition: opacity 0.2s ease; } }
 .pl-block--line { font-size: clamp(18px, 4.8vw, 24px); padding: 10px 18px; max-width: 100%; }
+
+/* ==========================================================================
+   Подробный разбор
+   ========================================================================== */
+.deep { margin: 26px 0 8px; }
+.deep__title { font-size: clamp(22px, 4vw, 28px); margin-bottom: 12px; }
+.deep__block { padding: 20px 20px 16px; margin-bottom: 12px; border-radius: var(--r-card); background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--shadow); }
+.deep__block h3 { font-size: 17.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.deep__block h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+.deep__block p { margin: 0 0 10px; color: var(--ink-2); line-height: 1.65; }
+.algo { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: a; }
+.algo li { position: relative; padding: 10px 12px 10px 46px; border-radius: 12px; background: color-mix(in srgb, var(--surface-2) 80%, transparent); counter-increment: a; color: var(--ink); font-weight: 600; line-height: 1.5; }
+.algo li::before { content: counter(a); position: absolute; left: 10px; top: 9px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: var(--bg); font-weight: 800; font-size: 13px; }
+.case { padding: 12px 0; border-top: 1px solid var(--line); }
+.case:first-of-type { border-top: 0; padding-top: 0; }
+.case > b { display: block; margin-bottom: 4px; }
+.case .ex { margin-top: 4px; }
+.faq { border-top: 1px solid var(--line); }
+.faq:first-of-type { border-top: 0; }
+.faq summary { cursor: pointer; list-style: none; padding: 12px 30px 12px 0; position: relative; font-weight: 700; line-height: 1.4; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 4px; top: 9px; font-size: 22px; color: var(--muted); transition: transform 0.2s var(--ease-out); }
+.faq[open] summary::after { transform: rotate(45deg); }
+.faq p { margin: 0 0 12px; }
+
+.note-link { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 16px 18px; border-radius: var(--r-card); text-decoration: none; background: #fffdf6; border: 1px solid #eadfc4; box-shadow: var(--shadow); background-image: linear-gradient(rgba(70, 110, 200, 0.12) 1px, transparent 1px); background-size: 100% 22px; color: #1f2b52; transition: transform 0.15s var(--ease-out); }
+.note-link:active { transform: scale(0.985); }
+.note-link__ic { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--accent); color: #fff; font-size: 22px; }
+.note-link b { display: block; font-size: 16.5px; }
+.note-link small { display: block; color: #5a6385; font-size: 14px; font-weight: 600; }
+
+/* 4 вкладки темы на узком экране */
+@media (max-width: 480px) { .steps-nav button { font-size: 12.5px; gap: 4px; padding: 6px 2px; } .steps-nav i { width: 20px; height: 20px; font-size: 11px; } }
+@media (max-width: 360px) { .steps-nav button span { display: none; } }
+
+/* ==========================================================================
+   Конспект: страница тетради в клетку
+   ========================================================================== */
+.note-wrap { max-width: 760px; }
+.note-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 14px; }
+.note-done { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; font-weight: 700; font-size: 14.5px; cursor: pointer; }
+.note-done input { width: 20px; height: 20px; accent-color: var(--ok); }
+.paper { --cell: 22px; --ink-blue: #233a8a; --pen-red: #c8352c; position: relative; padding: 26px 22px 26px 44px; border-radius: 6px; color: #1d2340; background-color: #fffef9;
+  background-image: linear-gradient(90deg, transparent 31px, rgba(220, 60, 60, 0.45) 31px, rgba(220, 60, 60, 0.45) 33px, transparent 33px),
+    linear-gradient(rgba(70, 110, 200, 0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(70, 110, 200, 0.16) 1px, transparent 1px);
+  background-size: 100% 100%, var(--cell) var(--cell), var(--cell) var(--cell);
+  box-shadow: 0 1px 2px rgba(31, 43, 82, 0.08), 0 22px 44px -26px rgba(31, 43, 82, 0.5); }
+.paper::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; border-radius: 6px 6px 0 0; background: repeating-linear-gradient(90deg, transparent 0 14px, rgba(31, 43, 82, 0.12) 14px 22px); }
+.hand { font-family: "Caveat", "Segoe Print", cursive; font-weight: 700; color: var(--ink-blue); }
+.paper h3.hand { font-size: 26px; line-height: 1; margin: 20px 0 8px; letter-spacing: 0; }
+.paper__head { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 700; color: #6b7290; margin-bottom: 6px; }
+.paper__title { font-family: "Caveat", cursive; font-size: clamp(34px, 7vw, 46px); font-weight: 700; line-height: 1.05; color: var(--pen-red); letter-spacing: 0; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.paper__idea { margin: 14px 0 0; font-size: 16.5px; line-height: 1.6; font-weight: 600; }
+.paper__idea .hand { font-size: 24px; margin-right: 4px; }
+.forms { display: grid; gap: 6px; }
+.form { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.85); border: 1.5px solid rgba(35, 58, 138, 0.25); }
+.form__k { min-width: 30px; height: 30px; padding: 0 6px; flex: none; display: grid; place-items: center; border-radius: 8px; font-weight: 800; font-size: 17px; color: #fff; background: #6b7290; }
+.form__k--plus { background: #1f9a63; }
+.form__k--minus { background: var(--pen-red); }
+.form__k--q { background: #2f56c9; }
+.form__v { font-weight: 800; font-size: 16.5px; color: #1d2340; line-height: 1.35; }
+.paper__list { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-weight: 600; line-height: 1.55; }
+.paper__list li::marker { color: var(--ink-blue); font-weight: 800; }
+.signals { display: flex; flex-wrap: wrap; gap: 6px; }
+.signals span { padding: 3px 10px; border-radius: 6px; background: #fff3a8; font-weight: 800; font-size: 15px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06); }
+.paper__ex { display: grid; gap: 6px; }
+.paper__ex > div { display: flex; align-items: flex-start; gap: 10px; }
+.paper__ex p { margin: 0; }
+.paper__ex b { display: block; font-size: 16.5px; }
+.paper__ex span { color: #5a6385; font-size: 14.5px; font-weight: 600; }
+.say--ink { width: 30px; height: 30px; background: #fff; color: var(--ink-blue); box-shadow: 0 1px 2px rgba(31, 43, 82, 0.15); }
+.paper__err { display: grid; gap: 8px; }
+.paper__err div { display: grid; gap: 2px; }
+.paper__err s { color: var(--pen-red); font-weight: 700; text-decoration-thickness: 1.5px; }
+.paper__err b { color: #1f9a63; font-weight: 800; }
+.remember { margin-top: 20px; padding: 12px 14px; border-radius: 8px; background: linear-gradient(transparent 8%, rgba(255, 214, 64, 0.55) 8%, rgba(255, 214, 64, 0.55) 92%, transparent 92%); font-weight: 800; font-size: 16.5px; line-height: 1.5; transform: rotate(-0.4deg); }
+.remember .hand { font-size: 26px; color: var(--pen-red); margin-right: 6px; }
+.note-tip { margin: 14px 0 0; color: var(--muted); font-size: 14.5px; }
+:root[data-theme="dark"] .paper { box-shadow: 0 24px 48px -26px rgba(0, 0, 0, 0.9); }
+
+/* Печать: только лист конспекта */
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  .backdrop, .header, .footer, .crumb, .topic-head, .steps-nav, .note-tools, .note-tip, .next-row, .toast, .skip, .say { display: none !important; }
+  .main { padding: 0; max-width: none; }
+  .paper { box-shadow: none; border: 1px solid #ccc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fx .paper { opacity: 1 !important; transform: none !important; }
+}
+.form__k { white-space: nowrap; font-size: 15px; }
+.form { flex-wrap: wrap; row-gap: 6px; }
+.form__v { flex: 1 1 170px; min-width: 0; }

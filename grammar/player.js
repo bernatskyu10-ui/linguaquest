@@ -74,7 +74,12 @@
   function build(lesson, plus, num) {
     const { formulas, errs } = parseBody(lesson.body);
     const steps = plus ? plus.steps : [];
-    // Нет формулы в шпаргалке: ищем «... + ...» в заголовках и текстах шагов
+    // Нет формулы в шпаргалке: берём строки «+ / - / ?» из конспекта
+    const note = (window.GRAMMAR_NOTES || {})[lesson.id];
+    if (!formulas.length && note && note.note && note.note.forms.length) {
+      formulas.push(note.note.forms.slice(0, 3).map(([k, v]) => `${k}  ${v}`));
+    }
+    // Иначе ищем «... + ...» в заголовках и текстах шагов
     if (!formulas.length) {
       // Сначала заголовки, потом тексты; формула должна содержать английское слово или «глагол»
       const pool = steps.map((st) => st.h.replace(/^Шаг \d+\.\s*/, "")).concat(steps.map((st) => st.t || ""));
