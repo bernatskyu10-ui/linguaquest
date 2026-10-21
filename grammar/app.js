@@ -9,11 +9,17 @@
   const C = window.GRAMMAR_COURSE;
   const PLUS = window.GRAMMAR_PLUS || {};
   const TR = window.TRAINER || {};
-  const L = C.lessons;
+  const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
+  // Порядок и уровни берём из data/order.js; темы вне списка идут в конец своего уровня
+  const ORDER = window.GRAMMAR_ORDER || {};
+  const byId = new Map(C.lessons.map((l) => [l.id, l]));
+  const listed = new Set(Object.values(ORDER).flat());
+  const L = LEVELS.flatMap((lv) => (ORDER[lv] || []).filter((id) => byId.has(id)).map((id) => Object.assign(byId.get(id), { lvl: lv }))
+    .concat(C.lessons.filter((l) => !listed.has(l.id) && l.lvl === lv)));
+  L.forEach((l, i) => { l.n = i + 1; });
   const FX = window.FX;
   const $main = document.getElementById("main");
   const $toast = document.querySelector("[data-toast]");
-  const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
   const LV_NAME = { A1: "A1", A2: "A2", B1: "B1", B2: "B2", C1: "C1-C2" };
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -41,6 +47,9 @@
     if (TR[l.id]) parts.push(r.tr != null ? 1 : 0);
     return Math.round((parts.reduce((a, b) => a + b, 0) / parts.length) * 100);
   }
+
+  const plural = (n, one, few, many) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many}`;
+  const doneCount = () => L.filter((l) => progress(l) === 100).length;
 
   /* ---------- Тема ---------- */
   const THEME = "gps-theme";
@@ -74,6 +83,13 @@
     voice = vs.find((v) => /en[-_]US/i.test(v.lang) && /Google|Natural|Samantha|Aria|Jenny/i.test(v.name)) || vs.find((v) => /en[-_]US/i.test(v.lang)) || vs[0] || null;
   };
   if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+  // Озвучка для видео-разбора: фразы встают в очередь, а не перебивают друг друга
+  function speak(text, rate) {
+    if (!("speechSynthesis" in window) || !voice) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = voice.lang; u.rate = rate || 0.92;
+    speechSynthesis.speak(u);
+  }
   function say(text, btn) {
     if (!("speechSynthesis" in window) || !voice) { toast("На этом устройстве нет английского голоса"); return; }
     speechSynthesis.cancel();
@@ -84,7 +100,7 @@
   }
 
   /* ---------- Сравнение ответов ---------- */
-  const CONTR = { "it's": "it is", "i'm": "i am", "you're": "you are", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "don't": "do not", "doesn't": "does not", "didn't": "did not", "isn't": "is not", "aren't": "are not", "wasn't": "was not", "weren't": "were not", "can't": "cannot", "won't": "will not", "i'll": "i will", "you'll": "you will", "he'll": "he will", "she'll": "she will", "we'll": "we will", "they'll": "they will", "it'll": "it will", "i'd": "i would", "i've": "i have", "you've": "you have", "we've": "we have", "they've": "they have", "haven't": "have not", "hasn't": "has not", "there's": "there is", "what's": "what is", "who's": "who is", "let's": "let us", "friend's": "friend has" };
+  const CONTR = { "it's": "it is", "i'm": "i am", "you're": "you are", "he's": "he is", "she's": "she is", "we're": "we are", "they're": "they are", "don't": "do not", "doesn't": "does not", "didn't": "did not", "isn't": "is not", "aren't": "are not", "wasn't": "was not", "weren't": "were not", "can't": "cannot", "won't": "will not", "i'll": "i will", "you'll": "you will", "he'll": "he will", "she'll": "she will", "we'll": "we will", "they'll": "they will", "it'll": "it will", "i'd": "i would", "i've": "i have", "you've": "you have", "we've": "we have", "they've": "they have", "haven't": "have not", "hasn't": "has not", "there's": "there is", "what's": "what is", "who's": "who is", "let's": "let us", "friend's": "friend has", "he'd": "he would", "she'd": "she would", "we'd": "we would", "you'd": "you would", "they'd": "they would", "it'd": "it would", "there'd": "there would", "wouldn't": "would not", "couldn't": "could not", "shouldn't": "should not", "mustn't": "must not", "needn't": "need not", "hadn't": "had not", "mightn't": "might not", "he'll": "he will", "that's": "that is", "where's": "where is", "how's": "how is", "here's": "here is" };
   const NUMS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
   function norm(s) {
     return String(s).toLowerCase().replace(/[’`´‘]/g, "'").replace(/…|\.\.\./g, " ")
@@ -102,11 +118,25 @@
     return d[m][n];
   }
   // Верно? Точное совпадение или одна опечатка в длинном слове
+  // «I'd» бывает и «I would», и «I had»; «he's» бывает и «he is», и «he has»: проверяем оба прочтения
+  const readings = (s) => {
+    const re = /\b([a-z]+)['’]d\b/gi;
+    const n = (s.match(re) || []).length;
+    let outs = [s];
+    // Каждое «'d» отдельно: would или had (до 4 штук в фразе)
+    if (n && n <= 4) {
+      outs = [];
+      for (let m = 0; m < 1 << n; m++) { let k = 0; outs.push(s.replace(re, (w, x) => ((m >> k++) & 1 ? `${x} had` : w))); }
+    }
+    const has = (x) => x.replace(/\b(he|she|it|who|what|there|that)['’]s\b/gi, "$1 has");
+    return [...new Set(outs.flatMap((x) => [x, has(x)]))];
+  };
   function judge(input, answers) {
     const ni = norm(input);
     if (!ni) return { ok: false, empty: true };
     const vs = variants(answers);
-    if (vs.includes(ni)) return { ok: true };
+    const alts = readings(input).map(norm);
+    if (alts.some((x) => vs.includes(x))) return { ok: true };
     for (const v of vs) {
       const a = ni.split(" "), b = v.split(" ");
       if (a.length !== b.length) continue;
@@ -153,12 +183,14 @@
             <h1>Английская грамматика, которую можно понять</h1>
             <p>Каждая тема по шагам: объяснение на русском, разминка и тренажёр перевода с проверкой каждого слова.</p>
             <div class="hero__actions">
-              <a class="btn btn--primary" href="#/t/${next.id}/learn">${started ? `Продолжить: тема ${next.id}` : "Начать с первой темы"}</a>
+              <a class="btn btn--primary" href="#/t/${next.id}/learn">${started ? `Продолжить: тема ${next.n}` : "Начать с первой темы"}</a>
               <a class="btn btn--ghost" href="#/topics">Все темы</a>
             </div>
+            <dl class="stats"><div><dt>Тем</dt><dd>${L.length}</dd></div><div><dt>Фраз в тренажёре</dt><dd>${Object.values(TR).reduce((n, a) => n + a.length, 0)}</dd></div><div><dt>Пройдено</dt><dd>${doneCount()} из ${L.length}</dd></div></dl>
           </div>
           <div class="hero__art" aria-hidden="true">
             <img src="https://bernatskyu10-ui.github.io/linguaquest/assets/mascot/fox-read.webp" alt="" width="300" height="300">
+            <span class="chip chip--a">am / is / are</span><span class="chip chip--b">did + V</span><span class="chip chip--c">have done</span>
             <div class="hero__note"><b>Я люблю музыку.</b><s>Music I like.</s> <span class="hero__fix">→ I like music.</span></div>
           </div>
         </section>
@@ -174,7 +206,9 @@
   }
 
   function topicsBlock(level) {
-    return `<section aria-labelledby="tt"><h2 class="section-title" id="tt">Темы по уровням</h2>
+    const d = doneCount();
+    return `<section aria-labelledby="tt"><div class="section-head"><h2 class="section-title" id="tt">Темы по уровням</h2>
+      <div class="overall" aria-label="Пройдено тем: ${d} из ${L.length}"><span>Пройдено <b>${d}</b> из ${L.length}</span><span class="overall__bar"><i style="transform:translateX(${(d / L.length - 1) * 100}%)"></i></span></div></div>
       <div class="tabs" role="tablist">${LEVELS.map((lv) => {
         const n = L.filter((l) => l.lvl === lv).length;
         return `<button class="tab ${lv === level ? "is-on" : ""}" role="tab" aria-selected="${lv === level}" data-lv="${lv}">${LV_NAME[lv]}<small>${n}</small></button>`;
@@ -186,9 +220,9 @@
       const p = progress(l);
       const tr = TR[l.id];
       return `<a class="topic" href="#/t/${l.id}/learn" style="--i:${i}">
-        <span class="ring ${p === 100 ? "is-full" : ""}" style="--p:${p}"><span>${p === 100 ? "✓" : l.id}</span></span>
+        <span class="ring ${p === 100 ? "is-full" : ""}" style="--p:${p}"><span>${p === 100 ? "✓" : l.n}</span></span>
         <span class="topic__body"><span class="topic__title">${esc(l.t)}</span>
-          <span class="topic__meta">${tr ? `<span class="badge">Перевод: ${tr.length} фраз</span>` : `<span class="badge badge--muted">Разминка</span>`}${p ? `<span>${p}%</span>` : ""}</span></span></a>`;
+          <span class="topic__meta">${tr ? `<span class="badge">Перевод: ${tr.length} фраз</span>` : `<span class="badge badge--muted">Разминка</span>`}${p ? `<span>${p}%</span>` : ""}</span></span><svg class="topic__go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>`;
     }).join("");
   }
   function bindTopics() {
@@ -235,7 +269,7 @@
     const parts = [["learn", "Объяснение", r.learn], ["warm", "Разминка", r.warm != null]].concat(hasTr ? [["tr", "Перевод", r.tr != null]] : []);
     $main.innerHTML = `
       <a class="crumb" href="#/topics">← Все темы</a>
-      <div class="topic-head"><div><span class="badge">${LV_NAME[l.lvl]}</span> <span class="badge badge--muted">Тема ${l.id}</span></div><h1>${esc(l.t)}</h1></div>
+      <div class="topic-head"><div><span class="badge">${LV_NAME[l.lvl]}</span> <span class="badge badge--muted">Тема ${l.n}</span></div><h1>${esc(l.t)}</h1></div>
       <div class="steps-nav" style="--n:${parts.length}" role="tablist">${parts.map(([k, name, done], i) => `<button role="tab" aria-selected="${k === part}" class="${k === part ? "is-on" : ""} ${done ? "is-done" : ""}" data-go="${k}"><i>${done ? "✓" : i + 1}</i><span>${name}</span></button>`).join("")}</div>
       <div data-part class="enter"></div>`;
     $main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => (location.hash = `#/t/${id}/${b.dataset.go}`)));
@@ -253,12 +287,23 @@
     const plus = PLUS[l.id];
     const r = rec(l.id);
     const exRow = ([en, ru]) => `<div class="ex__row"><button class="say" type="button" data-say="${esc(en.split(" → ").pop())}" aria-label="Послушать">${SPEAKER}</button><div><b>${esc(en)}</b><span>${esc(ru)}</span></div></div>`;
-    box.innerHTML = `<div class="reading">
+    const nTasks = warmTasks(l).length, nTr = (TR[l.id] || []).length;
+    const aside = `<aside class="side" aria-label="План темы"><div class="side__card">
+      <div class="side__title">План темы</div>
+      <ol class="side__list"><li class="is-on"><b>Объяснение</b><span>${plus ? plural(plus.steps.length, "шаг", "шага", "шагов") + " и шпаргалка" : "Правило и таблицы"}</span></li>
+        <li><b>Разминка</b><span>${plural(nTasks, "задание", "задания", "заданий")} с разбором</span></li>${nTr ? `<li><b>Перевод</b><span>${plural(nTr, "фраза", "фразы", "фраз")} с проверкой слов</span></li>` : ""}</ol>
+      <a class="btn btn--primary" href="#/t/${l.id}/warm" data-learned>К разминке</a></div></aside>`;
+    const watch = `<button class="watch" type="button" data-watch><span class="watch__play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></span><span><b>Разбор за минуту</b><small>Анимированное объяснение с озвучкой</small><span class="watch__chips" aria-hidden="true"><span>Смысл</span><span>Строим</span><span>Ошибка</span></span></span></button>`;
+    box.innerHTML = `<div class="learn-grid"><div class="reading">${watch}
       ${plus ? plus.steps.map((s, i) => `<section class="step" style="--i:${i}"><span class="step__n">${i + 1}</span><h3>${esc(s.h.replace(/^Шаг \d+\.\s*/, ""))}</h3>${s.t ? `<p>${esc(s.t)}</p>` : ""}${s.ex.length ? `<div class="ex">${s.ex.map(exRow).join("")}</div>` : ""}</section>`).join("") : ""}
       <details class="cheat" ${plus ? "" : "open"}><summary>${plus ? "Шпаргалка: правило и таблицы" : "Правило"}</summary><div class="cheat__body">${clean(l.body)}</div></details>
-      <div class="next-row"><a class="btn btn--primary" href="#/t/${l.id}/warm" data-learned>Понятно, к разминке</a>${hasTr ? `<a class="btn btn--ghost" href="#/t/${l.id}/tr" data-learned>Сразу к переводу</a>` : ""}</div></div>`;
+      <div class="next-row"><a class="btn btn--primary" href="#/t/${l.id}/warm" data-learned>Понятно, к разминке</a>${hasTr ? `<a class="btn btn--ghost" href="#/t/${l.id}/tr" data-learned>Сразу к переводу</a>` : ""}</div></div>${aside}</div>`;
     box.querySelectorAll(".cheat__body table").forEach((t) => { const w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); });
     box.querySelectorAll("[data-say]").forEach((b) => b.addEventListener("click", () => say(b.dataset.say, b)));
+    box.querySelector("[data-watch]").addEventListener("click", (e) => {
+      const btn = e.currentTarget;
+      window.PLAYER.play(l, plus, l.n, { speak, hush: () => "speechSynthesis" in window && speechSynthesis.cancel(), onClose: () => btn.focus({ preventScroll: true }) });
+    });
     box.querySelectorAll("[data-learned]").forEach((a) => a.addEventListener("click", () => { r.learn = true; save(); }));
     FX.rise(box.querySelectorAll(".step, .cheat, .next-row"), { y: 10, gap: 0.05, delay: 0.08, d: 0.3 });
   }
@@ -343,7 +388,7 @@
           const right = t.k === "choice" ? t.o[t.a] : (Array.isArray(t.a) ? t.a[0] : t.a);
           body = `<div class="fb__title">${ok ? (typo ? "Верно, только опечатка" : "Верно!") : "Ошибка"}</div>${ok && !typo ? "" : `<div>Правильно: <span class="fb__answer">${esc(right)}</span></div>`}${t.why ? `<div class="fb__why">${esc(t.why)}</div>` : ""}`;
         }
-        $fb.innerHTML = `<div class="fb ${ok ? "fb--ok" : "fb--bad"} enter">${body}</div>`;
+        $fb.innerHTML = `<div class="fb ${ok ? "fb--ok" : "fb--bad"} enter"><span class="fb__icon" aria-hidden="true">${ok ? "✓" : "✕"}</span><div>${body}</div></div>`;
         FX.fb($fb.firstElementChild, ok);
         box.querySelector(".drill__bar i").style.transform = `translateX(${((pos + 1) / list.length - 1) * 100}%)`;
         $check.textContent = pos + 1 < list.length ? "Дальше" : "Результат";
@@ -374,7 +419,7 @@
       if (!only) { r[mode] = Math.max(r[mode] || 0, score); save(); }
       const total = list.length;
       const good = score / total >= 0.7;
-      const next = L.find((x) => x.id === l.id + 1);
+      const next = L[L.indexOf(l) + 1];
       const nextHref = mode === "warm" && TR[l.id] ? `#/t/${l.id}/tr` : next ? `#/t/${next.id}/learn` : "#/topics";
       const nextText = mode === "warm" && TR[l.id] ? "К переводу" : next ? "Следующая тема" : "Все темы";
       box.innerHTML = `<div class="drill"><div class="card result enter">
